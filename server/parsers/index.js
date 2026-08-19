@@ -12,8 +12,6 @@ import * as upstox from "./upstox.js";
 import * as groww from "./groww.js";
 import * as generic from "./generic.js";
 
-const BROKERS = [zerodha, upstox, groww];
-
 export function detectFileType(filename) {
   const lower = (filename || "").toLowerCase();
   if (lower.endsWith(".csv")) return "csv";
@@ -56,11 +54,19 @@ export async function rowsFromFile(buffer, type) {
   return { headers: [], rows: [] };
 }
 
+// Each broker module exports detect() and parse(). The dispatcher keys off
+// detect() to pick one. We tag the broker by which module matched.
 export function tryBrokerParse(headers, rows) {
-  for (const broker of BROKERS) {
-    if (broker.detect(headers)) {
-      const result = broker.parse(rows);
-      return { broker: broker.name || "broker", ...result };
+  // Order matters: zerodha first (most common), then upstox, groww.
+  const ordered = [
+    { name: "zerodha", mod: zerodha },
+    { name: "upstox", mod: upstox },
+    { name: "groww", mod: groww },
+  ];
+  for (const { name, mod } of ordered) {
+    if (mod.detect(headers)) {
+      const result = mod.parse(rows);
+      return { broker: name, ...result };
     }
   }
   return null;
