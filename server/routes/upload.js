@@ -6,6 +6,7 @@ import {
   detectFileType,
   rowsFromFile,
   tryBrokerParse,
+  tryBrokerParseByText,
   generic,
 } from "../parsers/index.js";
 
@@ -25,10 +26,22 @@ uploadRouter.post("/", upload.single("file"), async (req, res) => {
     if (type === "unknown")
       return res.status(400).json({ error: "Unsupported file type (csv/xlsx/pdf only)" });
 
-    const { headers, rows } = await rowsFromFile(req.file.buffer, type);
+    const { headers, rows, rawText } = await rowsFromFile(req.file.buffer, type);
 
-    // 1. Try a known broker parser first.
-    const brokerResult = tryBrokerParse(headers, rows);
+    // 1a. Section-marker parsers (e.g. Invest Right's "--- Open Positions ---" blocks)
+    //     need raw text. Try this first because the CSV-flatten path would lose them.
+    const byText = tryBrokerParseByText(rawText);
+    if (byText) {
+      return res.json({
+        broker: byText.broker,
+        headers,
+        rows: [...byText.trades, ...byText.unmatched],
+        detected: true,
+      });
+    }
+
+    // 1b. Try a known broker parser keyed off headers.
+    const brokerResult = tryBrokerParse(headers, rows, rawText);
     if (brokerResult) {
       return res.json({
         broker: brokerResult.broker,

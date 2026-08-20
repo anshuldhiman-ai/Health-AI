@@ -9,4 +9,7 @@ dist
 server/dev.db
 server/dev.db-journal
 server/prisma/dev.db
+
+# Local sample files used during parser development
+*.csv
 client.zip
