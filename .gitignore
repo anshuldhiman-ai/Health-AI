@@ -9,3 +9,4 @@ dist
 server/dev.db
 server/dev.db-journal
 server/prisma/dev.db
+client.zip
