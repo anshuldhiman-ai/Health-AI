@@ -19,5 +19,6 @@ goto :eof
 
 :err
 echo [frontend] setup failed.
+pause
 exit /b 1
 endlocal

@@ -1,6 +1,6 @@
 @echo off
 REM Starts ONLY the backend (Express + Prisma). Useful when iterating on the API.
-REM Run install/migrate the first time. cd to script's own directory so relative paths work.
+REM cd to script's own directory so relative paths work.
 
 setlocal
 
@@ -14,10 +14,15 @@ if not exist "node_modules" (
     if errorlevel 1 goto :err
 )
 
-REM Generate the Prisma client and apply migrations on first run / when schema changes.
-REM migrate deploy is safe to run repeatedly; it's a no-op if there are no new migrations.
+REM Always regenerate the Prisma client (cheap, idempotent) so the JS bindings
+REM match the latest schema. --schema points at db/schema.prisma.
+echo [backend] generating Prisma client ...
+call npx prisma generate --schema db/schema.prisma
+if errorlevel 1 goto :err
+
+REM Apply any pending migrations. Safe to run repeatedly.
 echo [backend] applying Prisma migrations ...
-call npx prisma migrate deploy
+call npx prisma migrate deploy --schema db/schema.prisma
 if errorlevel 1 goto :err
 
 echo [backend] starting on http://localhost:4000 ...
@@ -26,5 +31,6 @@ goto :eof
 
 :err
 echo [backend] setup failed.
+pause
 exit /b 1
 endlocal
