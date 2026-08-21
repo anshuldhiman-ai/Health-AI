@@ -24,6 +24,19 @@ trading-journal/
 
 ## Setup
 
+### One-shot (Windows)
+
+From the repo root, double-click or run:
+
+- `start.bat` — launches both backend (`:4000`) and frontend (`:5173`) in separate windows; kills any prior runs first.
+- `stop.bat` — kills both services and their terminal windows.
+- `start-backend.bat` — backend only (Express + Prisma).
+- `start-frontend.bat` — frontend only (Vite).
+
+Each script will run `npm install` on first launch and apply Prisma migrations when the backend starts.
+
+### Manual (any OS)
+
 ```bash
 # Server
 cd server
