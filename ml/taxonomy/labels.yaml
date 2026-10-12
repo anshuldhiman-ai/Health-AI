@@ -1,0 +1,48 @@
+# Canonical label set and mapping to nutrition codes (Section 8.4).
+#
+# THE SINGLE SOURCE OF TRUTH for the model's class labels.
+# Classes are defined by nutritional distinguishability, not just
+# names:
+#   - merge visually identical dishes whose nutrition is similar
+#   - split dishes that look alike but differ a lot
+#     (plain roti vs paratha vs butter naan; dal tadka vs dal makhani;
+#      paneer butter masala vs palak paneer)
+#
+# Every class maps to food_ids in nutrition.db (built by
+# scripts/build_nutrition_db.py). A test checks labels.yaml and the
+# label_map table in nutrition.db stay in sync.
+#
+# Changing the label set = new model version + new label_map version.
+
+version: 1
+# TODO(M2): fill in the v1 class list — start with the 40 most
+# common dishes you actually eat (Section 14 open decisions).
+
+classes:
+  - id: other_food
+    names:
+      en: Other food
+      hi: अन्य भोजन
+      pa: ਹੋਰ ਖਾਣ-ਪੀਣ
+    food_ids: []
+    default_serving: null
+    tags: [special]
+
+  - id: not_food
+    names:
+      en: Not food
+      hi: भोजन नहीं
+      pa: ਖਾਣ-ਪੀਣ ਨਹੀਂ
+    food_ids: []
+    default_serving: null
+    tags: [special]
+
+  # --- groups (TODO: real classes here) ---
+  # - id: dal_tadka
+  #   names:
+  #     en: Dal tadka
+  #     hi: दाल तड़का
+  #     pa: ਦਾਲ ਤੜਕਾ
+  #   food_ids: [<nutrition.db food ids>]
+  #   default_serving: {label: katori, grams: 150}
+  #   tags: [dal, main]

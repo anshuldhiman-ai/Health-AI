@@ -1,0 +1,59 @@
+# ML pipeline (Section 8).
+# Run everything from configs: `uv run python -m <pkg>.train +experiment=...`
+# Notebooks are for exploration only; nothing in notebooks is the source of truth.
+
+# Data pipeline (DVC stages, all reproducible):
+#   ingest → validate (corrupt/tiny images) → EXIF-normalise
+#   → dedupe (perceptual hash across ALL splits)
+#   → label audit (cleanlab on a first model's predictions, then manual review
+#     of the worst) → group-aware stratified split → freeze (DVC hash)
+
+stages:
+  prepare:
+    cmd: uv run python scripts/prepare_dataset.py +data=${data}
+    deps:
+      - scripts/prepare_dataset.py
+    outs:
+      - data/interim/${data}
+
+  make_splits:
+    cmd: uv run python scripts/make_splits.py +data=${data}
+    deps:
+      - scripts/make_splits.py
+      - data/interim/${data}
+    outs:
+      - data/splits/${data}
+
+  train:
+    cmd: uv run python -m src.ml_pipeline.train +experiment=${experiment}
+    deps:
+      - src
+      - configs
+      - data/splits/${data}
+    metrics:
+      - reports/${experiment}/metrics.json:
+          cache: false
+
+  export:
+    cmd: uv run python -m src.ml_pipeline.export.to_litert +ckpt=${ckpt} +quant=${quant}
+    deps:
+      - src
+      - ${ckpt}
+    outs:
+      - reports/${ckpt}/model.tflite
+
+  parity:
+    cmd: uv run python -m src.ml_pipeline.export.parity_test +tflite=${tflite}
+    deps:
+      - src
+      - ${tflite}
+
+  build_nutrition_db:
+    cmd: uv run python scripts/build_nutrition_db.py
+    deps:
+      - scripts/build_nutrition_db.py
+    outs:
+      - ../app/assets/nutrition/nutrition.db
+    metrics:
+      - reports/nutrition_db/report.json:
+          cache: false

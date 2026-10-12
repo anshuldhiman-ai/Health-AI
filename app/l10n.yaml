@@ -1,0 +1,9 @@
+# l10n config — ARB files live in lib/l10n/ (R13)
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+preferred-supported-locales:
+  - en
+untranslated-messages-file: l10n/untranslated_messages.json
+synthetic-package: false

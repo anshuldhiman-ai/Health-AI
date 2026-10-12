@@ -1,0 +1,54 @@
+# --- Flutter / Dart ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.idea/
+
+# FVM downloads the SDK itself; only .fvmrc is tracked
+.fvm/
+
+# Generated code is NOT committed (decision pending; if changed, delete these
+# lines and record the decision in docs/adr/). Regenerate with:
+#   dart run build_runner build --delete-conflicting-outputs
+**/*.g.dart
+**/*.freezed.dart
+**/*.drift.dart
+*.gr.dart
+
+# --- Python / ML ---
+ml/data/
+ml/.venv/
+!ml/reports/.gitkeep
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Datasets, checkpoints, training artifacts (R8: never commit these)
+*.pt
+*.ckpt
+*.pth
+*.safetensors
+*.onnx
+# Released models ARE committed under app/assets/models (Section 11.4)
+
+# --- Secrets / local config ---
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+key.properties
+google-services.json
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- DVC cache ---
+.dvc/cache/
+.dvc/tmp/

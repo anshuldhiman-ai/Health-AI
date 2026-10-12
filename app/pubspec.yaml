@@ -1,0 +1,99 @@
+name: app
+description: "{{APP_NAME}} — offline-first calorie, macro, activity and sleep tracker with on-device Indian food recognition."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.0
+
+# FVM manages the Flutter/Dart SDK (see .fvmrc).
+# Versions are pinned by pubspec.lock — commit it (Section 9.5).
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management / DI (ADR 0002)
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Navigation (ADR 0002)
+  go_router: ^14.6.2
+
+  # Models / immutability
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # Local DB (ADR 0003): drift + SQLCipher
+  drift: ^2.22.0
+  sqlcipher_flutter_libs: ^0.6.4
+  flutter_secure_storage: ^9.2.4
+
+  # Health data (Health Connect) — READ-ONLY, minimal types (ADR 0008)
+  health: ^6.1.0
+
+  # ML runtime (Section 3.1): verify maintenance/licence before adopting
+  flutter_litert: ^0.1.0
+
+  # Camera / images (no broad storage permissions)
+  camera: ^0.11.0
+  image_picker: ^1.1.2
+  image: ^4.3.0
+
+  # Charts (styled through design tokens)
+  fl_chart: ^0.69.2
+
+  # Notifications (opt-in, inexact scheduling)
+  flutter_local_notifications: ^19.5.0
+
+  # Biometric app lock (optional)
+  local_auth: ^2.3.0
+
+  # Localisation
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  mocktail: ^1.0.4
+  integration_test:
+    sdk: flutter
+
+  # Codegen (freezed, drift, riverpod, json_serializable)
+  build_runner: ^2.4.14
+  freezed: ^2.5.7
+  drift_dev: ^2.22.0
+  riverpod_generator: ^2.6.1
+  json_serializable: ^6.9.0
+
+  # Golden tests
+  golden_toolkit: ^0.15.0
+
+flutter:
+  uses-material-design: true
+
+  # Localisation (R13: no hard-coded user-facing strings)
+  generate: true
+
+  # Bundled assets (fonts, models, nutrition.db, brand)
+  assets:
+    - assets/fonts/
+    - assets/models/
+    - assets/nutrition/
+    - assets/brand/
+
+  # Fonts are bundled assets ONLY — never fetched at runtime (R2).
+  # Final family choice pending M0 comparison (Section 14 open decisions).
+  fonts:
+    - family: UiSans
+      fonts:
+        - asset: assets/fonts/UiSans-Regular.ttf
+        - asset: assets/fonts/UiSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/UiSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/UiSans-Bold.ttf
+          weight: 700
