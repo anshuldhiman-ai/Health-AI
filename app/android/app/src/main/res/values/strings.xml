@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Display name (Section 0 placeholder). Must stay in sync with l10n
+  AppLocalizations.appTitle until the brand name exists — keep the
+  working title "App" in ALL places, replace in ONE pass at rebrand.
+-->
+<resources>
+    <string name="app_name">App</string>
+</resources>
