@@ -1,5 +1,5 @@
 import 'package:app/domain/services/safety_rules.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 /// Tests for the safety constants (Section 9.4).
 ///
@@ -17,7 +17,10 @@ void main() {
     });
 
     test('floors are positive and below typical TDEE', () {
-      for (final floor in [SafetyRules.kcalFloorWomen, SafetyRules.kcalFloorMen]) {
+      for (final floor in [
+        SafetyRules.kcalFloorWomen,
+        SafetyRules.kcalFloorMen,
+      ]) {
         expect(floor, greaterThan(800));
         expect(floor, lessThan(2000));
       }

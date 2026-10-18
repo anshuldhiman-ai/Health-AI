@@ -1,5 +1,3 @@
-import 'package:meta/meta.dart';
-
 /// Day-boundary logic (Section 6.5).
 ///
 /// The single authority that decides which local day a timestamp
@@ -7,7 +5,9 @@ import 'package:meta/meta.dart';
 /// millis plus `tz_offset_min`; this service turns that pair into a
 /// stable local date.
 ///
-/// Pure Dart (R9). No `DateTime.now()` — callers pass a [Clock].
+/// Pure Dart (R9). No `DateTime.now()` — callers inject the current
+/// epoch millis (from a `Clock`, in the application layer) so tests
+/// can control time.
 library;
 
 /// A local calendar date (year, month, day), with no time-of-day.
@@ -15,12 +15,8 @@ library;
 /// Comparable in chronological order.
 final class LocalDate implements Comparable<LocalDate> {
   const LocalDate(this.year, this.month, this.day)
-      : assert(month >= 1 && month <= 12),
-        assert(day >= 1 && day <= 31);
-
-  final int year;
-  final int month;
-  final int day;
+    : assert(month >= 1 && month <= 12),
+      assert(day >= 1 && day <= 31);
 
   /// Builds a [LocalDate] from a UTC [DateTime] with the given
   /// offset applied.
@@ -35,15 +31,31 @@ final class LocalDate implements Comparable<LocalDate> {
     if (parts.length != 3) {
       throw FormatException('Expected yyyy-MM-dd, got "$iso"');
     }
-    final y = int.parse(parts[0]);
-    final m = int.parse(parts[1]);
-    final d = int.parse(parts[2]);
+    final y = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    final d = int.tryParse(parts[2]);
+    // Validate explicitly: asserts alone are debug-only and would make
+    // behaviour differ between debug and release builds.
+    if (y == null ||
+        m == null ||
+        d == null ||
+        m < 1 ||
+        m > 12 ||
+        d < 1 ||
+        d > 31) {
+      throw FormatException('Expected yyyy-MM-dd, got "$iso"');
+    }
     return LocalDate(y, m, d);
   }
 
+  final int year;
+  final int month;
+  final int day;
+
   /// `yyyy-MM-dd` — used as the `local_date` key in `user.db`.
   String toIso() =>
-      '$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+      '$year-${month.toString().padLeft(2, '0')}-'
+      '${day.toString().padLeft(2, '0')}';
 
   @override
   int compareTo(LocalDate other) {
@@ -71,7 +83,10 @@ abstract final class DayBoundary {
   /// The local date of [epochMillisUtc] in the timezone at
   /// [tzOffsetMin] from UTC.
   static LocalDate localDateOf(int epochMillisUtc, int tzOffsetMin) {
-    final utc = DateTime.fromMillisecondsSinceEpoch(epochMillisUtc, isUtc: true);
+    final utc = DateTime.fromMillisecondsSinceEpoch(
+      epochMillisUtc,
+      isUtc: true,
+    );
     return LocalDate.fromUtc(utc, tzOffsetMin);
   }
 
@@ -82,7 +97,9 @@ abstract final class DayBoundary {
       epochMillisUtc,
       isUtc: true,
     ).add(Duration(minutes: tzOffsetMin));
-    final localMidnight = DateTime(local.year, local.month, local.day);
+    // Must be built as UTC: the host's own timezone must never
+    // influence the result (ADR 0005 — reproducible on every machine).
+    final localMidnight = DateTime.utc(local.year, local.month, local.day);
     return localMidnight
         .subtract(Duration(minutes: tzOffsetMin))
         .millisecondsSinceEpoch;
@@ -93,8 +110,8 @@ abstract final class DayBoundary {
       startOfDayUtc(epochMillisUtc, tzOffsetMin) +
       const Duration(hours: 24).inMilliseconds;
 
-  /// True when [epochMillisUtc] falls on the same local day as [otherMillisUtc],
-  /// under the same offset.
+  /// True when [epochMillisUtc] falls on the same local day as
+  /// [otherMillisUtc], under the same offset.
   static bool sameLocalDay(
     int epochMillisUtc,
     int otherMillisUtc,
@@ -103,7 +120,9 @@ abstract final class DayBoundary {
       localDateOf(epochMillisUtc, tzOffsetMin) ==
       localDateOf(otherMillisUtc, tzOffsetMin);
 
-  /// The local date "today" under [tzOffsetMin], per [clock].
-  static LocalDate today(int tzOffsetMin, Clock clock) =>
-      localDateOf(clock.nowEpochMillis(), tzOffsetMin);
+  /// The local date "today" under [tzOffsetMin], given the current
+  /// time as UTC epoch millis. The caller injects the time from a
+  /// `Clock` (Section 11.1) so tests can control it.
+  static LocalDate today(int nowEpochMillisUtc, int tzOffsetMin) =>
+      localDateOf(nowEpochMillisUtc, tzOffsetMin);
 }

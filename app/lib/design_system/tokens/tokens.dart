@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Design tokens (Section 10.2–10.4).
 ///
 /// All values are a PROPOSAL until the brand name exists. They live
@@ -9,6 +7,8 @@ import 'package:flutter/material.dart';
 /// large text and graphics) — enforced by unit tests. No colour alone
 /// conveys state (R14).
 library;
+
+import 'package:flutter/material.dart';
 
 /// Semantic colour tokens, light and dark.
 ///
@@ -102,16 +102,52 @@ class AppColorScheme {
 /// One UI family, bundled as an asset (OFL-licensed, tabular
 /// figures verified with [FontFeature.tabularFigures]).
 /// Weights 400/500/600/700 only. Sentence case everywhere.
+///
+/// Tabular figures are set on every style so nutrition numbers
+/// align in columns (the bundled font must support this — verify
+/// in M0).
 abstract final class AppTypography {
   AppTypography._();
 
+  static const _tabular = [FontFeature.tabularFigures()];
+
   // sp / line-height pairs.
-  static const display = TextStyle(fontSize: 36, height: 42 / 36, fontWeight: FontWeight.w700);
-  static const titleL = TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700);
-  static const titleM = TextStyle(fontSize: 22, height: 28 / 22, fontWeight: FontWeight.w600);
-  static const bodyL = TextStyle(fontSize: 17, height: 26 / 17, fontWeight: FontWeight.w400);
-  static const bodyM = TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w400);
-  static const label = TextStyle(fontSize: 13, height: 18 / 13, fontWeight: FontWeight.w500);
+  static const display = TextStyle(
+    fontSize: 36,
+    height: 42 / 36,
+    fontWeight: FontWeight.w700,
+    fontFeatures: _tabular,
+  );
+  static const titleL = TextStyle(
+    fontSize: 28,
+    height: 34 / 28,
+    fontWeight: FontWeight.w700,
+    fontFeatures: _tabular,
+  );
+  static const titleM = TextStyle(
+    fontSize: 22,
+    height: 28 / 22,
+    fontWeight: FontWeight.w600,
+    fontFeatures: _tabular,
+  );
+  static const bodyL = TextStyle(
+    fontSize: 17,
+    height: 26 / 17,
+    fontWeight: FontWeight.w400,
+    fontFeatures: _tabular,
+  );
+  static const bodyM = TextStyle(
+    fontSize: 15,
+    height: 22 / 15,
+    fontWeight: FontWeight.w400,
+    fontFeatures: _tabular,
+  );
+  static const label = TextStyle(
+    fontSize: 13,
+    height: 18 / 13,
+    fontWeight: FontWeight.w500,
+    fontFeatures: _tabular,
+  );
 }
 
 /// Spacing on the 4pt grid (Section 10.4).

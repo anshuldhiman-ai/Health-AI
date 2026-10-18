@@ -1,0 +1,11 @@
+{
+  "@@locale": "en",
+  "appTitle": "App",
+  "@appTitle": {
+    "description": "The app display name. Working title until the brand name is decided (Section 0) — replace in ALL arb files at once."
+  },
+  "homePlaceholderMessage": "Foundation ready. Screens arrive in M1.",
+  "@homePlaceholderMessage": {
+    "description": "Temporary home screen text shown until the first M1 screen ships."
+  }
+}

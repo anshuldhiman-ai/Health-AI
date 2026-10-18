@@ -24,7 +24,7 @@
 //   5. features never import each other's internals.
 import 'dart:io';
 
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 /// Returns the area a lib/ file belongs to.
 /// `domain/services/x.dart` -> `domain`; `features/diary/x.dart` -> `features/diary`.
@@ -70,45 +70,55 @@ void main() {
 
           // Rule 1: domain is pure Dart.
           if (area == 'domain') {
-            final ok = imported.startsWith('dart:') ||
+            final ok =
+                imported.startsWith('dart:') ||
                 imported.startsWith('package:meta') ||
                 imported.startsWith('package:collection') ||
                 imported.startsWith('domain/');
             if (!ok) {
-              violations.add('$rel imports $imported (domain must be pure Dart)');
+              violations.add(
+                '$rel imports $imported (domain must be pure Dart)',
+              );
             }
             continue;
           }
 
           // Rule 2: design_system imports only flutter + itself.
           if (area == 'design_system') {
-            final ok = imported.startsWith('dart:') ||
+            final ok =
+                imported.startsWith('dart:') ||
                 imported.startsWith('package:flutter') ||
                 imported.startsWith('design_system/');
             if (!ok) {
               violations.add(
-                  '$rel imports $imported (design_system imports only flutter + itself)');
+                '$rel imports $imported'
+                ' (design_system imports only flutter + itself)',
+              );
             }
             continue;
           }
 
           // Rule 3: core is cross-cutting only.
           if (area == 'core') {
-            final bad = imported.startsWith('domain/') ||
+            final bad =
+                imported.startsWith('domain/') ||
                 imported.startsWith('data/') ||
                 imported.startsWith('ml/') ||
                 imported.startsWith('features/') ||
                 imported.startsWith('design_system/') ||
                 imported.startsWith('app/');
             if (bad) {
-              violations.add('$rel imports $imported (core may not depend on other areas)');
+              violations.add(
+                '$rel imports $imported (core may not depend on other areas)',
+              );
             }
             continue;
           }
 
           // Rule 4: data may not import UI.
           if (area == 'data') {
-            final bad = imported.startsWith('design_system/') ||
+            final bad =
+                imported.startsWith('design_system/') ||
                 imported.startsWith('features/') ||
                 imported.startsWith('app/');
             if (bad) {
@@ -123,7 +133,9 @@ void main() {
             if (imported.startsWith('features/') &&
                 !imported.startsWith('features/$featureName')) {
               violations.add(
-                  '$rel imports $imported (features are isolated from each other)');
+                '$rel imports $imported'
+                ' (features are isolated from each other)',
+              );
             }
             continue;
           }

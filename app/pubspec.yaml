@@ -30,7 +30,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
 
   # Health data (Health Connect) — READ-ONLY, minimal types (ADR 0008)
-  health: ^6.1.0
+  health: ^13.3.1
 
   # ML runtime (Section 3.1): verify maintenance/licence before adopting
   flutter_litert: ^0.1.0
@@ -87,13 +87,15 @@ flutter:
 
   # Fonts are bundled assets ONLY — never fetched at runtime (R2).
   # Final family choice pending M0 comparison (Section 14 open decisions).
-  fonts:
-    - family: UiSans
-      fonts:
-        - asset: assets/fonts/UiSans-Regular.ttf
-        - asset: assets/fonts/UiSans-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/UiSans-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/UiSans-Bold.ttf
-          weight: 700
+  # Uncomment the block below when the bundled .ttf files land in
+  # assets/fonts/ (weights 400/500/600/700, OFL licence file included).
+  # fonts:
+  #   - family: UiSans
+  #     fonts:
+  #       - asset: assets/fonts/UiSans-Regular.ttf
+  #       - asset: assets/fonts/UiSans-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/UiSans-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/UiSans-Bold.ttf
+  #         weight: 700

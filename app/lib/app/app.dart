@@ -1,25 +1,26 @@
+import 'package:app/design_system/theme/app_theme.dart';
+import 'package:app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// The app's MaterialApp shell (Section 4: app/app.dart).
 ///
-/// Navigation (go_router), locale and theme live here. The router
-/// itself is under lib/app/router/ and the shell under lib/app/shell/.
+/// Navigation (go_router), locale overrides and further wiring live
+/// under lib/app/ as features arrive.
 ///
 /// TODO(M1): wire go_router with the onboarding redirect guard.
+/// TODO(M1): manual theme/locale override from settings (system default now).
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '{{APP_NAME}}',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      // Follow the system by default; manual override in settings (M1).
-      themeMode: ThemeMode.system,
-      // TODO(M1): localizationsDelegates + supportedLocales (en, hi, pa)
-      // TODO(M1): routerConfig: appRouter
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const _PlaceholderHome(),
     );
   }
@@ -31,9 +32,9 @@ class _PlaceholderHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: Text('{{APP_NAME}} — M0 foundation'),
+        child: Text(AppLocalizations.of(context)!.homePlaceholderMessage),
       ),
     );
   }

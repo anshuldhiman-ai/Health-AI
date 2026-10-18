@@ -6,4 +6,3 @@ output-class: AppLocalizations
 preferred-supported-locales:
   - en
 untranslated-messages-file: l10n/untranslated_messages.json
-synthetic-package: false

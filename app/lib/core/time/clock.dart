@@ -11,7 +11,7 @@ abstract interface class Clock {
   DateTime nowUtc();
 
   /// Current epoch milliseconds (UTC).
-  int nowEpochMillis() => nowUtc().millisecondsSinceEpoch;
+  int nowEpochMillis();
 }
 
 /// The real clock. The only place in the app allowed to call
@@ -21,6 +21,9 @@ final class SystemClock implements Clock {
 
   @override
   DateTime nowUtc() => DateTime.now().toUtc();
+
+  @override
+  int nowEpochMillis() => nowUtc().millisecondsSinceEpoch;
 }
 
 /// A controllable clock for tests.
@@ -31,6 +34,9 @@ final class FakeClock implements Clock {
 
   @override
   DateTime nowUtc() => _timeUtc;
+
+  @override
+  int nowEpochMillis() => nowUtc().millisecondsSinceEpoch;
 
   /// Advance time by [duration].
   void advance(Duration duration) => _timeUtc = _timeUtc.add(duration);

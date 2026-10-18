@@ -52,11 +52,11 @@ abstract final class AppTheme {
         fillColor: c.surface,
         border: OutlineInputBorder(
           borderRadius: const BorderRadius.all(AppRadii.input),
-          borderSide: BorderSide(color: c.line, width: 1),
+          borderSide: BorderSide(color: c.line),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: const BorderRadius.all(AppRadii.input),
-          borderSide: BorderSide(color: c.line, width: 1),
+          borderSide: BorderSide(color: c.line),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: const BorderRadius.all(AppRadii.input),
@@ -76,7 +76,9 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: c.primary,
-          foregroundColor: isDark ? const Color(0xFF0D1412) : const Color(0xFFFFFFFF),
+          foregroundColor: isDark
+              ? const Color(0xFF0D1412)
+              : const Color(0xFFFFFFFF),
           textStyle: AppTypography.label,
           minimumSize: const Size.fromHeight(48), // 48dp touch target (R14)
           shape: const StadiumBorder(),
@@ -106,16 +108,12 @@ abstract final class AppTheme {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.all(AppRadii.card),
-          side: BorderSide(color: c.line, width: 1),
+          side: BorderSide(color: c.line),
         ),
       ),
 
       // Dividers
-      dividerTheme: DividerThemeData(
-        color: c.line,
-        thickness: 1,
-        space: 1,
-      ),
+      dividerTheme: DividerThemeData(color: c.line, thickness: 1, space: 1),
 
       // Bottom sheets
       bottomSheetTheme: BottomSheetThemeData(
@@ -197,10 +195,6 @@ abstract final class AppTheme {
       ),
       labelMedium: AppTypography.label.copyWith(color: c.ink),
       labelSmall: AppTypography.label.copyWith(color: c.inkMuted),
-    ).apply(
-      // Tabular figures so nutrition numbers align (Section 10.3).
-      // The bundled font must support this — verify in M0.
-      fontFeatures: const [FontFeature.tabularFigures()],
     );
   }
 }
