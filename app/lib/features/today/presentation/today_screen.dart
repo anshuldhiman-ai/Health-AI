@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:app/design_system/components/empty_state.dart';
 import 'package:app/design_system/components/group_header.dart';
 import 'package:app/design_system/components/meter_bar.dart';
 import 'package:app/design_system/components/progress_ring.dart';
@@ -18,7 +20,7 @@ class TodayScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(sampleTodayProvider);
+    final state = ref.watch(todayStateProvider);
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
@@ -55,12 +57,20 @@ class TodayScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.x6),
             GroupHeader(title: l10n.todaysMeals),
             const SizedBox(height: AppSpacing.x3),
-            if (state.meals.isEmpty)
-              const _LogFirstMeal(key: ValueKey('log-first-meal'))
+            if (state.isEmpty)
+              EmptyState(
+                key: const ValueKey('log-first-meal'),
+                icon: Icons.no_meals_outlined,
+                title: l10n.logFirstMealCta,
+                message: l10n.emptyDayHint,
+                actionLabel: l10n.addFood,
+                onAction: () => context.push('/scan?meal=lunch'),
+              )
             else
               ...state.meals.map(
                 (entry) => _MealCard(entry: entry),
               ),
+            const _AddFoodCard(),
           ],
         ),
       ),
@@ -289,7 +299,8 @@ class _MealCard extends StatelessWidget {
             )
           else
             FilledButton.tonal(
-              onPressed: () {}, // TODO(M1): open add-food flow
+              onPressed: () =>
+                  context.push('/scan?meal=${entry.mealKind.name}'),
               style: FilledButton.styleFrom(
                 minimumSize: const Size(0, 40),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -304,22 +315,42 @@ class _MealCard extends StatelessWidget {
   }
 }
 
-class _LogFirstMeal extends StatelessWidget {
-  const _LogFirstMeal({super.key});
+/// Persistent quick-add entry feeding the scan flow (the reference
+/// shows the same affordance under the meal list).
+class _AddFoodCard extends StatelessWidget {
+  const _AddFoodCard();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // EmptyState is used through the design system once the real meal
-    // stream is wired; the reference shows a data-state card here.
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push('/scan?meal=lunch'),
         borderRadius: BorderRadius.circular(AppRadii.card.x),
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(AppRadii.card.x),
+            border: Border.all(color: scheme.outline),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: AppSpacing.x2,
+            children: [
+              Icon(Icons.add, color: scheme.primary, size: 20),
+              Text(
+                l10n.addFood,
+                style: text.labelLarge?.copyWith(color: scheme.primary),
+              ),
+            ],
+          ),
+        ),
       ),
-      child: Text(l10n.logFirstMealCta),
     );
   }
 }

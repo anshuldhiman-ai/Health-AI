@@ -268,6 +268,90 @@ abstract class AppLocalizations {
   /// **'Nutrition breakdown'**
   String get nutritionBreakdown;
 
+  /// No description provided for @emptyDayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a plate or add a dish to start tracking.'**
+  String get emptyDayHint;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @welcomeTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Eat Smart. Live Healthier.'**
+  String get welcomeTagline;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get signIn;
+
+  /// No description provided for @deviceOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Health AI on this device'**
+  String get deviceOnlyTitle;
+
+  /// No description provided for @signInNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Health AI is offline-first: there is no account and never one. Your diary is encrypted on this phone only.'**
+  String get signInNote;
+
+  /// No description provided for @okGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get okGotIt;
+
+  /// No description provided for @wdMon.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get wdMon;
+
+  /// No description provided for @wdTue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get wdTue;
+
+  /// No description provided for @wdWed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get wdWed;
+
+  /// No description provided for @wdThu.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get wdThu;
+
+  /// No description provided for @wdFri.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get wdFri;
+
+  /// No description provided for @wdSat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get wdSat;
+
+  /// No description provided for @wdSun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get wdSun;
+
   /// No description provided for @ofTargets.
   ///
   /// In en, this message translates to:

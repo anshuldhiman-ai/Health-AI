@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app/design_system/tokens/tokens.dart';
+import 'package:app/domain/entities/meal.dart';
 import 'package:app/features/scan/presentation/scan_result_sheet.dart';
 import 'package:app/l10n/app_localizations.dart';
 
@@ -11,7 +12,11 @@ import 'package:app/l10n/app_localizations.dart';
 /// inference isolate; what exists now is the full-screen shell so the
 /// navigation and the result-sheet flow are complete end to end.
 class ScanScreen extends ConsumerWidget {
-  const ScanScreen({super.key});
+  const ScanScreen({super.key, this.mealKind = MealKind.lunch});
+
+  /// The meal the user is logging into (from the route query), so the
+  /// result sheet's confirm button says the right thing.
+  final MealKind mealKind;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -117,14 +122,20 @@ class ScanScreen extends ConsumerWidget {
     );
   }
 
-  void _openResultSheet(BuildContext context) {
-    showModalBottomSheet<void>(
+  Future<void> _openResultSheet(BuildContext context) async {
+    final added = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
       // Shape comes from bottomSheetTheme (AppRadii.sheet = 24).
-      builder: (_) => const ScanResultSheet(),
+      builder: (_) => const ScanResultSheet(mealKind: MealKind.lunch),
     );
+    // A confirmed add closes the whole scan flow back to the caller;
+    // a plain dismissal stays here in "camera" (undo lives in the
+    // snack bar).
+    if (added == true && context.mounted) {
+      Navigator.of(context).pop();
+    }
   }
 }

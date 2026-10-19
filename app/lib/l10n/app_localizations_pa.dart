@@ -96,6 +96,50 @@ class AppLocalizationsPa extends AppLocalizations {
   String get nutritionBreakdown => 'ਪੋਸ਼ਣ ਵੇਰਵਾ';
 
   @override
+  String get emptyDayHint =>
+      'ਸਕੈਨ ਕਰੋ ਜਾਂ ਵਾਂਝਾ ਪਕਵਾਨ ਜੋੜੋ ਤੇ ਟਰੈਕਿੰਗ ਸ਼ੁਰੂ ਕਰੋ।';
+
+  @override
+  String get getStarted => 'ਸ਼ੁਰੂ ਕਰੋ';
+
+  @override
+  String get welcomeTagline => 'ਸਮਝਦਾਰੀ ਨਾਲ ਖਾਓ। ਸਿਹਤਮੰਦ ਰਹੋ।';
+
+  @override
+  String get signIn => 'ਸਾਈਨ ਇਨ';
+
+  @override
+  String get deviceOnlyTitle => 'Health AI ਇਸੇ ਡਿਵਾਈਸ ਉੱਤੇ ਵਰਤੋ';
+
+  @override
+  String get signInNote =>
+      'Health AI ਆਫ਼ਲਾਈਨ-ਪਹਿਲਾ ਹੈ: ਇੱਥੇ ਕੋਈ ਖਾਤਾ ਨਹੀਂ ਅਤੇ ਕਦੇ ਨਹੀਂ ਹੋਵੇਗਾ। ਤੁਹਾਡਾ ਡਾਇਰੀ ਡਾਟਾ ਇਸੇ ਫੋਨ ਉੱਤੇ ਐਨਕ੍ਰਿਪਟਡ ਰਹਿੰਦਾ ਹੈ।';
+
+  @override
+  String get okGotIt => 'ਠੀਕ ਹੈ';
+
+  @override
+  String get wdMon => 'ਸੋਮ';
+
+  @override
+  String get wdTue => 'ਮੰਗਲ';
+
+  @override
+  String get wdWed => 'ਬੁੱਧ';
+
+  @override
+  String get wdThu => 'ਵੀਰ';
+
+  @override
+  String get wdFri => 'ਸ਼ੁੱਕਰ';
+
+  @override
+  String get wdSat => 'ਸ਼ਨਿ';
+
+  @override
+  String get wdSun => 'ਐਤ';
+
+  @override
   String ofTargets(String percent) {
     return '$percent ਟੀਚਾ ਪੂਰਾ';
   }

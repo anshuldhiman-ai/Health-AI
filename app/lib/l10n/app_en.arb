@@ -38,6 +38,20 @@
     }
   },
   "nutritionBreakdown": "Nutrition breakdown",
+  "emptyDayHint": "Scan a plate or add a dish to start tracking.",
+  "getStarted": "Get Started",
+  "welcomeTagline": "Eat Smart. Live Healthier.",
+  "signIn": "Sign In",
+  "deviceOnlyTitle": "Use Health AI on this device",
+  "signInNote": "Health AI is offline-first: there is no account and never one. Your diary is encrypted on this phone only.",
+  "okGotIt": "Got it",
+  "wdMon": "Mon",
+  "wdTue": "Tue",
+  "wdWed": "Wed",
+  "wdThu": "Thu",
+  "wdFri": "Fri",
+  "wdSat": "Sat",
+  "wdSun": "Sun",
   "ofTargets": "{percent} of targets",
   "@ofTargets": {
     "placeholders": {

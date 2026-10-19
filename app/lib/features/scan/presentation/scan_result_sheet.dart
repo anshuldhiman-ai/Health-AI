@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app/app/log_store.dart';
 import 'package:app/design_system/tokens/tokens.dart';
+import 'package:app/domain/entities/log_entry.dart';
+import 'package:app/domain/entities/meal.dart';
 import 'package:app/features/scan/application/scan_state.dart';
 import 'package:app/l10n/app_localizations.dart';
+import 'package:app/l10n/extensions.dart';
 
 /// Result sheet per ref_ui.png: top-3 candidate radio list, serving
 /// chips, calories-range card, add-to-meal action.
 ///
-/// Prediction values come from [sampleScanSessionProvider]; the real
+/// Predictions come from [sampleScanSessionProvider]; the real
 /// recogniser feeds this same shape in M2 (Section 8.7). Calories are
 /// ALWAYS a range — portion error dominates class error, so a single
 /// confident number would be dishonest (Section 8.1, R11).
+///
+/// Confirming writes a [LogEntry.estimated] into the shared
+/// [dayLogProvider] store; the sheet pops `true` so the camera
+/// screen can close back to the caller.
 class ScanResultSheet extends ConsumerStatefulWidget {
-  const ScanResultSheet({super.key});
+  const ScanResultSheet({required this.mealKind, super.key});
+
+  /// Which meal slot the user is logging into.
+  final MealKind mealKind;
 
   @override
   ConsumerState<ScanResultSheet> createState() => _ScanResultSheetState();
@@ -99,10 +110,9 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
             ),
           ),
           FilledButton(
-            // TODO(M1): write the entry through the diary repository.
             onPressed: () => _confirm(context),
             child: Text(
-              l10n.addToMeal(l10n.mealLunch),
+              l10n.addToMeal(l10n.mealLabel(widget.mealKind)),
             ),
           ),
           const SizedBox(height: AppSpacing.x2),
@@ -113,13 +123,25 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
 
   void _confirm(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    Navigator.of(context).pop();
+    final session = ref.read(sampleScanSessionProvider);
+    final serving = session.chosenServing;
+    final store = ref.read(dayLogProvider.notifier);
+
+    store.add(
+      LogEntry.estimated(
+        mealKind: widget.mealKind,
+        dish: session.chosenPrediction.label,
+        kcal: ((serving.lowKcal + serving.highKcal) / 2).round(),
+      ),
+    );
+    Navigator.of(context).pop(true);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(l10n.addedToast(l10n.mealLunch)),
+        content: Text(l10n.addedToast(l10n.mealLabel(widget.mealKind))),
         action: SnackBarAction(
           label: l10n.undo,
-          onPressed: () {}, // TODO(M1): undo the diary write
+          // Latest-added entry of today is exactly this write.
+          onPressed: () => store.removeNewest(0),
         ),
       ),
     );

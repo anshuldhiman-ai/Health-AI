@@ -1,25 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:app/design_system/components/empty_state.dart';
 import 'package:app/design_system/components/group_header.dart';
 import 'package:app/design_system/components/meter_bar.dart';
 import 'package:app/design_system/components/progress_ring.dart';
 import 'package:app/design_system/tokens/tokens.dart';
+import 'package:app/app/log_store.dart';
 import 'package:app/domain/entities/macro.dart';
-import 'package:app/domain/entities/meal.dart';
 import 'package:app/features/diary/application/diary_state.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/l10n/extensions.dart';
 
-/// Diary per ref_ui.png: week strip, calories summary with "left"
-/// chip, per-meal bars, nutrition breakdown donut, meal log list.
+/// Diary per ref_ui.png: week strip (last 7 days, switchable), the
+/// selected day's calories summary with "left" chip, per-meal bars,
+/// nutrition breakdown donut, meal log list, empty-day CTA.
 class DiaryScreen extends ConsumerWidget {
   const DiaryScreen({super.key});
 
+  /// UI window: today + the six previous days.
+  static const maxOffset = DayLog.maxDays - 1;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(sampleDiaryProvider);
     final l10n = AppLocalizations.of(context)!;
+    final text = Theme.of(context).textTheme;
 
     return Scaffold(
       body: SafeArea(
@@ -31,26 +37,11 @@ class DiaryScreen extends ConsumerWidget {
             AppSpacing.x6,
           ),
           children: [
-            Text(l10n.diaryTitle, style: _pageTitle(context)),
+            Text(l10n.diaryTitle, style: text.titleLarge),
             const SizedBox(height: AppSpacing.x4),
-            _WeekStrip(days: state.days),
+            _WeekStrip(),
             const SizedBox(height: AppSpacing.x4),
-            _CaloriesCard(
-              consumed: state.caloriesConsumed,
-              target: state.caloriesTarget,
-              remaining: state.caloriesRemaining,
-            ),
-            const SizedBox(height: AppSpacing.x4),
-            _MealBars(bars: state.mealBars),
-            const SizedBox(height: AppSpacing.x6),
-            GroupHeader(title: l10n.nutritionBreakdown),
-            const SizedBox(height: AppSpacing.x3),
-            _BreakdownCard(state: state),
-            const SizedBox(height: AppSpacing.x6),
-            GroupHeader(title: l10n.mealLog),
-            const SizedBox(height: AppSpacing.x3),
-            for (final entry in state.mealLog)
-              _MealLogRow(entry: entry),
+            _DayBody(),
           ],
         ),
       ),
@@ -58,66 +49,156 @@ class DiaryScreen extends ConsumerWidget {
   }
 }
 
-TextStyle _pageTitle(BuildContext context) => Theme.of(context)
-    .textTheme
-    .titleLarge ?? const TextStyle(fontSize: 28, fontWeight: FontWeight.w700);
+class _WeekStrip extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final today = DateTime.now();
+    final selectedOffset = ref.watch(selectedDiaryOffsetProvider);
 
-class _WeekStrip extends StatelessWidget {
-  const _WeekStrip({required this.days});
+    return Row(
+      spacing: AppSpacing.x2,
+      children: [
+        for (var i = DiaryScreen.maxOffset; i >= 0; i--)
+          Expanded(
+            child: _DayChip(
+              label: _weekdayAbbrev(
+                l10n,
+                today.subtract(Duration(days: i)).weekday,
+              ),
+              dayOfMonth: today.subtract(Duration(days: i)).day,
+              selected: i == selectedOffset,
+              onTap: () =>
+                  ref.read(selectedDiaryOffsetProvider.notifier).state = i,
+            ),
+          ),
+      ],
+    );
+  }
 
-  final List<DiaryDay> days;
+  static String _weekdayAbbrev(AppLocalizations l10n, int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return l10n.wdMon;
+      case DateTime.tuesday:
+        return l10n.wdTue;
+      case DateTime.wednesday:
+        return l10n.wdWed;
+      case DateTime.thursday:
+        return l10n.wdThu;
+      case DateTime.friday:
+        return l10n.wdFri;
+      case DateTime.saturday:
+        return l10n.wdSat;
+      case DateTime.sunday:
+      default:
+        return l10n.wdSun;
+    }
+  }
+}
+
+class _DayChip extends StatelessWidget {
+  const _DayChip({
+    required this.label,
+    required this.dayOfMonth,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final int dayOfMonth;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
-    return Row(
-      spacing: AppSpacing.x2,
-      children: [
-        for (final day in days)
-          Expanded(
-            child: InkWell(
-              onTap: () {}, // TODO(M1): switch diary date
-              borderRadius: BorderRadius.circular(AppRadii.card.x),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: day.isSelected ? scheme.primary : scheme.surface,
-                  borderRadius: BorderRadius.circular(AppRadii.card.x),
-                  border: Border.all(
-                    color: day.isSelected ? scheme.primary : scheme.outline,
-                  ),
-                ),
-                child: Column(
-                  spacing: 2,
-                  children: [
-                    Text(
-                      day.weekdayLabel,
-                      style: text.labelSmall?.copyWith(
-                        color: day.isSelected
-                            ? scheme.onPrimary
-                            : scheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Text(
-                      '${day.dayOfMonth}',
-                      style: text.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: day.isSelected
-                            ? scheme.onPrimary
-                            : scheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.card.x),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? scheme.primary : scheme.surface,
+          borderRadius: BorderRadius.circular(AppRadii.card.x),
+          border: Border.all(
+            color: selected ? scheme.primary : scheme.outline,
+          ),
+        ),
+        child: Column(
+          spacing: 2,
+          children: [
+            Text(
+              label,
+              style: text.labelSmall?.copyWith(
+                color: selected
+                    ? scheme.onPrimary
+                    : scheme.onSurfaceVariant,
               ),
             ),
-          ),
+            Text(
+              '$dayOfMonth',
+              style: text.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: selected ? scheme.onPrimary : scheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DayBody extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Kept simple: the strip owns selection locally; reading the
+    // latest offset family provider through a dependency would need
+    // an InheritedWidget — the strip passes it via a shared provider
+    // below instead (selectedDiaryOffset).
+    final offset = ref.watch(selectedDiaryOffsetProvider);
+    final state = ref.watch(diaryStateProvider(offset));
+    final l10n = AppLocalizations.of(context)!;
+
+    if (state.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.x2),
+        child: EmptyState(
+          icon: Icons.no_meals_outlined,
+          title: l10n.logFirstMealCta,
+          message: l10n.emptyDayHint,
+          actionLabel: l10n.addFood,
+          onAction: () => context.push('/scan'),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.x4,
+      children: [
+        _CaloriesCard(
+          consumed: state.caloriesConsumed,
+          target: state.caloriesTarget,
+          remaining: state.caloriesRemaining,
+        ),
+        _MealBars(bars: state.mealBars),
+        GroupHeader(title: l10n.nutritionBreakdown),
+        _BreakdownCard(state: state),
+        GroupHeader(title: l10n.mealLog),
+        for (final entry in state.mealLog) _MealLogRow(entry: entry),
       ],
     );
   }
 }
+
+/// The selected diary day, written by the week strip and read by the
+/// body. Local-vs-shared state note: one small provider is simpler
+/// and rebuilds only the body.
+final selectedDiaryOffsetProvider = StateProvider<int>((ref) => 0);
 
 class _CaloriesCard extends StatelessWidget {
   const _CaloriesCard({
@@ -225,7 +306,7 @@ class _MealBars extends StatelessWidget {
                     alignment: Alignment.bottomCenter,
                     child: FractionallySizedBox(
                       heightFactor: bar.calories / maxKcal,
-                      widthFactor: 0.55,
+                      widthFactor: bar.calories == 0 ? 0 : 0.55,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           color: scheme.primary,
@@ -348,9 +429,7 @@ class _MealLogRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadii.input.x),
             ),
             child: Icon(
-              entry.mealKind == MealKind.lunch
-                  ? Icons.lunch_dining_outlined
-                  : Icons.restaurant_outlined,
+              Icons.restaurant_outlined,
               color: scheme.primary,
               size: 22,
             ),

@@ -96,6 +96,50 @@ class AppLocalizationsHi extends AppLocalizations {
   String get nutritionBreakdown => 'पोषण विवरण';
 
   @override
+  String get emptyDayHint =>
+      'स्कैन करें या व्यंजन जोड़ें और ट्रैकिंग शुरू करें।';
+
+  @override
+  String get getStarted => 'शुरू करें';
+
+  @override
+  String get welcomeTagline => 'समझदारी से खाएँ। स्वस्थ रहें।';
+
+  @override
+  String get signIn => 'साइन इन';
+
+  @override
+  String get deviceOnlyTitle => 'Health AI इसी डिवाइस पर उपयोग करें';
+
+  @override
+  String get signInNote =>
+      'Health AI ऑफ़लाइन-पहला है: यहाँ कोई अकाउंट नहीं है और कभी नहीं होगा। आपका डायरी डेटा इसी फोन पर एन्क्रिप्टेड रहता है।';
+
+  @override
+  String get okGotIt => 'ठीक है';
+
+  @override
+  String get wdMon => 'सोम';
+
+  @override
+  String get wdTue => 'मंगल';
+
+  @override
+  String get wdWed => 'बुध';
+
+  @override
+  String get wdThu => 'गुरु';
+
+  @override
+  String get wdFri => 'शुक्र';
+
+  @override
+  String get wdSat => 'शनि';
+
+  @override
+  String get wdSun => 'रवि';
+
+  @override
   String ofTargets(String percent) {
     return '$percent लक्ष्य पूरा';
   }

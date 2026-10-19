@@ -35,6 +35,20 @@
     }
   },
   "nutritionBreakdown": "ਪੋਸ਼ਣ ਵੇਰਵਾ",
+  "emptyDayHint": "ਸਕੈਨ ਕਰੋ ਜਾਂ ਵਾਂਝਾ ਪਕਵਾਨ ਜੋੜੋ ਤੇ ਟਰੈਕਿੰਗ ਸ਼ੁਰੂ ਕਰੋ।",
+  "getStarted": "ਸ਼ੁਰੂ ਕਰੋ",
+  "welcomeTagline": "ਸਮਝਦਾਰੀ ਨਾਲ ਖਾਓ। ਸਿਹਤਮੰਦ ਰਹੋ।",
+  "signIn": "ਸਾਈਨ ਇਨ",
+  "deviceOnlyTitle": "Health AI ਇਸੇ ਡਿਵਾਈਸ ਉੱਤੇ ਵਰਤੋ",
+  "signInNote": "Health AI ਆਫ਼ਲਾਈਨ-ਪਹਿਲਾ ਹੈ: ਇੱਥੇ ਕੋਈ ਖਾਤਾ ਨਹੀਂ ਅਤੇ ਕਦੇ ਨਹੀਂ ਹੋਵੇਗਾ। ਤੁਹਾਡਾ ਡਾਇਰੀ ਡਾਟਾ ਇਸੇ ਫੋਨ ਉੱਤੇ ਐਨਕ੍ਰਿਪਟਡ ਰਹਿੰਦਾ ਹੈ।",
+  "okGotIt": "ਠੀਕ ਹੈ",
+  "wdMon": "ਸੋਮ",
+  "wdTue": "ਮੰਗਲ",
+  "wdWed": "ਬੁੱਧ",
+  "wdThu": "ਵੀਰ",
+  "wdFri": "ਸ਼ੁੱਕਰ",
+  "wdSat": "ਸ਼ਨਿ",
+  "wdSun": "ਐਤ",
   "ofTargets": "{percent} ਟੀਚਾ ਪੂਰਾ",
   "@ofTargets": {
     "placeholders": {

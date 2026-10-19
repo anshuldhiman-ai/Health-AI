@@ -35,6 +35,20 @@
     }
   },
   "nutritionBreakdown": "पोषण विवरण",
+  "emptyDayHint": "स्कैन करें या व्यंजन जोड़ें और ट्रैकिंग शुरू करें।",
+  "getStarted": "शुरू करें",
+  "welcomeTagline": "समझदारी से खाएँ। स्वस्थ रहें।",
+  "signIn": "साइन इन",
+  "deviceOnlyTitle": "Health AI इसी डिवाइस पर उपयोग करें",
+  "signInNote": "Health AI ऑफ़लाइन-पहला है: यहाँ कोई अकाउंट नहीं है और कभी नहीं होगा। आपका डायरी डेटा इसी फोन पर एन्क्रिप्टेड रहता है।",
+  "okGotIt": "ठीक है",
+  "wdMon": "सोम",
+  "wdTue": "मंगल",
+  "wdWed": "बुध",
+  "wdThu": "गुरु",
+  "wdFri": "शुक्र",
+  "wdSat": "शनि",
+  "wdSun": "रवि",
   "ofTargets": "{percent} लक्ष्य पूरा",
   "@ofTargets": {
     "placeholders": {

@@ -96,6 +96,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nutritionBreakdown => 'Nutrition breakdown';
 
   @override
+  String get emptyDayHint => 'Scan a plate or add a dish to start tracking.';
+
+  @override
+  String get getStarted => 'Get Started';
+
+  @override
+  String get welcomeTagline => 'Eat Smart. Live Healthier.';
+
+  @override
+  String get signIn => 'Sign In';
+
+  @override
+  String get deviceOnlyTitle => 'Use Health AI on this device';
+
+  @override
+  String get signInNote =>
+      'Health AI is offline-first: there is no account and never one. Your diary is encrypted on this phone only.';
+
+  @override
+  String get okGotIt => 'Got it';
+
+  @override
+  String get wdMon => 'Mon';
+
+  @override
+  String get wdTue => 'Tue';
+
+  @override
+  String get wdWed => 'Wed';
+
+  @override
+  String get wdThu => 'Thu';
+
+  @override
+  String get wdFri => 'Fri';
+
+  @override
+  String get wdSat => 'Sat';
+
+  @override
+  String get wdSun => 'Sun';
+
+  @override
   String ofTargets(String percent) {
     return '$percent of targets';
   }

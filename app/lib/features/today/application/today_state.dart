@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app/app/log_store.dart';
 import 'package:app/domain/entities/meal.dart';
 import 'package:app/domain/entities/macro.dart';
 
-/// Today-screen state. SAMPLE DATA for the UI v0: the real provider
-/// will watch the drift `user.db` diary stream through the M1 data
-/// layer; the shape of these records is the contract that layer must
-/// satisfy. Delete the sample constants at that point (keep the
-/// provider surface).
+/// Today-screen state, now derived from the shared [dayLogProvider]
+/// log store: the ring, macro meters and meal rows all update live
+/// when a meal is added or undone.
 ///
-/// [MacroLine]/[MealKind] come from domain so Today and Diary share
-/// one vocabulary (Section 5.1).
+/// [QuietStat] keeps the placeholder steps/water/sleep values until
+/// Health Connect reads arrive (ADR 0008).
 class QuietStat {
   const QuietStat({
     required this.icon,
@@ -32,17 +31,14 @@ class MealEntry {
     required this.logged,
     this.calories,
     this.timeLabel,
+    this.dish,
   });
 
   final MealKind mealKind;
-
-  /// Whether anything was logged for this meal today.
   final bool logged;
   final int? calories;
-
-  /// Pre-formatted clock label ("8:15 AM") — localisation lands with
-  /// the data layer.
   final String? timeLabel;
+  final String? dish;
 }
 
 class TodayState {
@@ -67,21 +63,22 @@ class TodayState {
 
   double get ringProgress =>
       (caloriesConsumed / caloriesTarget).clamp(0.0, 1.0);
+
+  bool get isEmpty => caloriesConsumed == 0;
 }
 
-/// Sample matching the reference design (ref_ui.png). Steps/water/
-/// sleep numbers are placeholders until Health Connect reads arrive
-/// (ADR 0008).
-final sampleTodayProvider = Provider<TodayState>((ref) {
-  return const TodayState(
-    caloriesConsumed: 1318,
-    caloriesTarget: 1800,
-    macros: [
-      MacroLine(kind: MacroKind.protein, value: 72, target: 100),
-      MacroLine(kind: MacroKind.carbs, value: 120, target: 180),
-      MacroLine(kind: MacroKind.fat, value: 28, target: 60),
-    ],
-    stats: [
+/// Aggregates the canonical meal rows for the dashboard: one row per
+/// meal kind — the newest logged entry wins, unlogged shows the
+/// "Add food" affordance.
+final todayStateProvider = Provider<TodayState>((ref) {
+  final log = ref.watch(dayLogProvider.notifier);
+  final totals = log.totalsFor(0);
+
+  return TodayState(
+    caloriesConsumed: totals.consumed,
+    caloriesTarget: kcalTarget,
+    macros: totals.macroLines,
+    stats: const [
       QuietStat(
         icon: Icons.directions_walk,
         value: '6,320',
@@ -99,13 +96,24 @@ final sampleTodayProvider = Provider<TodayState>((ref) {
       ),
     ],
     meals: [
-      MealEntry(
-        mealKind: MealKind.breakfast,
-        logged: true,
-        calories: 420,
-        timeLabel: '8:15 AM',
-      ),
-      MealEntry(mealKind: MealKind.lunch, logged: false),
+      for (final kind in MealKind.values)
+        () {
+          final entries = log
+              .entriesFor(0)
+              .where((e) => e.mealKind == kind)
+              .toList();
+          if (entries.isEmpty) {
+            return MealEntry(mealKind: kind, logged: false);
+          }
+          final e = entries.last;
+          return MealEntry(
+            mealKind: kind,
+            logged: true,
+            calories: e.kcal,
+            timeLabel: e.timeLabel,
+            dish: e.dish,
+          );
+        }(),
     ],
   );
 });

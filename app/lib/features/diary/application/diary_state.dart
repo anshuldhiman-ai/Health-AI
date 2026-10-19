@@ -1,22 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app/app/log_store.dart';
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/domain/entities/meal.dart';
 
-/// Diary-screen state. SAMPLE DATA (UI v0); the real feed is the
-/// drift diary DAO through the M1 data layer.
-class DiaryDay {
-  const DiaryDay({
-    required this.weekdayLabel,
-    required this.dayOfMonth,
-    required this.isSelected,
-  });
-
-  final String weekdayLabel;
-  final int dayOfMonth;
-  final bool isSelected;
-}
-
+/// Diary-screen state for ONE day ([offset] family: 0 = today,
+/// positive = days back), derived from the shared log store.
 class MealBar {
   const MealBar({required this.mealKind, required this.calories});
 
@@ -38,70 +27,57 @@ class MealLogEntry {
 
 class DiaryState {
   const DiaryState({
+    required this.dtOffset,
     required this.caloriesConsumed,
     required this.caloriesTarget,
-    required this.days,
-    required this.mealBars,
     required this.macros,
+    required this.mealBars,
     required this.mealLog,
   });
 
+  final int dtOffset;
   final int caloriesConsumed;
   final int caloriesTarget;
+  final List<MacroLine> macros;
+  final List<MealBar> mealBars;
+  final List<MealLogEntry> mealLog;
 
   int get caloriesRemaining {
     final left = caloriesTarget - caloriesConsumed;
     return left < 0 ? 0 : left;
   }
 
-  final List<DiaryDay> days;
-
-  /// One bar per meal kind, in canonical order.
-  final List<MealBar> mealBars;
-
-  final List<MacroLine> macros;
-
-  final List<MealLogEntry> mealLog;
-
-  /// Overall completion of today's targets (the donut fraction, 0..1),
-  /// computed across the macro lines.
   double get targetsCompletion {
     final sum = macros.fold<double>(0, (acc, m) => acc + m.ratio);
     return (sum / macros.length).clamp(0.0, 1.0);
   }
+
+  bool get isEmpty => caloriesConsumed == 0;
 }
 
-/// Mirrors reference values (ref_ui.png, Diary screen).
-final sampleDiaryProvider = Provider<DiaryState>((ref) {
-  return const DiaryState(
-    caloriesConsumed: 1230,
-    caloriesTarget: 1800,
-    days: [
-      DiaryDay(weekdayLabel: 'Mon', dayOfMonth: 21, isSelected: false),
-      DiaryDay(weekdayLabel: 'Tue', dayOfMonth: 22, isSelected: false),
-      DiaryDay(weekdayLabel: 'Wed', dayOfMonth: 23, isSelected: false),
-      DiaryDay(weekdayLabel: 'Thu', dayOfMonth: 24, isSelected: true),
-      DiaryDay(weekdayLabel: 'Fri', dayOfMonth: 25, isSelected: false),
-      DiaryDay(weekdayLabel: 'Sat', dayOfMonth: 26, isSelected: false),
-      DiaryDay(weekdayLabel: 'Sun', dayOfMonth: 27, isSelected: false),
-    ],
+final diaryStateProvider = Provider.family<DiaryState, int>((ref, offset) {
+  final log = ref.watch(dayLogProvider.notifier);
+  final totals = log.totalsFor(offset);
+
+  return DiaryState(
+    dtOffset: offset,
+    caloriesConsumed: totals.consumed,
+    caloriesTarget: kcalTarget,
+    macros: totals.macroLines,
     mealBars: [
-      MealBar(mealKind: MealKind.breakfast, calories: 420),
-      MealBar(mealKind: MealKind.lunch, calories: 380),
-      MealBar(mealKind: MealKind.dinner, calories: 350),
-      MealBar(mealKind: MealKind.snacks, calories: 80),
-    ],
-    macros: [
-      MacroLine(kind: MacroKind.protein, value: 72, target: 100),
-      MacroLine(kind: MacroKind.carbs, value: 120, target: 180),
-      MacroLine(kind: MacroKind.fat, value: 28, target: 60),
+      for (final kind in MealKind.values)
+        MealBar(
+          mealKind: kind,
+          calories: log.kcalForMeal(offset, kind),
+        ),
     ],
     mealLog: [
-      MealLogEntry(
-        mealKind: MealKind.lunch,
-        dish: 'Paneer Butter Masala + Rice',
-        calories: 320,
-      ),
+      for (final e in log.entriesFor(offset).reversed)
+        MealLogEntry(
+          mealKind: e.mealKind,
+          dish: e.dish,
+          calories: e.kcal,
+        ),
     ],
   );
 });

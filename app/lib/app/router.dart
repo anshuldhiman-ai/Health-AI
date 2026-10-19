@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:app/l10n/app_localizations.dart';
+import 'package:app/domain/entities/meal.dart';
 import 'package:app/features/diary/presentation/diary_screen.dart';
 import 'package:app/features/insights/presentation/insights_screen.dart';
+import 'package:app/features/onboarding/presentation/welcome_screen.dart';
 import 'package:app/features/profile/presentation/profile_screen.dart';
 import 'package:app/features/scan/presentation/scan_screen.dart';
 import 'package:app/features/today/presentation/today_screen.dart';
 
-/// App routes (Section 10, navigation map). Five destinations: four
-/// tabs in the shell + a full-screen scan flow pushed on top.
+/// App routes (Section 10, navigation map). Welcome gates the shell;
+/// five destinations: four tabs + the full-screen scan flow.
 final appRouter = GoRouter(
-  initialLocation: '/today',
+  initialLocation: '/welcome',
   routes: [
+    GoRoute(path: '/welcome', builder: (_, _) => const WelcomeScreen()),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           _NavShell(navigationShell: navigationShell),
@@ -51,7 +54,17 @@ final appRouter = GoRouter(
         ),
       ],
     ),
-    GoRoute(path: '/scan', builder: (_, _) => const ScanScreen()),
+    GoRoute(
+      path: '/scan',
+      builder: (context, state) {
+        // Which meal is being logged decides the sheet's confirm
+        // label; unknown values fall back to lunch.
+        final mealParam = state.uri.queryParameters['meal'];
+        final meal = MealKind.values.asNameMap()[mealParam] ??
+            MealKind.lunch;
+        return ScanScreen(mealKind: meal);
+      },
+    ),
   ],
 );
 

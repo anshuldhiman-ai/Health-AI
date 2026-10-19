@@ -18,7 +18,7 @@ class InsightsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(sampleInsightsProvider);
+    final state = ref.watch(insightsStateProvider);
     final l10n = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
 
