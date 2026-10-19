@@ -16,10 +16,18 @@ from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from ml_pipeline.eval.metrics import topk_accuracy
 from ml_pipeline.models.classifier import build_ema
 from ml_pipeline.utils.seeding import git_commit
+
+
+def gpu_mem_gb(device: torch.device | None = None) -> float:
+    """Peak GPU memory allocated in GiB (YOLO-style GPU_mem column)."""
+    if not torch.cuda.is_available():
+        return 0.0
+    return torch.cuda.max_memory_allocated(device) / (1024**3)
 
 
 def lr_lambda_factory(warmup_epochs: int, total_epochs: int):
@@ -68,15 +76,17 @@ def load_checkpoint(path: Path, model, optimizer, scheduler, ema=None):
 
 
 @torch.no_grad()
-def evaluate(model, loader, device, num_classes: int) -> dict:
+def evaluate(model, loader, device, num_classes: int, desc: str = "val") -> dict:
     model.eval()
     logits_all: list[torch.Tensor] = []
     targets_all: list[torch.Tensor] = []
-    for images, targets in loader:
+    bar = tqdm(loader, desc=desc, leave=False, unit="it")
+    for images, targets in bar:
         images = images.to(device, non_blocking=True)
         out = model(images)
         logits_all.append(out.cpu())
         targets_all.append(targets)
+        bar.set_postfix(top1=f"{topk_accuracy(out.cpu(), targets, 1):.3f}")
     logits = torch.cat(logits_all)
     targets = torch.cat(targets_all)
     return {
@@ -128,7 +138,13 @@ def fit(
     for epoch in range(start_epoch, epochs):
         model.train()
         running_loss, seen = 0.0, 0
-        for images, targets in train_loader:
+        bar = tqdm(
+            train_loader,
+            desc=f"  epoch {epoch + 1}/{epochs}",
+            leave=True,
+            unit="it",
+        )
+        for step, (images, targets) in enumerate(bar):
             images = images.to(device, non_blocking=True)
             targets = targets.to(device, non_blocking=True)
             optimizer.zero_grad(set_to_none=True)
@@ -142,6 +158,12 @@ def fit(
             ema.update(model)
             running_loss += loss.item() * targets.numel()
             seen += targets.numel()
+            if step % 25 == 0 or step == len(bar) - 1:
+                bar.set_postfix(
+                    loss=f"{loss.item():.3f}",
+                    gpu_mem=f"{gpu_mem_gb():.2f}G",
+                    refresh=True,
+                )
         scheduler.step()
 
         metrics = evaluate(model, val_loader, device, num_classes)
@@ -151,7 +173,16 @@ def fit(
             "lr": scheduler.get_last_lr()[0],
             **metrics,
         }
+        # machine-readable line (metrics.jsonl + logs) AND the
+        # YOLO-style human line below.
         print(json.dumps(record))
+        print(
+            f"   Epoch   GPU_mem     loss     top1     top5\n"
+            f"   {epoch + 1}/{epochs:<4}   "
+            f"{gpu_mem_gb():.2f}G   "
+            f"{record['train_loss']:.4f}   "
+            f"{metrics['top1']:.4f}   {metrics['top5']:.4f}"
+        )
         with open(out_dir / "metrics.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(record) + "\n")
 
