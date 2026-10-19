@@ -71,7 +71,10 @@ def load_checkpoint(path: Path, model, optimizer, scheduler, ema=None):
     optimizer.load_state_dict(ckpt["optimizer"])
     scheduler.load_state_dict(ckpt["scheduler"])
     if ema is not None and ckpt.get("ema"):
-        ema.load_state_dict(ckpt["ema"])
+        # ckpt["ema"] holds the INNER model's state (saved as
+        # ema.module.state_dict()); load it into the inner module,
+        # not the ModelEma wrapper.
+        ema.module.load_state_dict(ckpt["ema"])
     return ckpt["epoch"], ckpt.get("meta", {})
 
 
