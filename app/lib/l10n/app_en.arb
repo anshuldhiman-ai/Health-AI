@@ -4,8 +4,97 @@
   "@appTitle": {
     "description": "The app display name. Working title until the brand name is decided (Section 0) — replace in ALL arb files at once."
   },
-  "homePlaceholderMessage": "Foundation ready. Screens arrive in M1.",
-  "@homePlaceholderMessage": {
-    "description": "Temporary home screen text shown until the first M1 screen ships."
-  }
+  "greetingMorning": "Good morning!",
+  "greetingAfternoon": "Good afternoon!",
+  "greetingEvening": "Good evening!",
+  "todayTagline": "Fuel your body for a healthier you.",
+  "remainingKcal": "Remaining",
+  "kcalUnit": "kcal",
+  "macroProtein": "Protein",
+  "macroCarbs": "Carbs",
+  "macroFat": "Fat",
+  "stepsTile": "steps",
+  "waterTile": "water",
+  "sleepTile": "sleep",
+  "todaysMeals": "Today's meals",
+  "addFood": "Add food",
+  "logFirstMealCta": "Log your first meal",
+  "mealNotLoggedYet": "Not logged yet",
+  "mealBreakfast": "Breakfast",
+  "mealLunch": "Lunch",
+  "mealDinner": "Dinner",
+  "mealSnacks": "Snacks",
+  "todayTab": "Today",
+  "diaryTab": "Diary",
+  "insightsTab": "Insights",
+  "profileTab": "Profile",
+  "diaryTitle": "Diary",
+  "caloriesLeft": "{left} left",
+  "@caloriesLeft": {
+    "placeholders": {
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionBreakdown": "Nutrition breakdown",
+  "ofTargets": "{percent} of targets",
+  "@ofTargets": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mealLog": "Meal log",
+  "scanScreenTitle": "Scan food",
+  "pointAtPlate": "Point your camera at the plate",
+  "cameraPlaceholder": "Camera preview arrives with the on-device model (M2).",
+  "scanResultTitle": "Scan result",
+  "scanResultSubtitle": "Top 3 possible matches",
+  "servingSizeLabel": "Serving size",
+  "estimatedCalories": "Estimated calories",
+  "addToMeal": "Add to {meal}",
+  "@addToMeal": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "addedToast": "Added to {meal}.",
+  "@addedToast": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "undo": "Undo",
+  "insightsTitle": "Insights",
+  "calorieTrend": "Calorie trend",
+  "avgKcalPerDay": "avg kcal/day",
+  "trendChangeUp": "↑ {percent}%",
+  "@trendChangeUp": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "trendChangeDown": "↓ {percent}%",
+  "@trendChangeDown": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionBalance": "Nutrition balance",
+  "profileTitle": "Profile",
+  "deviceOnly": "Your data stays on this device.",
+  "myGoals": "My goals",
+  "settingsRow": "Settings",
+  "helpRow": "Help & support",
+  "aboutRow": "About the app"
 }

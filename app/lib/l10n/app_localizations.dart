@@ -106,11 +106,311 @@ abstract class AppLocalizations {
   /// **'App'**
   String get appTitle;
 
-  /// Temporary home screen text shown until the first M1 screen ships.
+  /// No description provided for @greetingMorning.
   ///
   /// In en, this message translates to:
-  /// **'Foundation ready. Screens arrive in M1.'**
-  String get homePlaceholderMessage;
+  /// **'Good morning!'**
+  String get greetingMorning;
+
+  /// No description provided for @greetingAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon!'**
+  String get greetingAfternoon;
+
+  /// No description provided for @greetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening!'**
+  String get greetingEvening;
+
+  /// No description provided for @todayTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel your body for a healthier you.'**
+  String get todayTagline;
+
+  /// No description provided for @remainingKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get remainingKcal;
+
+  /// No description provided for @kcalUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get kcalUnit;
+
+  /// No description provided for @macroProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get macroProtein;
+
+  /// No description provided for @macroCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs'**
+  String get macroCarbs;
+
+  /// No description provided for @macroFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get macroFat;
+
+  /// No description provided for @stepsTile.
+  ///
+  /// In en, this message translates to:
+  /// **'steps'**
+  String get stepsTile;
+
+  /// No description provided for @waterTile.
+  ///
+  /// In en, this message translates to:
+  /// **'water'**
+  String get waterTile;
+
+  /// No description provided for @sleepTile.
+  ///
+  /// In en, this message translates to:
+  /// **'sleep'**
+  String get sleepTile;
+
+  /// No description provided for @todaysMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s meals'**
+  String get todaysMeals;
+
+  /// No description provided for @addFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Add food'**
+  String get addFood;
+
+  /// No description provided for @logFirstMealCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your first meal'**
+  String get logFirstMealCta;
+
+  /// No description provided for @mealNotLoggedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged yet'**
+  String get mealNotLoggedYet;
+
+  /// No description provided for @mealBreakfast.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakfast'**
+  String get mealBreakfast;
+
+  /// No description provided for @mealLunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Lunch'**
+  String get mealLunch;
+
+  /// No description provided for @mealDinner.
+  ///
+  /// In en, this message translates to:
+  /// **'Dinner'**
+  String get mealDinner;
+
+  /// No description provided for @mealSnacks.
+  ///
+  /// In en, this message translates to:
+  /// **'Snacks'**
+  String get mealSnacks;
+
+  /// No description provided for @todayTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayTab;
+
+  /// No description provided for @diaryTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary'**
+  String get diaryTab;
+
+  /// No description provided for @insightsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get insightsTab;
+
+  /// No description provided for @profileTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTab;
+
+  /// No description provided for @diaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary'**
+  String get diaryTitle;
+
+  /// No description provided for @caloriesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{left} left'**
+  String caloriesLeft(String left);
+
+  /// No description provided for @nutritionBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition breakdown'**
+  String get nutritionBreakdown;
+
+  /// No description provided for @ofTargets.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} of targets'**
+  String ofTargets(String percent);
+
+  /// No description provided for @mealLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal log'**
+  String get mealLog;
+
+  /// No description provided for @scanScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan food'**
+  String get scanScreenTitle;
+
+  /// No description provided for @pointAtPlate.
+  ///
+  /// In en, this message translates to:
+  /// **'Point your camera at the plate'**
+  String get pointAtPlate;
+
+  /// No description provided for @cameraPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera preview arrives with the on-device model (M2).'**
+  String get cameraPlaceholder;
+
+  /// No description provided for @scanResultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan result'**
+  String get scanResultTitle;
+
+  /// No description provided for @scanResultSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top 3 possible matches'**
+  String get scanResultSubtitle;
+
+  /// No description provided for @servingSizeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Serving size'**
+  String get servingSizeLabel;
+
+  /// No description provided for @estimatedCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated calories'**
+  String get estimatedCalories;
+
+  /// No description provided for @addToMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to {meal}'**
+  String addToMeal(String meal);
+
+  /// No description provided for @addedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to {meal}.'**
+  String addedToast(String meal);
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @insightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get insightsTitle;
+
+  /// No description provided for @calorieTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Calorie trend'**
+  String get calorieTrend;
+
+  /// No description provided for @avgKcalPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'avg kcal/day'**
+  String get avgKcalPerDay;
+
+  /// No description provided for @trendChangeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'↑ {percent}%'**
+  String trendChangeUp(String percent);
+
+  /// No description provided for @trendChangeDown.
+  ///
+  /// In en, this message translates to:
+  /// **'↓ {percent}%'**
+  String trendChangeDown(String percent);
+
+  /// No description provided for @nutritionBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition balance'**
+  String get nutritionBalance;
+
+  /// No description provided for @profileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTitle;
+
+  /// No description provided for @deviceOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data stays on this device.'**
+  String get deviceOnly;
+
+  /// No description provided for @myGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'My goals'**
+  String get myGoals;
+
+  /// No description provided for @settingsRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsRow;
+
+  /// No description provided for @helpRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & support'**
+  String get helpRow;
+
+  /// No description provided for @aboutRow.
+  ///
+  /// In en, this message translates to:
+  /// **'About the app'**
+  String get aboutRow;
 }
 
 class _AppLocalizationsDelegate

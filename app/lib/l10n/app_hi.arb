@@ -1,5 +1,97 @@
 {
   "@@locale": "hi",
   "appTitle": "App",
-  "homePlaceholderMessage": "आधार तैयार। M1 में स्क्रीन आएंगी।"
+  "greetingMorning": "सुप्रभात!",
+  "greetingAfternoon": "नमस्कार!",
+  "greetingEvening": "शुभ संध्या!",
+  "todayTagline": "एक स्वस्थ जीवन के लिए अपने शरीर को पोषण दें।",
+  "remainingKcal": "शेष",
+  "kcalUnit": "कैलोरी",
+  "macroProtein": "प्रोटीन",
+  "macroCarbs": "कार्ब्स",
+  "macroFat": "फैट",
+  "stepsTile": "कदम",
+  "waterTile": "पानी",
+  "sleepTile": "नींद",
+  "todaysMeals": "आज के भोजन",
+  "addFood": "भोजन जोड़ें",
+  "logFirstMealCta": "अपना पहला भोजन लॉग करें",
+  "mealNotLoggedYet": "अभी लॉग नहीं हुआ",
+  "mealBreakfast": "नाश्ता",
+  "mealLunch": "दोपहर का भोजन",
+  "mealDinner": "रात का भोजन",
+  "mealSnacks": "स्नैक्स",
+  "todayTab": "आज",
+  "diaryTab": "डायरी",
+  "insightsTab": "विश्लेषण",
+  "profileTab": "प्रोफ़ाइल",
+  "diaryTitle": "डायरी",
+  "caloriesLeft": "{left} बची हैं",
+  "@caloriesLeft": {
+    "placeholders": {
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionBreakdown": "पोषण विवरण",
+  "ofTargets": "{percent} लक्ष्य पूरा",
+  "@ofTargets": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mealLog": "भोजन लॉग",
+  "scanScreenTitle": "भोजन स्कैन",
+  "pointAtPlate": "कैमरा अपनी थाली की ओर रखें",
+  "cameraPlaceholder": "कैमरा पूर्वावलोकन ऑन-डिवाइस मॉडल के साथ आएगा (M2)।",
+  "scanResultTitle": "स्कैन परिणाम",
+  "scanResultSubtitle": "शीर्ष 3 संभावित मेल",
+  "servingSizeLabel": "परोसने का आकार",
+  "estimatedCalories": "अनुमानित कैलोरी",
+  "addToMeal": "{meal} में जोड़ें",
+  "@addToMeal": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "addedToast": "{meal} में जोड़ा गया।",
+  "@addedToast": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "undo": "पूर्ववत",
+  "insightsTitle": "विश्लेषण",
+  "calorieTrend": "कैलोरी रुझान",
+  "avgKcalPerDay": "औसत कैलोरी/दिन",
+  "trendChangeUp": "↑ {percent}%",
+  "@trendChangeUp": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "trendChangeDown": "↓ {percent}%",
+  "@trendChangeDown": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionBalance": "पोषण संतुलन",
+  "profileTitle": "प्रोफ़ाइल",
+  "deviceOnly": "आपका डेटा इसी डिवाइस पर रहता है।",
+  "myGoals": "मेरे लक्ष्य",
+  "settingsRow": "सेटिंग्स",
+  "helpRow": "सहायता",
+  "aboutRow": "ऐप के बारे में"
 }

@@ -1,5 +1,97 @@
 {
   "@@locale": "pa",
   "appTitle": "App",
-  "homePlaceholderMessage": "ਬੁਨਿਆਦ ਤਿਆਰ ਹੈ। M1 ਵਿੱਚ ਸਕਰੀਨਾਂ ਆਉਣਗੀਆਂ।"
+  "greetingMorning": "ਸ਼ੁਭ ਸਵੇਰ!",
+  "greetingAfternoon": "ਨਮਸਕਾਰ!",
+  "greetingEvening": "ਸ਼ੁਭ ਸ਼ਾਮ!",
+  "todayTagline": "ਸਿਹਤਮੰਦ ਜੀਵਨ ਲਈ ਆਪਣੇ ਸਰੀਰ ਨੂੰ ਪੌਸ਼ਟਿਕ ਭੋਜਨ ਦਿਓ।",
+  "remainingKcal": "ਬਾਕੀ",
+  "kcalUnit": "ਕੈਲੋਰੀ",
+  "macroProtein": "ਪ੍ਰੋਟੀਨ",
+  "macroCarbs": "ਕਾਰਬਜ਼",
+  "macroFat": "ਫੈਟ",
+  "stepsTile": "ਕਦਮ",
+  "waterTile": "ਪਾਣੀ",
+  "sleepTile": "ਨੀਂਦ",
+  "todaysMeals": "ਅੱਜ ਦਾ ਭੋਜਨ",
+  "addFood": "ਭੋਜਨ ਸ਼ਾਮਲ ਕਰੋ",
+  "logFirstMealCta": "ਆਪਣਾ ਪਹਿਲਾ ਭੋਜਨ ਦਰਜ ਕਰੋ",
+  "mealNotLoggedYet": "ਹਾਲੇ ਦਰਜ ਨਹੀਂ",
+  "mealBreakfast": "ਨਾਸ਼ਤਾ",
+  "mealLunch": "ਦੁਪਹਿਰ ਦਾ ਖਾਣਾ",
+  "mealDinner": "ਸ਼ਾਮ ਦਾ ਖਾਣਾ",
+  "mealSnacks": "ਸਨੈਕਸ",
+  "todayTab": "ਅੱਜ",
+  "diaryTab": "ਡਾਇਰੀ",
+  "insightsTab": "ਵਿਸ਼ਲੇਸ਼ਣ",
+  "profileTab": "ਪ੍ਰੋਫਾਈਲ",
+  "diaryTitle": "ਡਾਇਰੀ",
+  "caloriesLeft": "{left} ਬਾਕੀ",
+  "@caloriesLeft": {
+    "placeholders": {
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionBreakdown": "ਪੋਸ਼ਣ ਵੇਰਵਾ",
+  "ofTargets": "{percent} ਟੀਚਾ ਪੂਰਾ",
+  "@ofTargets": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mealLog": "ਭੋਜਨ ਰਿਕਾਰਡ",
+  "scanScreenTitle": "ਭੋਜਨ ਸਕੈਨ",
+  "pointAtPlate": "ਕੈਮਰਾ ਆਪਣੀ ਥਾਲੀ ਵੱਲ ਰੱਖੋ",
+  "cameraPlaceholder": "ਕੈਮਰਾ ਝਲਕ ਡਿਵਾਈਸ ਉੱਤੇ ਮਾਡਲ ਦੇ ਨਾਲ ਆਵੇਗੀ (M2)।",
+  "scanResultTitle": "ਸਕੈਨ ਨਤੀਜਾ",
+  "scanResultSubtitle": "ਚੋਟੀ ਦੇ 3 ਸੰਭਾਵਿਤ ਮੇਲ",
+  "servingSizeLabel": "ਪਰੋਸਣ ਦਾ ਆਕਾਰ",
+  "estimatedCalories": "ਅੰਦਾਜ਼ਨ ਕੈਲੋਰੀ",
+  "addToMeal": "{meal} ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ",
+  "@addToMeal": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "addedToast": "{meal} ਵਿੱਚ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ।",
+  "@addedToast": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "undo": "ਵਾਪਸ ਲਵੋ",
+  "insightsTitle": "ਵਿਸ਼ਲੇਸ਼ਣ",
+  "calorieTrend": "ਕੈਲੋਰੀ ਰੁਝਾਨ",
+  "avgKcalPerDay": "ਔਸਤ ਕੈਲੋਰੀ/ਦਿਨ",
+  "trendChangeUp": "↑ {percent}%",
+  "@trendChangeUp": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "trendChangeDown": "↓ {percent}%",
+  "@trendChangeDown": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionBalance": "ਪੋਸ਼ਣ ਸੰਤੁਲਨ",
+  "profileTitle": "ਪ੍ਰੋਫਾਈਲ",
+  "deviceOnly": "ਤੁਹਾਡਾ ਡਾਟਾ ਇਸੇ ਡਿਵਾਈਸ ਉੱਤੇ ਰਹਿੰਦਾ ਹੈ।",
+  "myGoals": "ਮੇਰੇ ਟੀਚੇ",
+  "settingsRow": "ਸੈਟਿੰਗਾਂ",
+  "helpRow": "ਮਦਦ",
+  "aboutRow": "ਐਪ ਬਾਰੇ"
 }

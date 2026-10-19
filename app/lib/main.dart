@@ -1,5 +1,6 @@
 import 'package:app/app/app.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Entry point. Init order per Section 4:
 /// keystore → DB → model integrity check → runApp.
@@ -20,5 +21,5 @@ void main() {
 /// be async and gated on a minimal splash once the data layer exists.
 void bootstrap() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const App());
+  runApp(const ProviderScope(child: App()));
 }
