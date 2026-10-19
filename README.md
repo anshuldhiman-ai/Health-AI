@@ -48,6 +48,17 @@ uv sync
 uv run ruff check . && uv run pytest
 ```
 
+### Training the food classifier (Colab)
+
+`ml/notebooks/train_on_colab.ipynb` is the end-to-end training driver:
+downloads the Khana dataset, builds the validated/deduped manifest,
+makes splits, and fine-tunes `mobilenetv4_conv_medium` with AMP + EMA,
+checkpointing every epoch into Google Drive. Open the notebook in
+Google Colab with a T4 GPU runtime and run the cells top-to-bottom.
+Start with `SMOKE = True` (2 epochs) to prove the plumbing, then
+switch to the full baseline. Dataset licence terms and what may be
+shipped live in `ml/DATA_LICENSES.md` — read that first.
+
 ## Hard rules that shape everything
 
 - **R1** — no network in release builds; the merged release manifest must not

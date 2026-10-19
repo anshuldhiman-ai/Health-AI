@@ -1,21 +1,57 @@
 # Data licences
 
-> **Status: M0 draft.** Record every dataset BEFORE downloading or
-> using it: URL, licence text, date accessed, what use it permits
-> (research vs commercial), attribution required (Section 8.2).
+> Record every dataset BEFORE downloading or using it: URL, licence
+> text, date accessed, what use it permits (research vs commercial),
+> attribution required (Section 8.2).
 
 ## Planned datasets
 
 | Dataset | What it is | Licence (verify before use) | Date accessed | Permitted use | Attribution |
 |---|---|---|---|---|---|
-| Khana (arXiv 2509.06006) | ~131K images, 80 Indian-dish labels | **check paper + site** | ☐ | ☐ | ☐ |
-| Kaggle "Indian Food Classification" (l33tc0d3r) | Smaller Indian dish set | **check dataset licence** | ☐ | ☐ | ☐ |
+| Khana (arXiv 2509.06006) | ~131K images, 80 Indian-dish labels | **VERIFIED — see notes below: non-commercial research/education only** | 2026-10-19 | experiments/baseline only | cite the paper (Prabhu, 2025) |
+| Kaggle "Indian Food Classification" (l33tc0d3r) | 6.2K images, 20 classes | **VERIFIED — see notes below: "MIT" claimed but images scraped from Google — research/experiments only** | 2026-10-19 | experiments only | n/a (licence dubious) |
 | IndianFoodNet | ~5.5K images, 30 classes, detection annotations | **check paper/site** | ☐ | ☐ | ☐ |
 | Food-101 | 101K images, 101 classes | **check terms** | ☐ | ☐ | ☐ |
 | UEC-FOOD256 | 256 categories, bounding boxes, Japan-centric | **check terms** | ☐ | ☐ | ☐ |
 | Nutrition5k (Google Research) | Plates with measured weights/nutrition + depth | **check licence** | ☐ | research only | ☐ |
 | Non-food images (COCO / Open Images subsets) | Negatives for `not_food` | **check terms** | ☐ | ☐ | ☐ |
 | Self-collected phone photos | Real conditions; the biggest accuracy lever | Own consent protocol (Section 8.3) | ☐ | ✓ | n/a |
+
+## Verified entries
+
+### Khana — verified 2026-10-19
+
+- Sources checked: arXiv paper landing (arXiv:2509.06006v1, Licence
+  CC BY-NC-ND 4.0 on the paper) and the dataset page/repo
+  (khana.omkar.xyz / github.com/prabhuomkar/Khana).
+- What it is: ~131K images, 80 labels, 500×500 px, official
+  train/val/test split; download via the author's Google Drive folder
+  (id `1PWyJdkizw5ABBd8BIAnr_FZq91YZ2Uo0`, wired into
+  `notebooks/train_on_colab.ipynb`).
+- Licence terms: dataset is made available for **non-commercial
+  research and/or educational purposes only**. The author does NOT
+  own copyright to the underlying images — they were collected via
+  search engines and food-delivery imagery.
+- Consequence for us: usable for the **v0.1 baseline and experiments**
+  (that is what `train_on_colab.ipynb` trains). The SHIPPED model must
+  be trained on self-collected, consented photos (Section 8.3).
+  Flagged per the hard rule below; revisit before any monetised
+  release.
+- Attribution: cite Prabhu, O. "Khana: A Comprehensive Indian Cuisine
+  Dataset", arXiv:2509.06006, 2025.
+
+### Kaggle "Indian Food Classification" (l33tc0d3r) — verified 2026-10-19
+
+- Source checked: kaggle.com/datasets/l33tc0d3r/indian-food-classification
+  data card.
+- What it is: 6.2K images, 20 classes (~300–400 per class).
+- Licence field says **MIT**, but the card states "All the images are
+  extracted from google [Images]". A MIT declaration over
+  Google-scraped photos is not reliable for us. Treat as
+  **research/experiments only**; do not ship models trained on it.
+- Alternative with a clean licence to evaluate: Hugging Face
+  `indian-foods-dataset` (CC0, ~4.7K images, 15 classes) — verify its
+  provenance before adding to training mix.
 
 ## Hard rules
 

@@ -10,28 +10,28 @@
 
 stages:
   prepare:
-    cmd: uv run python scripts/prepare_dataset.py +data=${data}
+    cmd: uv run python scripts/prepare_dataset.py --data-root data/raw/${data}/images --out data/interim/${data}/manifest.csv --source ${data}
     deps:
       - scripts/prepare_dataset.py
     outs:
       - data/interim/${data}
 
   make_splits:
-    cmd: uv run python scripts/make_splits.py +data=${data}
+    cmd: uv run python scripts/make_splits.py --manifest data/interim/${data}/manifest.csv --out data/interim/${data}/manifest_splits.csv
     deps:
       - scripts/make_splits.py
       - data/interim/${data}
     outs:
-      - data/splits/${data}
+      - data/interim/${data}/manifest_splits.csv
 
   train:
-    cmd: uv run python -m src.ml_pipeline.train +experiment=${experiment}
+    cmd: uv run python scripts/train.py --splits data/interim/${data}/manifest_splits.csv --out runs/${experiment}
     deps:
       - src
-      - configs
-      - data/splits/${data}
+      - scripts/train.py
+      - data/interim/${data}/manifest_splits.csv
     metrics:
-      - reports/${experiment}/metrics.json:
+      - runs/${experiment}/metrics.json:
           cache: false
 
   export:
