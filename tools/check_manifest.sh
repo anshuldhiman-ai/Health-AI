@@ -73,8 +73,13 @@ ALLOWED=(
 
 FAILED=0
 
-# Extract permission names.
-MAPFILE -t FOUND < <(echo "$PERMISSIONS" | grep -oE "uses-permission:[^ ]*" | sed 's/uses-permission://' | sort -u || true)
+# Extract permission names. aapt2 prints
+# `uses-permission: name='android.permission.X'` — take the
+# android.permission.* tokens only (app-defined permission strings
+# such as com.<pkg>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION, which
+# AndroidX auto-generates, name nothing outside this app and are not
+# real grants).
+mapfile -t FOUND < <(echo "$PERMISSIONS" | grep -oE "android\.permission\.[A-Za-z0-9_.]+" | sort -u || true)
 
 for perm in "${FOUND[@]}"; do
   ok=0
