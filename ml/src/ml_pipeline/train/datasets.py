@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 import csv
+import warnings
 from pathlib import Path
 
 import torch
-from PIL import Image
+from PIL import Image, ImageFile
 from torch.utils.data import Dataset
 from torchvision import transforms
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
+
+# Khana ships some header-valid but pixel-truncated files. Without
+# this flag they crash DataLoader workers at load time (verify() in
+# prepare.py only checks headers, not full pixel decode).
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 def build_transform(train: bool, image_size: int = 224) -> transforms.Compose:
@@ -57,6 +63,7 @@ class ManifestDataset(Dataset):
         self.classes = classes
         self.class_to_idx = {c: i for i, c in enumerate(classes)}
         self.transform = build_transform(train, image_size)
+        self.image_size = image_size
         self.samples: list[tuple[str, int]] = []
         with open(manifest_csv, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
@@ -68,6 +75,13 @@ class ManifestDataset(Dataset):
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
         path, target = self.samples[index]
-        with Image.open(path) as img:
-            tensor = self.transform(img.convert("RGB"))
+        try:
+            with Image.open(path) as img:
+                tensor = self.transform(img.convert("RGB"))
+        except Exception as exc:
+            # Last-resort black placeholder so a batch is never a
+            # crash at 100K images deep into an epoch. Such samples
+            # count as wrong in eval (conservative) and warn loudly.
+            warnings.warn(f"unreadable image {path!r} ({exc!r}) — zeros placeholder", stacklevel=1)
+            tensor = torch.zeros(3, self.image_size, self.image_size)
         return tensor, target

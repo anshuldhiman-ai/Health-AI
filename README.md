@@ -59,6 +59,22 @@ Start with `SMOKE = True` (2 epochs) to prove the plumbing, then
 switch to the full baseline. Dataset licence terms and what may be
 shipped live in `ml/DATA_LICENSES.md` — read that first.
 
+### Baseline status (recorded 2026-10-19)
+
+- Student: `mobilenetv4_conv_medium` (timm, ImageNet pretrain), **80
+  classes** (Khana), image size 224
+- **Smoke checkpoint (2 epochs, code `bdee652`):** test top-1 **0.8098**,
+  top-5 **0.9618** (19,424 images, seed 42) — plumbing check, kept as a
+  working artifact at `ml/weights/baseline/` (gitignored per R8)
+- **Full 30-epoch baseline:** pending; real numbers land here with their
+  model card only after the actual run (R11 — real numbers only)
+- Export: notebook cell 8 runs `scripts/export_tflite.py` on Colab →
+  `baseline.tflite` + `labels.json`; day-1 random-weights export check
+  included; app preprocessing parity is R12 (ImageNet mean/std after /255)
+- Constraint to honor before shipping: Khana is **non-commercial** —
+  the shipped model must come from self-collected, consented photos
+  (`ml/DATA_LICENSES.md`, Section 8.3)
+
 ## Hard rules that shape everything
 
 - **R1** — no network in release builds; the merged release manifest must not
