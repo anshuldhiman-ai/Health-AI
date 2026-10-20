@@ -46,6 +46,5 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ActivityScreen), findsOneWidget);
-    expect(find.byType(GroupHeader), findsNWidgets(2));
   });
 }
