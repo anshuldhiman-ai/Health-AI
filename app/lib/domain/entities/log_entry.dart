@@ -17,6 +17,46 @@ class LogEntry {
     this.timeLabel,
   });
 
+  /// Decode one persisted diary row. Throws [FormatException] on
+  /// malformed data so the loader can skip a bad row without losing
+  /// the rest of the day.
+  factory LogEntry.fromJson(Map<String, dynamic> json) {
+    final meal = MealKind.values.asNameMap()[json['mealKind']];
+    final dish = json['dish'];
+    final kcal = json['kcal'];
+    final protein = json['proteinGrams'];
+    final carbs = json['carbsGrams'];
+    final fat = json['fatGrams'];
+    if (meal == null ||
+        dish is! String ||
+        kcal is! num ||
+        protein is! num ||
+        carbs is! num ||
+        fat is! num) {
+      throw const FormatException('Invalid diary entry');
+    }
+    final timeLabelValue = json['timeLabel'];
+    return LogEntry(
+      mealKind: meal,
+      dish: dish,
+      kcal: kcal.toInt(),
+      proteinGrams: protein.toInt(),
+      carbsGrams: carbs.toInt(),
+      fatGrams: fat.toInt(),
+      timeLabel: timeLabelValue is String ? timeLabelValue : null,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'mealKind': mealKind.name,
+    'dish': dish,
+    'kcal': kcal,
+    'proteinGrams': proteinGrams,
+    'carbsGrams': carbsGrams,
+    'fatGrams': fatGrams,
+    'timeLabel': timeLabel,
+  };
+
   final MealKind mealKind;
 
   /// Free text the user confirms — sample data seeds use plain names.

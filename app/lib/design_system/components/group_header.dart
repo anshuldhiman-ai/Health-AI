@@ -13,12 +13,7 @@ class GroupHeader extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Row(
       children: [
-        Expanded(
-          child: Text(
-            title,
-            style: text.titleMedium,
-          ),
-        ),
+        Expanded(child: Text(title, style: text.titleMedium)),
         if (trailing != null) trailing!,
       ],
     );

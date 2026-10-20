@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:app/design_system/tokens/tokens.dart';
+
 /// Horizontal meter bar with a label row (generic; no nutrition
 /// knowledge). The reference dashboard uses it for protein / carbs /
 /// fat against targets.
@@ -30,44 +32,46 @@ class MeterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
     final ratio = (value / target).clamp(0.0, 1.0);
 
     return Semantics(
       label: '$label: $value of $target $unit',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 6,
         children: [
           Row(
             children: [
               Expanded(
                 child: Text(
                   label,
-                  style: text.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.caption.copyWith(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
                   ),
                 ),
               ),
               Text(
                 '$value / $target $unit',
-                style: text.labelMedium,
+                style: AppTypography.caption.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 12.5,
+                ),
               ),
             ],
           ),
+          const SizedBox(height: 8),
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: ratio),
-            duration: const Duration(milliseconds: 240),
-            curve: Curves.easeOutCubic,
+            duration: AppMotion.normal,
+            curve: AppMotion.standard,
             builder: (context, animated, _) => ClipRRect(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadii.pill.x),
               child: LinearProgressIndicator(
                 value: animated,
-                minHeight: 8,
+                minHeight: 7,
                 backgroundColor: scheme.outlineVariant,
-                valueColor: AlwaysStoppedAnimation(
-                  barColor ?? scheme.primary,
-                ),
+                valueColor: AlwaysStoppedAnimation(barColor ?? scheme.primary),
               ),
             ),
           ),

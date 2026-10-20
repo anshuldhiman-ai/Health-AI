@@ -1,4 +1,9 @@
 import 'package:app/app/app.dart';
+import 'package:app/app/log_store.dart';
+import 'package:app/data/preferences/goal_kind_controller.dart';
+import 'package:app/data/preferences/sleep_controller.dart';
+import 'package:app/data/preferences/theme_mode_controller.dart';
+import 'package:app/data/preferences/water_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,14 +17,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// TODO(M1): top-level error guards (Section 5.3): `runZonedGuarded`
 /// + `FlutterError.onError` writing ONLY to the local ring-buffer
 /// logger (no remote reporting, R2). Requires core/logging.
-void main() {
-  bootstrap();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await bootstrap();
 }
 
 /// Ordered initialisation. Never puts heavy work on the UI isolate
 /// before first frame; blocking steps (DB warm-up, model checks) will
 /// be async and gated on a minimal splash once the data layer exists.
-void bootstrap() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: App()));
+Future<void> bootstrap() async {
+  final initialThemeMode = await loadSavedThemeMode();
+  final initialGoalKind = await loadSavedGoalKind();
+  final initialWater = await loadSavedWater();
+  final initialSleep = await loadSavedSleep();
+  final initialDayLog = await loadSavedDayLog();
+  runApp(
+    ProviderScope(
+      overrides: [
+        initialThemeModeProvider.overrideWithValue(initialThemeMode),
+        initialGoalKindProvider.overrideWithValue(initialGoalKind),
+        initialWaterProvider.overrideWithValue(initialWater),
+        initialSleepProvider.overrideWithValue(initialSleep),
+        dayLogProvider.overrideWith((ref) => initialDayLog),
+      ],
+      child: const App(),
+    ),
+  );
 }

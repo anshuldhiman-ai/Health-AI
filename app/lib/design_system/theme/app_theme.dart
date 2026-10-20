@@ -14,18 +14,22 @@ abstract final class AppTheme {
 
   static ThemeData _base(Brightness brightness, AppColorScheme c) {
     final isDark = brightness == Brightness.dark;
+    final onPrimary = isDark
+        ? const Color(0xFF0B1A14)
+        : const Color(0xFFFFFFFF);
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      extensions: [AppTokensExtension(c)],
 
       // Scaffold / surfaces
       scaffoldBackgroundColor: c.canvas,
       colorScheme: ColorScheme(
         brightness: brightness,
         primary: c.primary,
-        onPrimary: isDark ? const Color(0xFF0D1412) : const Color(0xFFFFFFFF),
+        onPrimary: onPrimary,
         secondary: c.primary,
-        onSecondary: isDark ? const Color(0xFF0D1412) : const Color(0xFFFFFFFF),
+        onSecondary: onPrimary,
         error: c.danger,
         onError: isDark ? const Color(0xFF1B0E0C) : const Color(0xFFFFFFFF),
         surface: c.surface,
@@ -40,10 +44,11 @@ abstract final class AppTheme {
         onInverseSurface: c.canvas,
         inversePrimary: c.primaryWash,
         tertiary: c.accent,
-        onTertiary: isDark ? const Color(0xFF241A00) : const Color(0xFF241A00),
+        onTertiary: const Color(0xFF241A00),
       ),
 
-      // Typography: one family, tabular figures for nutrition numbers.
+      // Typography: one family (bundled Plus Jakarta Sans), tabular
+      // figures for nutrition numbers.
       textTheme: _textTheme(c),
 
       // Inputs
@@ -72,15 +77,13 @@ abstract final class AppTheme {
         ),
       ),
 
-      // Buttons
+      // Buttons: pill, 52dp tall like the reference.
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: c.primary,
-          foregroundColor: isDark
-              ? const Color(0xFF0D1412)
-              : const Color(0xFFFFFFFF),
+          foregroundColor: onPrimary,
           textStyle: AppTypography.label,
-          minimumSize: const Size.fromHeight(48), // 48dp touch target (R14)
+          minimumSize: const Size.fromHeight(52), // 52dp touch target (R14)
           shape: const StadiumBorder(),
         ),
       ),
@@ -97,30 +100,30 @@ abstract final class AppTheme {
           textStyle: AppTypography.label,
           minimumSize: const Size.fromHeight(48),
           shape: const StadiumBorder(),
-          side: BorderSide(color: c.primary, width: 1.5),
+          side: BorderSide(color: c.line, width: 1.5),
         ),
       ),
 
-      // Cards: hairline border, not shadows (Section 10.4)
+      // Cards: soft shadow, no border (reference look)
       cardTheme: CardThemeData(
         color: c.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(AppRadii.card),
-          side: BorderSide(color: c.line),
+        shadowColor: const Color(0x0F10201A),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(AppRadii.card),
         ),
       ),
 
-      // Dividers
+      // Dividers: hairlines
       dividerTheme: DividerThemeData(color: c.line, thickness: 1, space: 1),
 
       // Bottom sheets
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: c.surface,
-        elevation: AppElevation.sheet,
+        elevation: 8,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: AppRadii.sheet),
         ),
         modalBackgroundColor: c.surface,
       ),
@@ -130,16 +133,16 @@ abstract final class AppTheme {
         backgroundColor: c.ink,
         contentTextStyle: AppTypography.bodyM.copyWith(color: c.canvas),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.card.x / 1),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(AppRadii.card),
         ),
       ),
 
       // Dialogs
       dialogTheme: DialogThemeData(
         backgroundColor: c.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.sheet.x / 1),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(AppRadii.sheet),
         ),
       ),
 
@@ -150,51 +153,66 @@ abstract final class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: AppTypography.titleM,
+        titleTextStyle: AppTypography.titleL.copyWith(color: c.ink),
       ),
 
-      // Navigation bar
-      navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: c.surface,
-        indicatorColor: c.primaryWash,
-        labelTextStyle: WidgetStateProperty.all(AppTypography.label),
-        iconTheme: WidgetStateProperty.all(
-          IconThemeData(color: c.inkMuted, size: 24),
-        ),
-        height: 64,
-      ),
-
-      // Chips
+      // Chips (defaults; screens override selection colours)
       chipTheme: ChipThemeData(
         backgroundColor: c.surface,
         side: BorderSide(color: c.line),
-        labelStyle: AppTypography.label,
+        labelStyle: AppTypography.label.copyWith(color: c.ink),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.pill.x / 1),
-        ),
+        shape: const StadiumBorder(),
       ),
     );
   }
 
   static TextTheme _textTheme(AppColorScheme c) {
     return TextTheme(
-      displayLarge: AppTypography.display.copyWith(color: c.ink),
+      displayLarge: AppTypography.hero.copyWith(color: c.ink),
       headlineLarge: AppTypography.titleL.copyWith(color: c.ink),
-      headlineMedium: AppTypography.titleM.copyWith(color: c.ink),
-      titleLarge: AppTypography.titleM.copyWith(color: c.ink),
-      titleMedium: AppTypography.bodyL.copyWith(
+      headlineMedium: AppTypography.counter.copyWith(color: c.ink),
+      headlineSmall: AppTypography.value20.copyWith(color: c.ink),
+      titleLarge: AppTypography.titleL.copyWith(color: c.ink),
+      titleMedium: AppTypography.itemTitle.copyWith(color: c.ink),
+      titleSmall: AppTypography.itemS.copyWith(color: c.ink),
+      bodyLarge: AppTypography.bodyM.copyWith(
         color: c.ink,
-        fontWeight: FontWeight.w600,
+        fontSize: 16,
+        height: 24 / 16,
       ),
-      bodyLarge: AppTypography.bodyL.copyWith(color: c.ink),
       bodyMedium: AppTypography.bodyM.copyWith(color: c.ink),
-      labelLarge: AppTypography.label.copyWith(
-        color: c.ink,
-        fontWeight: FontWeight.w600,
+      labelLarge: AppTypography.label.copyWith(color: c.ink),
+      labelMedium: AppTypography.caption.copyWith(color: c.inkMuted),
+      labelSmall: AppTypography.caption.copyWith(
+        color: c.inkMuted,
+        fontSize: 11,
+        height: 15 / 11,
       ),
-      labelMedium: AppTypography.label.copyWith(color: c.ink),
-      labelSmall: AppTypography.label.copyWith(color: c.inkMuted),
     );
   }
+}
+
+/// Carries the raw token scheme on [ThemeData] so screens can reach
+/// colours outside [ColorScheme] (water/sleep data-viz, cream washes).
+class AppTokensExtension extends ThemeExtension<AppTokensExtension> {
+  const AppTokensExtension(this.scheme);
+
+  final AppColorScheme scheme;
+
+  @override
+  AppTokensExtension copyWith({AppColorScheme? scheme}) =>
+      AppTokensExtension(scheme ?? this.scheme);
+
+  @override
+  AppTokensExtension lerp(ThemeExtension<AppTokensExtension>? other, double t) {
+    if (other is! AppTokensExtension) return this;
+    return AppTokensExtension(AppColorScheme.lerp(scheme, other.scheme, t));
+  }
+}
+
+/// `context.appColors.primaryWash` etc.
+extension AppTokensX on BuildContext {
+  AppColorScheme get appColors =>
+      Theme.of(this).extension<AppTokensExtension>()!.scheme;
 }

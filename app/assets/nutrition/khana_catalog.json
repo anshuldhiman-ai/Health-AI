@@ -1,0 +1,2000 @@
+{
+  "version": 1,
+  "source": "Khana 80-class label set; plausible cooked-dish values (NOT lab-measured)",
+  "classes": [
+    "aloo gobi",
+    "aloo methi",
+    "aloo mutter",
+    "aloo paratha",
+    "amritsari kulcha",
+    "anda curry",
+    "balushahi",
+    "banana chips",
+    "besan laddu",
+    "bhindi masala",
+    "biryani",
+    "boondi laddu",
+    "chaas",
+    "chana masala",
+    "chapati",
+    "chicken pizza",
+    "chicken wings",
+    "chikki",
+    "chivda",
+    "chole bhature",
+    "dabeli",
+    "dal khichdi",
+    "dhokla",
+    "falooda",
+    "fish curry",
+    "gajar ka halwa",
+    "garlic bread",
+    "garlic naan",
+    "ghevar",
+    "grilled sandwich",
+    "gujhia",
+    "gulab jamun",
+    "hara bhara kabab",
+    "idiyappam",
+    "idli",
+    "jalebi",
+    "kaju katli",
+    "khakhra",
+    "kheer",
+    "kulfi",
+    "margherita pizza",
+    "masala dosa",
+    "masala papad",
+    "medu vada",
+    "misal pav",
+    "modak",
+    "moong dal halwa",
+    "murukku",
+    "mysore pak",
+    "navratan korma",
+    "neer dosa",
+    "onion pakoda",
+    "palak paneer",
+    "paneer masala",
+    "paneer pizza",
+    "pani puri",
+    "paniyaram",
+    "papdi chaat",
+    "patrode",
+    "pav bhaji",
+    "pepperoni pizza",
+    "phirni",
+    "poha",
+    "pongal",
+    "puri bhaji",
+    "rajma chawal",
+    "rasgulla",
+    "rava dosa",
+    "sabudana khichdi",
+    "sabudana vada",
+    "samosa",
+    "seekh kebab",
+    "set dosa",
+    "sev puri",
+    "solkadhi",
+    "steamed momo",
+    "thali",
+    "thukpa",
+    "uttapam",
+    "vada pav"
+  ],
+  "dishes": {
+    "aloo gobi": {
+      "name": "Aloo Gobi",
+      "family": "curry",
+      "ingredients": [
+        "Potato",
+        "Cauliflower",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 120,
+        "protein": 2.9,
+        "carbs": 12.0,
+        "fat": 6.8
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "aloo methi": {
+      "name": "Aloo Methi",
+      "family": "curry",
+      "ingredients": [
+        "Potato",
+        "Fenugreek",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 118,
+        "protein": 3.2,
+        "carbs": 11.0,
+        "fat": 6.5
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "aloo mutter": {
+      "name": "Aloo Mutter",
+      "family": "curry",
+      "ingredients": [
+        "Potato",
+        "Peas",
+        "Tomato"
+      ],
+      "per100g": {
+        "kcal": 125,
+        "protein": 3.8,
+        "carbs": 14.0,
+        "fat": 6.2
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "aloo paratha": {
+      "name": "Aloo Paratha",
+      "family": "bread",
+      "ingredients": [
+        "Wheat",
+        "Potato",
+        "Ghee"
+      ],
+      "per100g": {
+        "kcal": 260,
+        "protein": 5.5,
+        "carbs": 34.0,
+        "fat": 11.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 100
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 200
+        }
+      ]
+    },
+    "amritsari kulcha": {
+      "name": "Amritsari Kulcha",
+      "family": "bread",
+      "ingredients": [
+        "Wheat",
+        "Potato",
+        "Ghee"
+      ],
+      "per100g": {
+        "kcal": 280,
+        "protein": 7.0,
+        "carbs": 40.0,
+        "fat": 9.5
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 90
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 180
+        }
+      ]
+    },
+    "anda curry": {
+      "name": "Anda Curry",
+      "family": "curry",
+      "ingredients": [
+        "Egg",
+        "Onion",
+        "Tomato"
+      ],
+      "per100g": {
+        "kcal": 150,
+        "protein": 8.0,
+        "carbs": 6.0,
+        "fat": 11.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "balushahi": {
+      "name": "Balushahi",
+      "family": "sweet",
+      "ingredients": [
+        "Flour",
+        "Ghee",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 450,
+        "protein": 5.0,
+        "carbs": 55.0,
+        "fat": 23.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 50
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        }
+      ]
+    },
+    "banana chips": {
+      "name": "Banana Chips",
+      "family": "snacks",
+      "ingredients": [
+        "Banana",
+        "Coconut oil",
+        "Salt"
+      ],
+      "per100g": {
+        "kcal": 520,
+        "protein": 3.0,
+        "carbs": 58.0,
+        "fat": 31.0
+      },
+      "servings": [
+        {
+          "label": "1 Handful",
+          "grams": 30
+        },
+        {
+          "label": "1 Packet",
+          "grams": 100
+        }
+      ]
+    },
+    "besan laddu": {
+      "name": "Besan Laddu",
+      "family": "sweet",
+      "ingredients": [
+        "Gram flour",
+        "Ghee",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 430,
+        "protein": 9.0,
+        "carbs": 55.0,
+        "fat": 20.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 40
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 80
+        }
+      ]
+    },
+    "bhindi masala": {
+      "name": "Bhindi Masala",
+      "family": "curry",
+      "ingredients": [
+        "Okra",
+        "Onion",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 110,
+        "protein": 2.4,
+        "carbs": 9.0,
+        "fat": 7.5
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "biryani": {
+      "name": "Biryani",
+      "family": "rice",
+      "ingredients": [
+        "Rice",
+        "Vegetables",
+        "Spices",
+        "Ghee"
+      ],
+      "per100g": {
+        "kcal": 190,
+        "protein": 5.5,
+        "carbs": 26.0,
+        "fat": 7.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Plate",
+          "grams": 350
+        }
+      ]
+    },
+    "boondi laddu": {
+      "name": "Boondi Laddu",
+      "family": "sweet",
+      "ingredients": [
+        "Gram flour",
+        "Ghee",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 420,
+        "protein": 7.0,
+        "carbs": 60.0,
+        "fat": 17.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 40
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 80
+        }
+      ]
+    },
+    "chaas": {
+      "name": "Chaas",
+      "family": "beverage",
+      "ingredients": [
+        "Curd",
+        "Cumin",
+        "Salt"
+      ],
+      "per100g": {
+        "kcal": 40,
+        "protein": 2.0,
+        "carbs": 4.0,
+        "fat": 1.2
+      },
+      "servings": [
+        {
+          "label": "1 Glass",
+          "grams": 200
+        }
+      ]
+    },
+    "chana masala": {
+      "name": "Chana Masala",
+      "family": "curry",
+      "ingredients": [
+        "Chickpeas",
+        "Onion",
+        "Tomato"
+      ],
+      "per100g": {
+        "kcal": 150,
+        "protein": 7.0,
+        "carbs": 20.0,
+        "fat": 5.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "chapati": {
+      "name": "Chapati",
+      "family": "bread",
+      "ingredients": [
+        "Wheat",
+        "Water"
+      ],
+      "per100g": {
+        "kcal": 240,
+        "protein": 8.0,
+        "carbs": 46.0,
+        "fat": 3.5
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 60
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 120
+        }
+      ]
+    },
+    "chicken pizza": {
+      "name": "Chicken Pizza",
+      "family": "pizza",
+      "ingredients": [
+        "Chicken",
+        "Cheese",
+        "Wheat"
+      ],
+      "per100g": {
+        "kcal": 250,
+        "protein": 12.0,
+        "carbs": 27.0,
+        "fat": 10.0
+      },
+      "servings": [
+        {
+          "label": "1 Slice",
+          "grams": 100
+        },
+        {
+          "label": "2 Slices",
+          "grams": 200
+        }
+      ]
+    },
+    "chicken wings": {
+      "name": "Chicken Wings",
+      "family": "snacks",
+      "ingredients": [
+        "Chicken",
+        "Spices",
+        "Oil"
+      ],
+      "per100g": {
+        "kcal": 290,
+        "protein": 27.0,
+        "carbs": 3.0,
+        "fat": 19.0
+      },
+      "servings": [
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        }
+      ]
+    },
+    "chikki": {
+      "name": "Chikki",
+      "family": "sweet",
+      "ingredients": [
+        "Jaggery",
+        "Peanuts"
+      ],
+      "per100g": {
+        "kcal": 480,
+        "protein": 10.0,
+        "carbs": 60.0,
+        "fat": 22.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 30
+        }
+      ]
+    },
+    "chivda": {
+      "name": "Chivda",
+      "family": "snacks",
+      "ingredients": [
+        "Rice flakes",
+        "Peanuts",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 480,
+        "protein": 8.0,
+        "carbs": 55.0,
+        "fat": 25.0
+      },
+      "servings": [
+        {
+          "label": "1 Handful",
+          "grams": 30
+        },
+        {
+          "label": "1 Packet",
+          "grams": 100
+        }
+      ]
+    },
+    "chole bhature": {
+      "name": "Chole Bhature",
+      "family": "bread",
+      "ingredients": [
+        "Chickpeas",
+        "Wheat",
+        "Oil"
+      ],
+      "per100g": {
+        "kcal": 330,
+        "protein": 9.0,
+        "carbs": 38.0,
+        "fat": 15.0
+      },
+      "servings": [
+        {
+          "label": "1 Plate",
+          "grams": 300
+        }
+      ]
+    },
+    "dabeli": {
+      "name": "Dabeli",
+      "family": "snacks",
+      "ingredients": [
+        "Bun",
+        "Potato",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 220,
+        "protein": 5.0,
+        "carbs": 32.0,
+        "fat": 8.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 120
+        }
+      ]
+    },
+    "dal khichdi": {
+      "name": "Dal Khichdi",
+      "family": "rice",
+      "ingredients": [
+        "Rice",
+        "Lentils",
+        "Ghee"
+      ],
+      "per100g": {
+        "kcal": 130,
+        "protein": 5.0,
+        "carbs": 20.0,
+        "fat": 3.5
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Plate",
+          "grams": 350
+        }
+      ]
+    },
+    "dhokla": {
+      "name": "Dhokla",
+      "family": "snacks",
+      "ingredients": [
+        "Gram flour",
+        "Curd",
+        "Mustard"
+      ],
+      "per100g": {
+        "kcal": 160,
+        "protein": 6.0,
+        "carbs": 23.0,
+        "fat": 4.5
+      },
+      "servings": [
+        {
+          "label": "2 Pieces",
+          "grams": 80
+        },
+        {
+          "label": "4 Pieces",
+          "grams": 160
+        }
+      ]
+    },
+    "falooda": {
+      "name": "Falooda",
+      "family": "sweet",
+      "ingredients": [
+        "Milk",
+        "Vermicelli",
+        "Rose syrup"
+      ],
+      "per100g": {
+        "kcal": 210,
+        "protein": 3.0,
+        "carbs": 33.0,
+        "fat": 7.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "fish curry": {
+      "name": "Fish Curry",
+      "family": "curry",
+      "ingredients": [
+        "Fish",
+        "Coconut",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 140,
+        "protein": 13.0,
+        "carbs": 5.0,
+        "fat": 8.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "gajar ka halwa": {
+      "name": "Gajar Ka Halwa",
+      "family": "sweet",
+      "ingredients": [
+        "Carrot",
+        "Milk",
+        "Ghee",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 330,
+        "protein": 4.5,
+        "carbs": 40.0,
+        "fat": 17.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 100
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 180
+        }
+      ]
+    },
+    "garlic bread": {
+      "name": "Garlic Bread",
+      "family": "snacks",
+      "ingredients": [
+        "Wheat",
+        "Garlic",
+        "Butter"
+      ],
+      "per100g": {
+        "kcal": 330,
+        "protein": 9.0,
+        "carbs": 44.0,
+        "fat": 12.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 60
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 120
+        }
+      ]
+    },
+    "garlic naan": {
+      "name": "Garlic Naan",
+      "family": "bread",
+      "ingredients": [
+        "Wheat",
+        "Garlic",
+        "Curd"
+      ],
+      "per100g": {
+        "kcal": 320,
+        "protein": 8.0,
+        "carbs": 48.0,
+        "fat": 10.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 90
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 180
+        }
+      ]
+    },
+    "ghevar": {
+      "name": "Ghevar",
+      "family": "sweet",
+      "ingredients": [
+        "Flour",
+        "Ghee",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 400,
+        "protein": 4.0,
+        "carbs": 52.0,
+        "fat": 20.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 80
+        }
+      ]
+    },
+    "grilled sandwich": {
+      "name": "Grilled Sandwich",
+      "family": "snacks",
+      "ingredients": [
+        "Bread",
+        "Vegetables",
+        "Cheese"
+      ],
+      "per100g": {
+        "kcal": 250,
+        "protein": 7.0,
+        "carbs": 30.0,
+        "fat": 11.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 120
+        }
+      ]
+    },
+    "gujhia": {
+      "name": "Gujhia",
+      "family": "sweet",
+      "ingredients": [
+        "Flour",
+        "Khoya",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 380,
+        "protein": 5.0,
+        "carbs": 50.0,
+        "fat": 17.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 50
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        }
+      ]
+    },
+    "gulab jamun": {
+      "name": "Gulab Jamun",
+      "family": "sweet",
+      "ingredients": [
+        "Milk solids",
+        "Sugar",
+        "Ghee"
+      ],
+      "per100g": {
+        "kcal": 330,
+        "protein": 4.0,
+        "carbs": 48.0,
+        "fat": 14.0
+      },
+      "servings": [
+        {
+          "label": "2 Pieces",
+          "grams": 90
+        }
+      ]
+    },
+    "hara bhara kabab": {
+      "name": "Hara Bhara Kabab",
+      "family": "kebab",
+      "ingredients": [
+        "Spinach",
+        "Peas",
+        "Potato"
+      ],
+      "per100g": {
+        "kcal": 190,
+        "protein": 5.0,
+        "carbs": 18.0,
+        "fat": 11.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 70
+        },
+        {
+          "label": "1 Plate",
+          "grams": 200
+        }
+      ]
+    },
+    "idiyappam": {
+      "name": "Idiyappam",
+      "family": "south indian",
+      "ingredients": [
+        "Rice",
+        "Coconut"
+      ],
+      "per100g": {
+        "kcal": 150,
+        "protein": 3.0,
+        "carbs": 32.0,
+        "fat": 1.0
+      },
+      "servings": [
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        },
+        {
+          "label": "1 Plate",
+          "grams": 200
+        }
+      ]
+    },
+    "idli": {
+      "name": "Idli",
+      "family": "south indian",
+      "ingredients": [
+        "Rice",
+        "Lentils"
+      ],
+      "per100g": {
+        "kcal": 140,
+        "protein": 4.0,
+        "carbs": 28.0,
+        "fat": 1.0
+      },
+      "servings": [
+        {
+          "label": "2 Pieces",
+          "grams": 90
+        },
+        {
+          "label": "3 Pieces",
+          "grams": 135
+        }
+      ]
+    },
+    "jalebi": {
+      "name": "Jalebi",
+      "family": "sweet",
+      "ingredients": [
+        "Flour",
+        "Sugar",
+        "Ghee"
+      ],
+      "per100g": {
+        "kcal": 380,
+        "protein": 3.0,
+        "carbs": 55.0,
+        "fat": 16.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 50
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        }
+      ]
+    },
+    "kaju katli": {
+      "name": "Kaju Katli",
+      "family": "sweet",
+      "ingredients": [
+        "Cashew",
+        "Sugar",
+        "Ghee"
+      ],
+      "per100g": {
+        "kcal": 480,
+        "protein": 9.0,
+        "carbs": 55.0,
+        "fat": 24.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 50
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        }
+      ]
+    },
+    "khakhra": {
+      "name": "Khakhra",
+      "family": "snacks",
+      "ingredients": [
+        "Wheat",
+        "Oil",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 380,
+        "protein": 12.0,
+        "carbs": 60.0,
+        "fat": 9.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 30
+        }
+      ]
+    },
+    "kheer": {
+      "name": "Kheer",
+      "family": "sweet",
+      "ingredients": [
+        "Rice",
+        "Milk",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 180,
+        "protein": 4.0,
+        "carbs": 26.0,
+        "fat": 6.5
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "kulfi": {
+      "name": "Kulfi",
+      "family": "sweet",
+      "ingredients": [
+        "Milk",
+        "Sugar",
+        "Cardamom"
+      ],
+      "per100g": {
+        "kcal": 220,
+        "protein": 4.5,
+        "carbs": 24.0,
+        "fat": 12.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 50
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        }
+      ]
+    },
+    "margherita pizza": {
+      "name": "Margherita Pizza",
+      "family": "pizza",
+      "ingredients": [
+        "Wheat",
+        "Cheese",
+        "Tomato"
+      ],
+      "per100g": {
+        "kcal": 230,
+        "protein": 9.0,
+        "carbs": 26.0,
+        "fat": 9.0
+      },
+      "servings": [
+        {
+          "label": "1 Slice",
+          "grams": 100
+        },
+        {
+          "label": "2 Slices",
+          "grams": 200
+        }
+      ]
+    },
+    "masala dosa": {
+      "name": "Masala Dosa",
+      "family": "south indian",
+      "ingredients": [
+        "Rice",
+        "Lentils",
+        "Potato"
+      ],
+      "per100g": {
+        "kcal": 220,
+        "protein": 5.0,
+        "carbs": 28.0,
+        "fat": 9.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 120
+        },
+        {
+          "label": "1 Plate",
+          "grams": 240
+        }
+      ]
+    },
+    "masala papad": {
+      "name": "Masala Papad",
+      "family": "others",
+      "ingredients": [
+        "Papad",
+        "Onion",
+        "Tomato"
+      ],
+      "per100g": {
+        "kcal": 220,
+        "protein": 8.0,
+        "carbs": 24.0,
+        "fat": 10.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 20
+        }
+      ]
+    },
+    "medu vada": {
+      "name": "Medu Vada",
+      "family": "south indian",
+      "ingredients": [
+        "Lentils",
+        "Onion",
+        "Oil"
+      ],
+      "per100g": {
+        "kcal": 280,
+        "protein": 7.0,
+        "carbs": 28.0,
+        "fat": 15.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 60
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 120
+        }
+      ]
+    },
+    "misal pav": {
+      "name": "Misal Pav",
+      "family": "snacks",
+      "ingredients": [
+        "Sprouts",
+        "Bread",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 230,
+        "protein": 7.0,
+        "carbs": 30.0,
+        "fat": 9.0
+      },
+      "servings": [
+        {
+          "label": "1 Plate",
+          "grams": 320
+        }
+      ]
+    },
+    "modak": {
+      "name": "Modak",
+      "family": "sweet",
+      "ingredients": [
+        "Rice flour",
+        "Coconut",
+        "Jaggery"
+      ],
+      "per100g": {
+        "kcal": 300,
+        "protein": 4.0,
+        "carbs": 45.0,
+        "fat": 11.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 50
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        }
+      ]
+    },
+    "moong dal halwa": {
+      "name": "Moong Dal Halwa",
+      "family": "sweet",
+      "ingredients": [
+        "Lentils",
+        "Ghee",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 380,
+        "protein": 6.0,
+        "carbs": 45.0,
+        "fat": 19.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 100
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 180
+        }
+      ]
+    },
+    "murukku": {
+      "name": "Murukku",
+      "family": "others",
+      "ingredients": [
+        "Rice flour",
+        "Lentils",
+        "Oil"
+      ],
+      "per100g": {
+        "kcal": 500,
+        "protein": 8.0,
+        "carbs": 58.0,
+        "fat": 26.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 25
+        }
+      ]
+    },
+    "mysore pak": {
+      "name": "Mysore Pak",
+      "family": "sweet",
+      "ingredients": [
+        "Gram flour",
+        "Ghee",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 550,
+        "protein": 6.0,
+        "carbs": 52.0,
+        "fat": 36.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 50
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        }
+      ]
+    },
+    "navratan korma": {
+      "name": "Navratan Korma",
+      "family": "curry",
+      "ingredients": [
+        "Vegetables",
+        "Cream",
+        "Cashew"
+      ],
+      "per100g": {
+        "kcal": 180,
+        "protein": 4.0,
+        "carbs": 14.0,
+        "fat": 12.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "neer dosa": {
+      "name": "Neer Dosa",
+      "family": "south indian",
+      "ingredients": [
+        "Rice",
+        "Coconut"
+      ],
+      "per100g": {
+        "kcal": 160,
+        "protein": 3.0,
+        "carbs": 32.0,
+        "fat": 2.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 120
+        },
+        {
+          "label": "1 Plate",
+          "grams": 240
+        }
+      ]
+    },
+    "onion pakoda": {
+      "name": "Onion Pakoda",
+      "family": "snacks",
+      "ingredients": [
+        "Onion",
+        "Gram flour",
+        "Oil"
+      ],
+      "per100g": {
+        "kcal": 320,
+        "protein": 6.0,
+        "carbs": 30.0,
+        "fat": 19.0
+      },
+      "servings": [
+        {
+          "label": "1 Plate",
+          "grams": 100
+        }
+      ]
+    },
+    "palak paneer": {
+      "name": "Palak Paneer",
+      "family": "curry",
+      "ingredients": [
+        "Spinach",
+        "Paneer",
+        "Cream"
+      ],
+      "per100g": {
+        "kcal": 180,
+        "protein": 8.0,
+        "carbs": 6.0,
+        "fat": 14.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "paneer masala": {
+      "name": "Paneer Masala",
+      "family": "curry",
+      "ingredients": [
+        "Paneer",
+        "Tomato",
+        "Cream"
+      ],
+      "per100g": {
+        "kcal": 220,
+        "protein": 9.0,
+        "carbs": 8.0,
+        "fat": 17.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "paneer pizza": {
+      "name": "Paneer Pizza",
+      "family": "pizza",
+      "ingredients": [
+        "Paneer",
+        "Cheese",
+        "Wheat"
+      ],
+      "per100g": {
+        "kcal": 260,
+        "protein": 12.0,
+        "carbs": 27.0,
+        "fat": 11.0
+      },
+      "servings": [
+        {
+          "label": "1 Slice",
+          "grams": 100
+        },
+        {
+          "label": "2 Slices",
+          "grams": 200
+        }
+      ]
+    },
+    "pani puri": {
+      "name": "Pani Puri",
+      "family": "chaat",
+      "ingredients": [
+        "Wheat",
+        "Potato",
+        "Tamarind"
+      ],
+      "per100g": {
+        "kcal": 200,
+        "protein": 4.0,
+        "carbs": 28.0,
+        "fat": 8.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 80
+        },
+        {
+          "label": "1 Plate",
+          "grams": 160
+        }
+      ]
+    },
+    "paniyaram": {
+      "name": "Paniyaram",
+      "family": "south indian",
+      "ingredients": [
+        "Rice",
+        "Lentils",
+        "Oil"
+      ],
+      "per100g": {
+        "kcal": 230,
+        "protein": 5.0,
+        "carbs": 30.0,
+        "fat": 9.0
+      },
+      "servings": [
+        {
+          "label": "3 Pieces",
+          "grams": 100
+        },
+        {
+          "label": "5 Pieces",
+          "grams": 165
+        }
+      ]
+    },
+    "papdi chaat": {
+      "name": "Papdi Chaat",
+      "family": "chaat",
+      "ingredients": [
+        "Wheat",
+        "Curd",
+        "Chutney"
+      ],
+      "per100g": {
+        "kcal": 220,
+        "protein": 5.0,
+        "carbs": 30.0,
+        "fat": 9.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 80
+        },
+        {
+          "label": "1 Plate",
+          "grams": 160
+        }
+      ]
+    },
+    "patrode": {
+      "name": "Patrode",
+      "family": "others",
+      "ingredients": [
+        "Colocasia leaves",
+        "Gram flour",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 190,
+        "protein": 4.0,
+        "carbs": 28.0,
+        "fat": 7.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 80
+        }
+      ]
+    },
+    "pav bhaji": {
+      "name": "Pav Bhaji",
+      "family": "snacks",
+      "ingredients": [
+        "Bread",
+        "Vegetables",
+        "Butter"
+      ],
+      "per100g": {
+        "kcal": 200,
+        "protein": 4.5,
+        "carbs": 24.0,
+        "fat": 9.0
+      },
+      "servings": [
+        {
+          "label": "1 Plate",
+          "grams": 300
+        }
+      ]
+    },
+    "pepperoni pizza": {
+      "name": "Pepperoni Pizza",
+      "family": "pizza",
+      "ingredients": [
+        "Wheat",
+        "Cheese",
+        "Pepperoni"
+      ],
+      "per100g": {
+        "kcal": 290,
+        "protein": 12.0,
+        "carbs": 26.0,
+        "fat": 15.0
+      },
+      "servings": [
+        {
+          "label": "1 Slice",
+          "grams": 100
+        },
+        {
+          "label": "2 Slices",
+          "grams": 200
+        }
+      ]
+    },
+    "phirni": {
+      "name": "Phirni",
+      "family": "sweet",
+      "ingredients": [
+        "Rice",
+        "Milk",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 190,
+        "protein": 4.0,
+        "carbs": 27.0,
+        "fat": 7.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "poha": {
+      "name": "Poha",
+      "family": "snacks",
+      "ingredients": [
+        "Rice flakes",
+        "Peanuts",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 180,
+        "protein": 3.5,
+        "carbs": 30.0,
+        "fat": 5.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "pongal": {
+      "name": "Pongal",
+      "family": "rice",
+      "ingredients": [
+        "Rice",
+        "Lentils",
+        "Ghee"
+      ],
+      "per100g": {
+        "kcal": 160,
+        "protein": 4.5,
+        "carbs": 26.0,
+        "fat": 4.5
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "puri bhaji": {
+      "name": "Puri Bhaji",
+      "family": "bread",
+      "ingredients": [
+        "Wheat",
+        "Potato",
+        "Oil"
+      ],
+      "per100g": {
+        "kcal": 300,
+        "protein": 5.0,
+        "carbs": 33.0,
+        "fat": 17.0
+      },
+      "servings": [
+        {
+          "label": "1 Plate",
+          "grams": 300
+        }
+      ]
+    },
+    "rajma chawal": {
+      "name": "Rajma Chawal",
+      "family": "rice",
+      "ingredients": [
+        "Kidney beans",
+        "Rice",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 150,
+        "protein": 5.0,
+        "carbs": 24.0,
+        "fat": 3.5
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Plate",
+          "grams": 350
+        }
+      ]
+    },
+    "rasgulla": {
+      "name": "Rasgulla",
+      "family": "sweet",
+      "ingredients": [
+        "Milk solids",
+        "Sugar"
+      ],
+      "per100g": {
+        "kcal": 240,
+        "protein": 4.0,
+        "carbs": 46.0,
+        "fat": 5.0
+      },
+      "servings": [
+        {
+          "label": "2 Pieces",
+          "grams": 100
+        }
+      ]
+    },
+    "rava dosa": {
+      "name": "Rava Dosa",
+      "family": "south indian",
+      "ingredients": [
+        "Semolina",
+        "Rice flour",
+        "Oil"
+      ],
+      "per100g": {
+        "kcal": 210,
+        "protein": 4.0,
+        "carbs": 27.0,
+        "fat": 9.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 120
+        },
+        {
+          "label": "1 Plate",
+          "grams": 240
+        }
+      ]
+    },
+    "sabudana khichdi": {
+      "name": "Sabudana Khichdi",
+      "family": "fasting",
+      "ingredients": [
+        "Sago",
+        "Peanuts",
+        "Potato"
+      ],
+      "per100g": {
+        "kcal": 230,
+        "protein": 3.0,
+        "carbs": 36.0,
+        "fat": 8.0
+      },
+      "servings": [
+        {
+          "label": "1 Katori",
+          "grams": 150
+        },
+        {
+          "label": "1 Bowl",
+          "grams": 250
+        }
+      ]
+    },
+    "sabudana vada": {
+      "name": "Sabudana Vada",
+      "family": "fasting",
+      "ingredients": [
+        "Sago",
+        "Potato",
+        "Peanuts"
+      ],
+      "per100g": {
+        "kcal": 330,
+        "protein": 4.0,
+        "carbs": 40.0,
+        "fat": 16.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 60
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 120
+        }
+      ]
+    },
+    "samosa": {
+      "name": "Samosa",
+      "family": "snacks",
+      "ingredients": [
+        "Wheat",
+        "Potato",
+        "Peas"
+      ],
+      "per100g": {
+        "kcal": 300,
+        "protein": 5.0,
+        "carbs": 32.0,
+        "fat": 17.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 60
+        },
+        {
+          "label": "2 Pieces",
+          "grams": 120
+        }
+      ]
+    },
+    "seekh kebab": {
+      "name": "Seekh Kebab",
+      "family": "kebab",
+      "ingredients": [
+        "Chicken",
+        "Spices",
+        "Oil"
+      ],
+      "per100g": {
+        "kcal": 260,
+        "protein": 20.0,
+        "carbs": 4.0,
+        "fat": 19.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 70
+        },
+        {
+          "label": "1 Plate",
+          "grams": 200
+        }
+      ]
+    },
+    "set dosa": {
+      "name": "Set Dosa",
+      "family": "south indian",
+      "ingredients": [
+        "Rice",
+        "Lentils"
+      ],
+      "per100g": {
+        "kcal": 200,
+        "protein": 5.0,
+        "carbs": 32.0,
+        "fat": 6.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 120
+        },
+        {
+          "label": "1 Plate",
+          "grams": 240
+        }
+      ]
+    },
+    "sev puri": {
+      "name": "Sev Puri",
+      "family": "chaat",
+      "ingredients": [
+        "Wheat",
+        "Sev",
+        "Potato"
+      ],
+      "per100g": {
+        "kcal": 230,
+        "protein": 5.0,
+        "carbs": 30.0,
+        "fat": 10.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 80
+        },
+        {
+          "label": "1 Plate",
+          "grams": 160
+        }
+      ]
+    },
+    "solkadhi": {
+      "name": "Solkadhi",
+      "family": "beverage",
+      "ingredients": [
+        "Kokum",
+        "Coconut milk",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 70,
+        "protein": 1.0,
+        "carbs": 6.0,
+        "fat": 4.5
+      },
+      "servings": [
+        {
+          "label": "1 Glass",
+          "grams": 200
+        }
+      ]
+    },
+    "steamed momo": {
+      "name": "Steamed Momo",
+      "family": "snacks",
+      "ingredients": [
+        "Flour",
+        "Vegetables",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 160,
+        "protein": 5.0,
+        "carbs": 24.0,
+        "fat": 4.5
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 30
+        },
+        {
+          "label": "1 Plate (6)",
+          "grams": 180
+        }
+      ]
+    },
+    "thali": {
+      "name": "Thali",
+      "family": "others",
+      "ingredients": [
+        "Roti",
+        "Dal",
+        "Rice",
+        "Vegetables"
+      ],
+      "per100g": {
+        "kcal": 160,
+        "protein": 5.0,
+        "carbs": 20.0,
+        "fat": 6.0
+      },
+      "servings": [
+        {
+          "label": "1 Thali",
+          "grams": 450
+        }
+      ]
+    },
+    "thukpa": {
+      "name": "Thukpa",
+      "family": "others",
+      "ingredients": [
+        "Noodles",
+        "Vegetables",
+        "Broth"
+      ],
+      "per100g": {
+        "kcal": 130,
+        "protein": 5.0,
+        "carbs": 18.0,
+        "fat": 4.0
+      },
+      "servings": [
+        {
+          "label": "1 Bowl",
+          "grams": 300
+        }
+      ]
+    },
+    "uttapam": {
+      "name": "Uttapam",
+      "family": "south indian",
+      "ingredients": [
+        "Rice",
+        "Lentils",
+        "Onion"
+      ],
+      "per100g": {
+        "kcal": 190,
+        "protein": 4.5,
+        "carbs": 28.0,
+        "fat": 6.5
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 150
+        },
+        {
+          "label": "1 Plate",
+          "grams": 300
+        }
+      ]
+    },
+    "vada pav": {
+      "name": "Vada Pav",
+      "family": "snacks",
+      "ingredients": [
+        "Bread",
+        "Potato",
+        "Spices"
+      ],
+      "per100g": {
+        "kcal": 290,
+        "protein": 6.0,
+        "carbs": 38.0,
+        "fat": 12.0
+      },
+      "servings": [
+        {
+          "label": "1 Piece",
+          "grams": 150
+        }
+      ]
+    }
+  }
+}

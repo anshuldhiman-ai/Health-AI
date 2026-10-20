@@ -9,12 +9,13 @@ import 'package:flutter_test/flutter_test.dart';
 /// generic widgets work in both themes.
 void main() {
   Widget host(Widget child) => MaterialApp(
-        theme: ThemeData(useMaterial3: true),
-        home: Scaffold(body: child),
-      );
+    theme: ThemeData(useMaterial3: true),
+    home: Scaffold(body: child),
+  );
 
-  testWidgets('ProgressRing renders its child and semantics value',
-      (tester) async {
+  testWidgets('ProgressRing renders its child and semantics value', (
+    tester,
+  ) async {
     final semantics = tester.ensureSemantics();
     await tester.pumpWidget(
       host(
@@ -53,8 +54,9 @@ void main() {
     expect(find.text('0 / 60 g'), findsOneWidget);
   });
 
-  testWidgets('StatTile and EmptyState render with their semantics',
-      (tester) async {
+  testWidgets('StatTile and EmptyState render with their semantics', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       host(
         Column(

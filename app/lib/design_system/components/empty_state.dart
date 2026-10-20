@@ -42,16 +42,11 @@ class EmptyState extends StatelessWidget {
             Text(title, style: text.titleMedium, textAlign: TextAlign.center),
             Text(
               message,
-              style: text.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null)
-              FilledButton(
-                onPressed: onAction,
-                child: Text(actionLabel!),
-              ),
+              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
           ],
         ),
       ),

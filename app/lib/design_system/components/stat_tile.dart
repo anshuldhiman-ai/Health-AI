@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
-/// Small square-ish tile with an icon chip, a prominent value and a
-/// caption — the dashboard's steps / water / sleep quiet tiles.
+import 'package:app/design_system/tokens/tokens.dart';
+
+/// Dashboard quiet tile: a free-standing coloured glyph, a prominent
+/// value and a caption (ref_ui.png). Soft-shadow card, no border.
 class StatTile extends StatelessWidget {
   const StatTile({
     required this.icon,
     required this.value,
     required this.caption,
+    this.iconColor,
     this.expanded = false,
     this.onTap,
     super.key,
@@ -16,6 +19,10 @@ class StatTile extends StatelessWidget {
   final String value;
   final String caption;
 
+  /// Data-viz glyph colour (primary / water / sleep). The caption
+  /// always carries the meaning as text (R14).
+  final Color? iconColor;
+
   /// When true the tile expands to fill remaining row space.
   final bool expanded;
 
@@ -24,43 +31,47 @@ class StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
 
-    final inner = Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 8,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest,
-            shape: BoxShape.circle,
+    final inner = Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x3,
+        vertical: 14,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: iconColor ?? scheme.primary, size: 24),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: AppTypography.value18.copyWith(color: scheme.onSurface),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          child: Icon(icon, color: scheme.primary, size: 20),
-        ),
-        Text(value, style: text.titleMedium),
-        Text(
-          caption,
-          style: text.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            caption,
+            style: AppTypography.caption.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
 
-    final tile = Material(
-      color: scheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: scheme.outline),
+    final tile = DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: AppShadows.card,
       ),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
           child: inner,
         ),
       ),

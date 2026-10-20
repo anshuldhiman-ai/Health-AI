@@ -36,6 +36,19 @@
         android:name="android.permission.USE_FINGERPRINT"
         tools:node="remove" />
 
+    <!-- Still-image meal capture (no video → RECORD_AUDIO stays removed). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- ADR 0008: read the phone's step counter for the Today tile.
+         Runtime-requested via permission_handler; no other sensor. -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.sensor.stepcounter"
+        android:required="false" />
+
     <application
         android:label="@string/app_name"
         android:name="${applicationName}"

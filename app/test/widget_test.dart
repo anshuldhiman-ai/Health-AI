@@ -7,8 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// resolves localisation end to end (R13), dashboard renders the
 /// calorie ring hero, scan flow writes to the day log.
 void main() {
-  testWidgets('Welcome gates the shell; Get Started lands on Today',
-      (tester) async {
+  testWidgets('Welcome gates the shell; Get Started lands on Today', (
+    tester,
+  ) async {
     await tester.pumpWidget(const ProviderScope(child: App()));
     await tester.pumpAndSettle();
 

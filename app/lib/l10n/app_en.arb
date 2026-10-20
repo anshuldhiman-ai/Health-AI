@@ -1,8 +1,8 @@
 {
   "@@locale": "en",
-  "appTitle": "App",
+  "appTitle": "Health AI",
   "@appTitle": {
-    "description": "The app display name. Working title until the brand name is decided (Section 0) — replace in ALL arb files at once."
+    "description": "The app display name, from the approved reference. Replace in ALL arb files at once if the brand changes."
   },
   "greetingMorning": "Good morning!",
   "greetingAfternoon": "Good afternoon!",
@@ -16,10 +16,11 @@
   "stepsTile": "steps",
   "waterTile": "water",
   "sleepTile": "sleep",
-  "todaysMeals": "Today's meals",
-  "addFood": "Add food",
+  "todaysMeals": "Today's Meals",
+  "caloriesLabel": "Calories",
+  "addFood": "Add Food",
   "logFirstMealCta": "Log your first meal",
-  "mealNotLoggedYet": "Not logged yet",
+  "mealNotLoggedYet": "Not added yet",
   "mealBreakfast": "Breakfast",
   "mealLunch": "Lunch",
   "mealDinner": "Dinner",
@@ -37,7 +38,7 @@
       }
     }
   },
-  "nutritionBreakdown": "Nutrition breakdown",
+  "nutritionBreakdown": "Nutrition Breakdown",
   "emptyDayHint": "Scan a plate or add a dish to start tracking.",
   "getStarted": "Get Started",
   "welcomeTagline": "Eat Smart. Live Healthier.",
@@ -60,14 +61,15 @@
       }
     }
   },
-  "mealLog": "Meal log",
+  "ofTargetsCaption": "of targets",
+  "mealLog": "Meal Log",
   "scanScreenTitle": "Scan food",
   "pointAtPlate": "Point your camera at the plate",
   "cameraPlaceholder": "Camera preview arrives with the on-device model (M2).",
-  "scanResultTitle": "Scan result",
+  "scanResultTitle": "Scan Result",
   "scanResultSubtitle": "Top 3 possible matches",
-  "servingSizeLabel": "Serving size",
-  "estimatedCalories": "Estimated calories",
+  "servingSizeLabel": "Select Serving Size",
+  "estimatedCalories": "Estimated Calories",
   "addToMeal": "Add to {meal}",
   "@addToMeal": {
     "placeholders": {
@@ -86,7 +88,7 @@
   },
   "undo": "Undo",
   "insightsTitle": "Insights",
-  "calorieTrend": "Calorie trend",
+  "calorieTrend": "Calorie Trend",
   "avgKcalPerDay": "avg kcal/day",
   "trendChangeUp": "↑ {percent}%",
   "@trendChangeUp": {
@@ -104,11 +106,275 @@
       }
     }
   },
-  "nutritionBalance": "Nutrition balance",
+  "nutritionBalance": "Nutrition Balance",
   "profileTitle": "Profile",
   "deviceOnly": "Your data stays on this device.",
-  "myGoals": "My goals",
+  "myGoals": "My Goals",
   "settingsRow": "Settings",
-  "helpRow": "Help & support",
-  "aboutRow": "About the app"
+  "helpRow": "Help & Support",
+  "aboutRow": "About Health AI",
+  "closeLabel": "Close",
+  "scanTorch": "Toggle torch",
+  "scanCapture": "Capture photo",
+  "scanCameraUnavailableTitle": "Camera unavailable",
+  "scanCameraUnavailableHint": "Check camera permission, or pick a photo from your gallery.",
+  "scanPickFromGallery": "Choose from gallery",
+  "scanAnalyzing": "Reading your plate…",
+  "scanAnalyzingHint": "Matching 80 Indian dishes on this device.",
+  "scanModelMissing": "The recognition model isn't installed in this build, so scanning is unavailable.",
+  "scanPhotoFailed": "Couldn't read that photo. Try another one.",
+  "scanUncertainHint": "Low confidence — check the dish and its ingredients before adding.",
+  "settingsTitle": "Settings",
+  "settingsSubtitle": "Make Health AI yours.",
+  "appearanceTitle": "Appearance",
+  "appearanceHint": "System follows your phone's light or dark setting.",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "doneLabel": "Done",
+  "privacyTitle": "Private by design",
+  "privacyBody": "Your meals, steps and photos stay on this device. No account, no cloud.",
+  "helpTitle": "Help & Support",
+  "helpSubtitle": "Quick answers, all offline.",
+  "helpScanQ": "How do I scan a dish?",
+  "helpScanA": "Tap the green camera button, take or choose a photo, then confirm the best match before adding it.",
+  "helpCaloriesQ": "Are the calories exact?",
+  "helpCaloriesA": "They are estimates based on the dish and serving size. Portion size is the biggest source of error.",
+  "helpStepsQ": "Why do steps show a dash?",
+  "helpStepsA": "Allow physical activity access when Android asks. The phone must have a step counter; steps start counting from the first reading of the day.",
+  "helpOfflineQ": "Does the app need internet?",
+  "helpOfflineA": "No. Recognition, diary and step tracking run on your phone.",
+  "aboutLegalese": "Offline nutrition and activity tracking.",
+  "aboutPrivacy": "Health AI has no account and no cloud sync. Everything you log stays on this device.",
+  "aboutModel": "Food recognition runs fully on-device with a MobileNetV4 model trained on 80 Indian dishes.",
+  "chooseGoal": "Pick the plan that fits you.",
+  "goalLose": "Lose weight",
+  "goalLoseHint": "A gentle calorie deficit",
+  "goalLoseSubtitle": "Lose 5 kg in 3 months",
+  "goalMaintain": "Maintain weight",
+  "goalMaintainHint": "Balance intake and activity",
+  "goalMaintainSubtitle": "Keep your current weight",
+  "goalGain": "Gain weight",
+  "goalGainHint": "A small calorie surplus",
+  "goalGainSubtitle": "Build strength and size",
+  "gramUnit": "g",
+  "kmUnit": "km",
+  "minPerKm": "min/km",
+  "spmUnit": "steps/min",
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "durationMinutes": "{minutes} min",
+  "dayToday": "Today",
+  "dayYesterday": "Yesterday",
+  "dayDaysAgo": "{count} days ago",
+  "stepsDistanceCaption": "steps · {distance} km",
+  "onTrackTitle": "You're on track!",
+  "onTrackBody": "{left} kcal left · {protein} g protein to go",
+  "overTargetTitle": "A little over today",
+  "overTargetBody": "{over} kcal over target. A lighter next meal can balance it out.",
+  "startDayTitle": "Start your day",
+  "startDayBody": "Log a meal to see today's calories and macros.",
+  "quickActions": "Quick actions",
+  "searchFood": "Search food",
+  "viewDiary": "View diary",
+  "activityTitle": "Activity",
+  "activitySubtitle": "Steps, distance and pace from your phone.",
+  "activityToday": "Today's movement",
+  "stepsLabel": "Steps",
+  "stepGoal": "of {goal} steps",
+  "distanceLabel": "Distance",
+  "activeTimeLabel": "Active time",
+  "avgPaceLabel": "Avg pace",
+  "cadenceLabel": "Cadence",
+  "todayByHour": "Today by hour",
+  "last7Days": "Last 7 days",
+  "historyBuildsHint": "History builds as you use the app.",
+  "activityPermissionTitle": "Allow activity access",
+  "activityPermissionBody": "Health AI reads your phone's step counter to show steps, distance and pace. It stays on this device.",
+  "activityAllow": "Allow access",
+  "activityOpenSettings": "Open settings",
+  "activityUnsupportedTitle": "No step sensor found",
+  "activityUnsupportedBody": "This device does not expose a step counter to apps. You can still log meals and water.",
+  "activityUnavailableTitle": "Steps unavailable",
+  "activityUnavailableBody": "The step sensor is not responding right now. Try again or check activity permission.",
+  "activityRefresh": "Try again",
+  "activityPrivacyNote": "Distance uses an average 0.76 m stride. Active time counts walking intervals only; your phone counts steps while it is with you.",
+  "waterTitle": "Water",
+  "waterSubtitle": "A glass at a time.",
+  "waterIntake": "Water intake",
+  "waterGoal": "Goal: {goal} L",
+  "addGlass": "Add a glass",
+  "removeGlass": "Remove last",
+  "glassesCount": "{count} of {goal} glasses",
+  "waterNote": "Hydration needs vary. This is a simple daily guide, not medical advice.",
+  "sleepTitle": "Sleep",
+  "sleepSubtitle": "Log last night's rest.",
+  "sleepDuration": "Sleep duration",
+  "bedtimeLabel": "Bedtime",
+  "wakeTimeLabel": "Wake time",
+  "saveSleep": "Save sleep",
+  "sleepGoal": "Goal: {goal}",
+  "noSleepLogged": "No sleep logged for today.",
+  "sleepNote": "Sleep is logged manually on this device. No wearable or account is required.",
+  "clearSleep": "Clear",
+  "weeklyProgress": "Weekly Progress",
+  "weeklySubtitle": "The last seven days at a glance.",
+  "viewWeekly": "View week",
+  "caloriesTab": "Calories",
+  "macrosTab": "Macros",
+  "mealsTab": "Meals",
+  "weeklyAverage": "Daily average",
+  "daysOnTarget": "Days on target",
+  "weeklyConsistency": "Days logged",
+  "weeklyNote": "Targets are your current plan. Tap a bar for the day's total.",
+  "searchFoodTitle": "Search Food",
+  "searchFoodHint": "Search 80 Indian dishes",
+  "categoryAll": "All",
+  "categoryCurry": "Curry",
+  "categoryBread": "Bread",
+  "categoryRice": "Rice",
+  "categorySnacks": "Snacks",
+  "categorySweet": "Sweet",
+  "categoryBeverage": "Beverage",
+  "categoryChaat": "Chaat",
+  "categoryKebab": "Kebab",
+  "categoryPizza": "Pizza",
+  "categorySouthIndian": "South Indian",
+  "categoryFasting": "Fasting",
+  "categoryOthers": "Others",
+  "noDishesFound": "No dishes found",
+  "noDishesFoundHint": "Try a different name or category.",
+  "popularDishes": "Popular dishes",
+  "allDishes": "All dishes",
+  "dishesCount": "{count} dishes",
+  "dishDetails": "Dish details",
+  "nutritionTab": "Nutrition",
+  "ingredientsTab": "Ingredients",
+  "portionsTab": "Portions",
+  "per100g": "per 100 g",
+  "perServing": "per serving",
+  "catalogNote": "Nutrition values are estimates. Recipes and portions vary.",
+  "ingredientsNote": "Key ingredients from our local catalog. Recipes vary.",
+  "selectServing": "Select serving",
+  "selectMeal": "Meal",
+  "addToDiary": "Add to Diary",
+  "mealDetails": "Meal details",
+  "noMealEntries": "Nothing logged for this meal yet.",
+  "entriesCount": "{count} items",
+  "addAnother": "Add another",
+  "delete": "Delete",
+  "goalLabel": "Goal",
+  "stepsToday": "Today",
+  "progressLabel": "Progress",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@dayDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@stepsDistanceCaption": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "@onTrackBody": {
+    "placeholders": {
+      "left": {
+        "type": "String"
+      },
+      "protein": {
+        "type": "String"
+      }
+    }
+  },
+  "@overTargetBody": {
+    "placeholders": {
+      "over": {
+        "type": "String"
+      }
+    }
+  },
+  "@stepGoal": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "@waterGoal": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "@glassesCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "@sleepGoal": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "@dishesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@entriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedLabel": "Saved",
+  "catalogLoadError": "Could not load the food catalog.",
+  "kcalLeftShort": "{left} kcal left",
+  "kcalOverShort": "{over} kcal over",
+  "noWeeklyData": "No meals logged this week.",
+  "@kcalLeftShort": {
+    "placeholders": {
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "@kcalOverShort": {
+    "placeholders": {
+      "over": {
+        "type": "String"
+      }
+    }
+  }
 }

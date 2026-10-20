@@ -34,7 +34,12 @@ __pycache__/
 *.pth
 *.safetensors
 *.onnx
-# Released models ARE committed under app/assets/models (Section 11.4)
+# Exported LiteRT weights are build artifacts, not source: keep the
+# 34 MB binary out of git. See app/assets/models/README.md.
+app/assets/models/*.tflite
+
+# Training/conversion outputs (checkpoints, ONNX, onnx2tf trees).
+ml/weights/
 
 # --- Secrets / local config ---
 .env

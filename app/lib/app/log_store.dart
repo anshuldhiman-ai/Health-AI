@@ -1,20 +1,21 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:app/domain/entities/log_entry.dart';
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/domain/entities/meal.dart';
+import 'package:app/domain/entities/nutrition_targets.dart';
 
-/// The whole UI's source of truth for dialed days.
-///
-/// TEMP: an in-memory store so the frontend is fully interactive.
-/// The M1 data layer replaces this class with the SQLCipher-backed
-/// repository behind the SAME provider (same summary methods), so
-/// screens will not change when that lands. Do not persist anything
-/// here — closing the app forgets it (empty first-launch behaviour,
-/// Section 10.6 empty states).
+/// The whole UI's source of truth for logged days.
 ///
 /// Days are indexed by OFFSET from today: 0 = today, 1 = yesterday,
-/// ... Negative offsets (future) are invalid by construction.
+/// ... Negative offsets (future) are invalid by construction. The
+/// store persists finished entries locally (SharedPreferences, never
+/// remote). [loadSavedDayLog] shifts saved offsets forward when the
+/// app is opened on a later date.
 class DayTotals {
   const DayTotals({
     required this.consumed,
@@ -28,55 +29,47 @@ class DayTotals {
   final int carbs;
   final int fat;
 
-  List<MacroLine> get macroLines => [
-        MacroLine(
-          kind: MacroKind.protein,
-          value: protein,
-          target: _proteinTarget,
-        ),
-        MacroLine(
-          kind: MacroKind.carbs,
-          value: carbs,
-          target: _carbsTarget,
-        ),
-        MacroLine(
-          kind: MacroKind.fat,
-          value: fat,
-          target: _fatTarget,
-        ),
-      ];
+  List<MacroLine> macroLines(NutritionTargets targets) => [
+    MacroLine(kind: MacroKind.protein, value: protein, target: targets.protein),
+    MacroLine(kind: MacroKind.carbs, value: carbs, target: targets.carbs),
+    MacroLine(kind: MacroKind.fat, value: fat, target: targets.fat),
+  ];
 
-  double get targetsCompletion {
-    final sum = macroLines.fold<double>(0, (acc, m) => acc + m.ratio);
-    return (sum / macroLines.length).clamp(0.0, 1.0);
+  double targetsCompletion(NutritionTargets targets) {
+    final lines = macroLines(targets);
+    final sum = lines.fold<double>(0, (acc, m) => acc + m.ratio);
+    return (sum / lines.length).clamp(0.0, 1.0);
   }
 }
 
-// Targets: proposal values from the product spec (Section 6.1);
-// personalised in the onboarding flow later (M1/M2).
-const _kcalTarget = 1800;
-const _proteinTarget = 100;
-const _carbsTarget = 180;
-const _fatTarget = 60;
-
-const kcalTarget = _kcalTarget;
-
 class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
-  DayLog() : super(_seed());
+  // ignore: prefer_initializing_formals
+  DayLog({SharedPreferences? prefs, Map<int, List<LogEntry>>? initial})
+      : _prefs = prefs,
+        super(initial ?? const {});
 
-  static const maxDays = 7; // UI window: today + 6 previous days.
+  /// Diary shows one week; Insights needs enough history for 90D plus
+  /// the preceding 90D comparison window.
+  static const diaryDays = 7;
+  static const maxDays = 180;
+
+  static const storageKey = 'food.log.v2';
+
+  final SharedPreferences? _prefs;
+  Future<void> _saveQueue = Future<void>.value();
 
   List<LogEntry> entriesFor(int dayOffset) => state[dayOffset] ?? const [];
 
   DayTotals totalsFor(int dayOffset) {
     var protein = 0, carbs = 0, fat = 0;
-    for (final e in entriesFor(dayOffset)) {
+    final entries = entriesFor(dayOffset);
+    for (final e in entries) {
       protein += e.proteinGrams;
       carbs += e.carbsGrams;
       fat += e.fatGrams;
     }
     return DayTotals(
-      consumed: entriesFor(dayOffset).fold(0, (sum, e) => sum + e.kcal),
+      consumed: entries.fold(0, (sum, e) => sum + e.kcal),
       protein: protein,
       carbs: carbs,
       fat: fat,
@@ -87,94 +80,116 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
       .where((e) => e.mealKind == kind)
       .fold(0, (sum, e) => sum + e.kcal);
 
-  /// Append a confirmed scan/menu pick. The UI never writes raw macro
-  /// numbers — it gets an estimated entry from [LogEntry.estimated].
-  void add(LogEntry entry) {
-    final entries = [...entriesFor(0), entry];
-    state = {...state, 0: entries};
+  /// Append a confirmed scan/menu pick to the requested day. The UI
+  /// never writes raw macro numbers — it gets an estimated entry from
+  /// [LogEntry.estimated] or the shared portion math.
+  void add(LogEntry entry, {int dayOffset = 0}) {
+    if (dayOffset < 0 || dayOffset >= maxDays) return;
+    _commit({...state, dayOffset: [...entriesFor(dayOffset), entry]});
   }
 
   /// Undo support: remove the newest entry of any day.
   bool removeNewest(int dayOffset) {
     final entries = entriesFor(dayOffset);
     if (entries.isEmpty) return false;
-    state = {...state, dayOffset: entries.sublist(0, entries.length - 1)};
+    _commit({
+      ...state,
+      dayOffset: entries.sublist(0, entries.length - 1),
+    });
     return true;
   }
+
+  /// Remove a specific entry from a day (meal detail sheet).
+  bool removeAt(int dayOffset, int index) {
+    final entries = entriesFor(dayOffset);
+    if (index < 0 || index >= entries.length) return false;
+    final next = [...entries]..removeAt(index);
+    _commit({...state, dayOffset: next});
+    return true;
+  }
+
+  /// Await the latest local write (used by tests and shutdown paths).
+  Future<void> flush() => _saveQueue;
+
+  void _commit(Map<int, List<LogEntry>> next) {
+    state = next;
+    final prefs = _prefs;
+    if (prefs == null) return;
+    final payload = jsonEncode({
+      'baseDate': _dateOnly(DateTime.now()).toIso8601String(),
+      'days': {
+        for (final entry in next.entries)
+          '${entry.key}': [for (final row in entry.value) row.toJson()],
+      },
+    });
+    // Serialize writes so a fast undo cannot land before its add.
+    _saveQueue = _saveQueue.then(
+      (_) => prefs.setString(storageKey, payload),
+    );
+  }
 }
 
-final dayLogProvider =
-    StateNotifierProvider<DayLog, Map<int, List<LogEntry>>>(
+/// Load the on-device diary before the first frame. Entries are
+/// stored against the date they were logged, so shifts forward when
+/// the app opens on a later day.
+Future<DayLog> loadSavedDayLog() async {
+  final prefs = await SharedPreferences.getInstance();
+  final raw = prefs.getString(DayLog.storageKey);
+  final entries = <int, List<LogEntry>>{};
+  DateTime? base;
+  if (raw != null) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        final baseRaw = decoded['baseDate'];
+        base = baseRaw is String ? DateTime.tryParse(baseRaw) : null;
+        final days = decoded['days'];
+        if (days is Map<String, dynamic>) {
+          for (final day in days.entries) {
+            final offset = int.tryParse(day.key);
+            final rows = day.value;
+            if (offset == null || rows is! List) continue;
+            final parsed = <LogEntry>[];
+            for (final row in rows) {
+              if (row is! Map<String, dynamic>) continue;
+              try {
+                parsed.add(LogEntry.fromJson(row));
+              } on FormatException {
+                // Skip a malformed row, keep the rest of the day.
+              }
+            }
+            if (parsed.isNotEmpty) entries[offset] = parsed;
+          }
+        }
+      }
+    } on FormatException {
+      await prefs.remove(DayLog.storageKey);
+    }
+  }
+
+  if (base != null && entries.isNotEmpty) {
+    final today = _dateOnly(DateTime.now());
+    final delta = today.difference(_dateOnly(base)).inDays;
+    if (delta > 0) {
+      final shifted = <int, List<LogEntry>>{};
+      for (final day in entries.entries) {
+        final offset = day.key + delta;
+        if (offset >= 0 && offset < DayLog.maxDays) {
+          shifted[offset] = day.value;
+        }
+      }
+      entries
+        ..clear()
+        ..addAll(shifted);
+    }
+  }
+
+  return DayLog(prefs: prefs, initial: entries);
+}
+
+DateTime _dateOnly(DateTime value) =>
+    DateTime(value.year, value.month, value.day);
+
+final dayLogProvider = StateNotifierProvider<DayLog, Map<int, List<LogEntry>>>(
   (ref) => DayLog(),
 );
-
-/// Previous-week baseline so the Insights delta chip has a defensible
-/// "before" number without 14 real days of history. M1 replaces this
-/// with the actual two-week average from the DB.
-const previousWeekAverageKcal = 1292;
-
-// ---------------------------------------------------------------------------
-// Seed: reference-matching demo data for TODAY (dashboard ring reads
-// 482 remaining) and plausible history for the previous six days so
-// Diary/Insights have believable shapes on first open. Deleted with
-// the store itself in M1.
-// ---------------------------------------------------------------------------
-
-Map<int, List<LogEntry>> _seed() {
-  final today = [
-    LogEntry.estimated(
-      mealKind: MealKind.breakfast,
-      dish: 'Poha + chai',
-      kcal: 420,
-      timeLabel: '8:15 AM',
-    ),
-    LogEntry.estimated(
-      mealKind: MealKind.lunch,
-      dish: 'Rajma chawal',
-      kcal: 468,
-      timeLabel: '1:10 PM',
-    ),
-    LogEntry.estimated(
-      mealKind: MealKind.dinner,
-      dish: 'Dal + roti',
-      kcal: 350,
-    ),
-    LogEntry.estimated(
-      mealKind: MealKind.snacks,
-      dish: 'Roasted chana',
-      kcal: 80,
-    ),
-  ];
-
-  // Totals ~ 1280..1560 so the 7-day average sits near the previous
-  // week's [previousWeekAverageKcal] with a small upward drift.
-  const historyTotals = [1280, 1350, 1560, 1480, 1420, 1380, 1310];
-
-  final out = <int, List<LogEntry>>{0: today};
-  for (var i = 1; i <= DayLog.maxDays - 1; i++) {
-    final total = historyTotals[i - 1];
-    out[i] = [
-      LogEntry.estimated(
-        mealKind: MealKind.breakfast,
-        dish: 'Breakfast',
-        kcal: (total * 0.34).round(),
-      ),
-      LogEntry.estimated(
-        mealKind: MealKind.lunch,
-        dish: 'Lunch',
-        kcal: (total * 0.31).round(),
-      ),
-      LogEntry.estimated(
-        mealKind: MealKind.dinner,
-        dish: 'Dinner',
-        kcal: (total * 0.28).round(),
-      ),
-      LogEntry.estimated(
-        mealKind: MealKind.snacks,
-        dish: 'Snacks',
-        kcal: (total * 0.07).round(),
-      ),
-    ];
-  }
-  return out;
-}

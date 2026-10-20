@@ -1,33 +1,56 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
-/// Circular progress ring — the calorie-remaining hero and the
-/// nutrition-breakdown donut (generic component; owns nothing about
-/// food). Only gradient allowed in the design system is inside this
-/// ring's "scan highlight" mode (Section 10.2) — not used by default.
+/// One arc of a multi-segment ring (donut charts).
+class RingSegment {
+  const RingSegment({required this.value, required this.color});
+
+  /// 0..1 share of the ring.
+  final double value;
+  final Color color;
+}
+
+/// Circular progress ring / donut (generic component; owns nothing
+/// about food).
+///
+/// - Single mode: [progress] 0..1 draws one arc from 12 o'clock.
+/// - Multi mode: [segments] draw consecutive arcs with small gaps —
+///   used by the macro-split donuts.
 class ProgressRing extends StatelessWidget {
   const ProgressRing({
-    required this.progress,
     required this.child,
+    this.progress,
+    this.segments,
     this.size = 132,
-    this.strokeWidth = 10,
+    this.strokeWidth = 12,
     this.trackColor,
-    this.progressColor,
+    this.barColor,
     this.semanticLabel,
     super.key,
-  }) : assert(progress >= 0 && progress <= 1);
+  }) : assert(
+         progress != null || segments != null,
+         'give either progress or segments',
+       );
 
-  /// 0..1 completion of the ring.
-  final double progress;
+  /// 0..1 completion of the ring (single-arc mode).
+  final double? progress;
 
-  /// Center content (the big number + unit).
+  /// Multi-arc mode (each value 0..1, sum ≦ 1; remainder = track).
+  final List<RingSegment>? segments;
+
+  /// Center content (the big number + caption).
   final Widget child;
 
   final double size;
   final double strokeWidth;
 
-  /// Defaults: track = [ColorScheme.outlineVariant], arc = primary.
+  /// Defaults to [ColorScheme.outlineVariant].
   final Color? trackColor;
-  final Color? progressColor;
+
+  /// Single-arc colour. Defaults to [ColorScheme.primary]; multi-mode
+  /// uses each [RingSegment] colour instead.
+  final Color? barColor;
 
   /// Whole-component semantics (charts get text summaries, R14).
   final String? semanticLabel;
@@ -35,19 +58,29 @@ class ProgressRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final effectiveSegments =
+        segments ??
+        [
+          RingSegment(
+            value: (progress ?? 0).clamp(0.0, 1.0),
+            color: barColor ?? scheme.primary,
+          ),
+        ];
+
+    final total = effectiveSegments.fold<double>(0, (s, e) => s + e.value);
+    final percent = (total * 100).round();
+
     return Semantics(
       label: semanticLabel,
-      value: '${(progress * 100).round()}%',
+      value: '$percent%',
       child: SizedBox(
         width: size,
         height: size,
         child: CustomPaint(
           painter: _RingPainter(
-            progress: progress,
+            segments: effectiveSegments,
             trackColor: trackColor ?? scheme.outlineVariant,
-            progressColor: progressColor ?? scheme.primary,
             strokeWidth: strokeWidth,
-            textDirectionOf: Directionality.of(context),
           ),
           child: Center(child: child),
         ),
@@ -58,18 +91,17 @@ class ProgressRing extends StatelessWidget {
 
 class _RingPainter extends CustomPainter {
   _RingPainter({
-    required this.progress,
+    required this.segments,
     required this.trackColor,
-    required this.progressColor,
     required this.strokeWidth,
-    required this.textDirectionOf,
   });
 
-  final double progress;
+  final List<RingSegment> segments;
   final Color trackColor;
-  final Color progressColor;
   final double strokeWidth;
-  final TextDirection textDirectionOf;
+
+  static const _tau = 2 * math.pi;
+  static const _gap = 0.10; // radians between segments (multi mode)
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -77,28 +109,36 @@ class _RingPainter extends CustomPainter {
     final radius = (size.width - strokeWidth) / 2;
     final rect = Rect.fromCircle(center: center, radius: radius);
 
-    // Track: full circle, hairline look via reduced opacity of line.
     final track = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..color = trackColor;
-    canvas.drawArc(rect, 0, 2 * 3.141592653589793, false, track);
+    canvas.drawArc(rect, 0, _tau, false, track);
 
-    // Progress arc: starts at 12 o'clock, sweeps clockwise. In RTL the
-    // sweep mirrors so "more logged" always grows from the start.
-    final sweep = 2 * 3.141592653589793 * progress;
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round
-      ..color = progressColor;
-    if (sweep <= 0.0001) return;
-    canvas.drawArc(rect, -3.141592653589793 / 2, sweep, false, paint);
+    final multi = segments.length > 1;
+    final gap = multi ? _gap : 0.0;
+    var start = -math.pi / 2; // 12 o'clock
+    for (final seg in segments) {
+      final sweep = _tau * seg.value.clamp(0.0, 1.0) - gap;
+      if (sweep <= 0.001) continue;
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round
+        ..color = seg.color;
+      canvas.drawArc(rect, start + gap / 2, sweep, false, paint);
+      start += sweep + gap;
+    }
   }
 
   @override
   bool shouldRepaint(_RingPainter old) =>
-      old.progress != progress ||
       old.trackColor != trackColor ||
-      old.progressColor != progressColor;
+      old.strokeWidth != strokeWidth ||
+      old.segments.length != segments.length ||
+      [
+        for (var i = 0; i < segments.length; i++)
+          old.segments[i].value != segments[i].value ||
+              old.segments[i].color != segments[i].color,
+      ].any((changed) => changed);
 }

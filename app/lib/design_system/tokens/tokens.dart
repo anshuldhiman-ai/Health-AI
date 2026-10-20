@@ -1,4 +1,6 @@
-/// Design tokens (Section 10.2–10.4).
+/// Design tokens (Section 10.2–10.4), tuned to the approved reference
+/// (ref_ui.png): forest-green brand, turmeric energy, sky-blue water,
+/// indigo sleep, soft-shadow cards on a warm mist canvas.
 ///
 /// All values are a PROPOSAL until the brand name exists. They live
 /// here so a rebrand is a one-folder change.
@@ -11,47 +13,58 @@ library;
 import 'package:flutter/material.dart';
 
 /// Semantic colour tokens, light and dark.
-///
-/// The palette deliberately avoids the common "cream + terracotta"
-/// and "near-black + acid green" looks. No decorative gradients; the
-/// only gradient allowed is inside the calorie ring / scan highlight.
 abstract final class AppColors {
   AppColors._();
 
-  // --- light theme ---
+  // --- light theme (sampled from the approved reference) ---
   static const light = AppColorScheme._(
-    canvas: Color(0xFFF4F6F3),
+    canvas: Color(0xFFF3F7F2),
     surface: Color(0xFFFFFFFF),
     surfaceRaised: Color(0xFFFFFFFF),
-    ink: Color(0xFF13201C),
-    inkMuted: Color(0xFF55645E),
-    primary: Color(0xFF1E6B57),
-    primaryWash: Color(0xFFDDEFE8),
-    accent: Color(0xFFD99A00),
+    ink: Color(0xFF16211C),
+    inkMuted: Color(0xFF6B7A72),
+    primary: Color(0xFF0F6D49),
+    primaryWash: Color(0xFFDFF0E5),
+    accent: Color(0xFFEA9907),
+    accentWash: Color(0xFFFDF3E2),
+    accentSoft: Color(0xFFFBD474),
+    water: Color(0xFF48ABD9),
+    sleep: Color(0xFF5860AF),
+    macroProtein: Color(0xFF0F6D49),
+    macroCarbs: Color(0xFFEA9907),
+    macroFat: Color(0xFF4FA576),
     danger: Color(0xFFB3392A),
-    line: Color(0xFFDCE3DF),
+    line: Color(0xFFE7ECE8),
   );
 
   // --- dark theme ---
   static const dark = AppColorScheme._(
-    canvas: Color(0xFF0D1412),
-    surface: Color(0xFF141E1B),
-    surfaceRaised: Color(0xFF1B2723),
-    ink: Color(0xFFE8F0EC),
-    inkMuted: Color(0xFF9DB0A8),
-    primary: Color(0xFF5CC4A3),
-    primaryWash: Color(0xFF16322B),
+    canvas: Color(0xFF0E1613),
+    surface: Color(0xFF16211C),
+    surfaceRaised: Color(0xFF1D2A24),
+    ink: Color(0xFFEAEFEB),
+    inkMuted: Color(0xFF9FB0A7),
+    primary: Color(0xFF4CC18F),
+    primaryWash: Color(0xFF1B3A2C),
     accent: Color(0xFFF0B429),
+    accentWash: Color(0xFF3A2C12),
+    accentSoft: Color(0xFF8A6A1F),
+    water: Color(0xFF6FC1E6),
+    sleep: Color(0xFF8A90D8),
+    macroProtein: Color(0xFF4CC18F),
+    macroCarbs: Color(0xFFF0B429),
+    macroFat: Color(0xFF8ED6B0),
     danger: Color(0xFFF08A7B),
-    line: Color(0xFF25332E),
+    line: Color(0xFF27332D),
   );
 }
 
 /// The semantic colour scheme.
 ///
 /// `accent` (turmeric) is for energy/calorie highlights — fills and
-/// graphics only, never small text. `primary` (moss) is for main
-/// actions and selected states.
+/// graphics only, never small text. `primary` (forest) is for main
+/// actions and selected states. `water`/`sleep` are data-viz icon
+/// colours only (never body text).
 class AppColorScheme {
   const AppColorScheme._({
     required this.canvas,
@@ -62,17 +75,47 @@ class AppColorScheme {
     required this.primary,
     required this.primaryWash,
     required this.accent,
+    required this.accentWash,
+    required this.accentSoft,
+    required this.water,
+    required this.sleep,
+    required this.macroProtein,
+    required this.macroCarbs,
+    required this.macroFat,
     required this.danger,
     required this.line,
   });
 
-  /// App background.
+  /// Smooth token interpolation for the light/dark theme transition.
+  factory AppColorScheme.lerp(AppColorScheme a, AppColorScheme b, double t) {
+    return AppColorScheme._(
+      canvas: Color.lerp(a.canvas, b.canvas, t)!,
+      surface: Color.lerp(a.surface, b.surface, t)!,
+      surfaceRaised: Color.lerp(a.surfaceRaised, b.surfaceRaised, t)!,
+      ink: Color.lerp(a.ink, b.ink, t)!,
+      inkMuted: Color.lerp(a.inkMuted, b.inkMuted, t)!,
+      primary: Color.lerp(a.primary, b.primary, t)!,
+      primaryWash: Color.lerp(a.primaryWash, b.primaryWash, t)!,
+      accent: Color.lerp(a.accent, b.accent, t)!,
+      accentWash: Color.lerp(a.accentWash, b.accentWash, t)!,
+      accentSoft: Color.lerp(a.accentSoft, b.accentSoft, t)!,
+      water: Color.lerp(a.water, b.water, t)!,
+      sleep: Color.lerp(a.sleep, b.sleep, t)!,
+      macroProtein: Color.lerp(a.macroProtein, b.macroProtein, t)!,
+      macroCarbs: Color.lerp(a.macroCarbs, b.macroCarbs, t)!,
+      macroFat: Color.lerp(a.macroFat, b.macroFat, t)!,
+      danger: Color.lerp(a.danger, b.danger, t)!,
+      line: Color.lerp(a.line, b.line, t)!,
+    );
+  }
+
+  /// App background (warm mist green).
   final Color canvas;
 
   /// Cards, sheets.
   final Color surface;
 
-  /// Modals, popovers (light adds a hairline border via [line]).
+  /// Modals, popovers.
   final Color surfaceRaised;
 
   /// Primary text.
@@ -90,6 +133,24 @@ class AppColorScheme {
   /// Energy / calorie highlight. Fills and graphics only.
   final Color accent;
 
+  /// Cream wash behind energy callouts (estimated-calories card).
+  final Color accentWash;
+
+  /// Soft gold for the "left today" chip.
+  final Color accentSoft;
+
+  /// Water data-viz only.
+  final Color water;
+
+  /// Sleep data-viz only.
+  final Color sleep;
+
+  /// Macro data-viz: protein / carbs / fat. Tuned per theme for
+  /// contrast on cards and chart legends.
+  final Color macroProtein;
+  final Color macroCarbs;
+  final Color macroFat;
+
   /// Errors, destructive actions.
   final Color danger;
 
@@ -97,55 +158,127 @@ class AppColorScheme {
   final Color line;
 }
 
-/// Typography scale (Section 10.3).
+/// Typography scale (Section 10.3): Plus Jakarta Sans (OFL), bundled
+/// under assets/fonts. Weights 400/500/600/700/800.
 ///
-/// One UI family, bundled as an asset (OFL-licensed, tabular
-/// figures verified with [FontFeature.tabularFigures]).
-/// Weights 400/500/600/700 only. Sentence case everywhere.
-///
-/// Tabular figures are set on every style so nutrition numbers
-/// align in columns (the bundled font must support this — verify
-/// in M0).
+/// Tabular figures are set on every style so nutrition numbers align
+/// in columns.
 abstract final class AppTypography {
   AppTypography._();
 
+  static const family = 'PlusJakartaSans';
+
   static const _tabular = [FontFeature.tabularFigures()];
 
-  // sp / line-height pairs.
-  static const display = TextStyle(
-    fontSize: 36,
-    height: 42 / 36,
-    fontWeight: FontWeight.w700,
+  /// Hero greeting / big numbers ("Good morning!", "482").
+  static const hero = TextStyle(
+    fontFamily: family,
+    fontSize: 30,
+    height: 38 / 30,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.4,
     fontFeatures: _tabular,
   );
+
+  /// Big counter numbers inside rings (34/800).
+  static const counter = TextStyle(
+    fontFamily: family,
+    fontSize: 34,
+    height: 40 / 34,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.4,
+    fontFeatures: _tabular,
+  );
+
+  /// Medium emphasis values ("1,420 avg kcal/day", names) 20/800.
+  static const value20 = TextStyle(
+    fontFamily: family,
+    fontSize: 20,
+    height: 27 / 20,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.2,
+    fontFeatures: _tabular,
+  );
+
+  /// Estimated-calories figure (18/800).
+  static const value18 = TextStyle(
+    fontFamily: family,
+    fontSize: 18,
+    height: 24 / 18,
+    fontWeight: FontWeight.w800,
+    fontFeatures: _tabular,
+  );
+
+  /// Screen titles ("Diary", "Insights") and sheet titles (24/800).
   static const titleL = TextStyle(
-    fontSize: 28,
-    height: 34 / 28,
+    fontFamily: family,
+    fontSize: 24,
+    height: 30 / 24,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.3,
+    fontFeatures: _tabular,
+  );
+
+  /// Card titles / section headers (15/700).
+  static const titleM = TextStyle(
+    fontFamily: family,
+    fontSize: 15,
+    height: 21 / 15,
     fontWeight: FontWeight.w700,
     fontFeatures: _tabular,
   );
-  static const titleM = TextStyle(
-    fontSize: 22,
-    height: 28 / 22,
-    fontWeight: FontWeight.w600,
-    fontFeatures: _tabular,
-  );
-  static const bodyL = TextStyle(
-    fontSize: 17,
-    height: 26 / 17,
-    fontWeight: FontWeight.w400,
-    fontFeatures: _tabular,
-  );
-  static const bodyM = TextStyle(
+
+  /// List item titles (15/700).
+  static const itemTitle = TextStyle(
+    fontFamily: family,
     fontSize: 15,
-    height: 22 / 15,
+    height: 21 / 15,
+    fontWeight: FontWeight.w700,
+    fontFeatures: _tabular,
+  );
+
+  /// Small titles in list rows (14/700).
+  static const itemS = TextStyle(
+    fontFamily: family,
+    fontSize: 14,
+    height: 20 / 14,
+    fontWeight: FontWeight.w700,
+    fontFeatures: _tabular,
+  );
+
+  /// Body / description (14/400).
+  static const bodyM = TextStyle(
+    fontFamily: family,
+    fontSize: 14,
+    height: 21 / 14,
     fontWeight: FontWeight.w400,
     fontFeatures: _tabular,
   );
-  static const label = TextStyle(
-    fontSize: 13,
-    height: 18 / 13,
+
+  /// Small labels, captions (12/500).
+  static const caption = TextStyle(
+    fontFamily: family,
+    fontSize: 12,
+    height: 17 / 12,
     fontWeight: FontWeight.w500,
+    fontFeatures: _tabular,
+  );
+
+  /// Buttons / chips (14/700).
+  static const label = TextStyle(
+    fontFamily: family,
+    fontSize: 14,
+    height: 19 / 14,
+    fontWeight: FontWeight.w700,
+    fontFeatures: _tabular,
+  );
+
+  /// Nav labels (11/600).
+  static const navLabel = TextStyle(
+    fontFamily: family,
+    fontSize: 11,
+    height: 15 / 11,
+    fontWeight: FontWeight.w600,
     fontFeatures: _tabular,
   );
 }
@@ -158,6 +291,7 @@ abstract final class AppSpacing {
   static const x2 = 8.0;
   static const x3 = 12.0;
   static const x4 = 16.0;
+  static const x5 = 20.0;
   static const x6 = 24.0;
   static const x8 = 32.0;
   static const x12 = 48.0;
@@ -170,9 +304,9 @@ abstract final class AppSpacing {
 abstract final class AppRadii {
   AppRadii._();
 
-  static const input = Radius.circular(8); // inputs, chips
-  static const card = Radius.circular(14); // cards
-  static const sheet = Radius.circular(24); // bottom sheets, hero surfaces
+  static const input = Radius.circular(10); // inputs, small tiles
+  static const card = Radius.circular(20); // cards
+  static const sheet = Radius.circular(28); // bottom sheets, hero surfaces
   static const pill = Radius.circular(999); // buttons, segmented controls
 }
 
@@ -189,12 +323,35 @@ abstract final class AppMotion {
   static const emphasized = Curves.easeInOutCubic;
 }
 
-/// Elevation: at most two soft shadow levels, used only for floating
-/// elements (bottom sheet, scan button). Depth otherwise comes from
-/// tonal surfaces and 1px [AppColorScheme.line] borders.
-abstract final class AppElevation {
-  AppElevation._();
+/// Soft diffusion shadows from the approved reference: cards lift on
+/// very low-alpha black, never harsh borders.
+abstract final class AppShadows {
+  AppShadows._();
 
-  static const sheet = 8.0;
-  static const fab = 12.0;
+  /// Cards and tiles.
+  static const card = [
+    BoxShadow(
+      color: Color(0x0F10201A), // 6% ink
+      blurRadius: 18,
+      offset: Offset(0, 6),
+    ),
+  ];
+
+  /// Flush chrome: the bottom nav bar lifts upward.
+  static const nav = [
+    BoxShadow(
+      color: Color(0x1410201A), // 8% ink
+      blurRadius: 24,
+      offset: Offset(0, -2),
+    ),
+  ];
+
+  /// The centre scan button.
+  static const scanButton = [
+    BoxShadow(
+      color: Color(0x2410201A), // 14% ink
+      blurRadius: 12,
+      offset: Offset(0, 5),
+    ),
+  ];
 }

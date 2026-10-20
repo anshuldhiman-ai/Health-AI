@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app/design_system/components/app_card.dart';
+import 'package:app/design_system/components/screen_header.dart';
+import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
+import 'package:app/domain/entities/nutrition_targets.dart';
+import 'package:app/data/preferences/goal_kind_controller.dart';
+import 'package:app/features/profile/presentation/goal_sheet.dart';
 import 'package:app/features/profile/application/profile_state.dart';
+import 'package:app/features/profile/presentation/about_dialog.dart';
+import 'package:app/features/profile/presentation/help_sheet.dart';
+import 'package:app/features/profile/presentation/settings_sheet.dart';
 import 'package:app/l10n/app_localizations.dart';
 
 /// Profile per ref_ui.png: identity block (device only — no cloud
@@ -13,81 +22,89 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(sampleProfileProvider);
+    final goal = ref.watch(goalKindProvider);
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
 
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.screenPadding,
             AppSpacing.x4,
             AppSpacing.screenPadding,
-            AppSpacing.x6,
+            120,
           ),
           children: [
-            Text(l10n.profileTitle, style: text.titleLarge),
-            const SizedBox(height: AppSpacing.x4),
-            Row(
-              spacing: AppSpacing.x3,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    state.displayName.isEmpty
-                        ? '·'
-                        : state.displayName[0].toUpperCase(),
-                    style: text.titleLarge?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+            ScreenHeader(
+              icon: Icons.person_rounded,
+              title: l10n.profileTitle,
+              trailing: IconButton(
+                onPressed: () => showSettingsSheet(context),
+                tooltip: l10n.settingsRow,
+                icon: Icon(
+                  Icons.settings_outlined,
+                  size: 21,
+                  color: scheme.onSurface,
                 ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 2,
-                    children: [
-                      Text(
-                        state.displayName,
-                        style: text.titleMedium,
-                      ),
-                      Text(
-                        l10n.deviceOnly,
-                        style: text.labelMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.x4),
-            _GoalCard(subtitle: state.goalSubtitle),
-            const SizedBox(height: AppSpacing.x6),
+            const SizedBox(height: 22),
+            Center(
+              child: Container(
+                width: 80,
+                height: 80,
+                padding: const EdgeInsets.all(2.5),
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: scheme.outlineVariant),
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/brand/avatar.png',
+                    fit: BoxFit.cover,
+                    semanticLabel: state.displayName,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              state.displayName,
+              textAlign: TextAlign.center,
+              style: AppTypography.value20.copyWith(color: scheme.onSurface),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              l10n.deviceOnly,
+              textAlign: TextAlign.center,
+              style: AppTypography.caption.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _GoalCard(
+              subtitle: _goalSubtitle(l10n, goal),
+              onTap: () => showGoalSheet(context),
+            ),
+            const SizedBox(height: 22),
             _LinkRow(
               icon: Icons.settings_outlined,
               label: l10n.settingsRow,
-              // TODO(M1): settings page (theme/locale overrides live here).
-              onTap: null,
+              onTap: () => showSettingsSheet(context),
             ),
             _LinkRow(
-              icon: Icons.help_outline,
+              icon: Icons.help_outline_rounded,
               label: l10n.helpRow,
-              onTap: null, // TODO(M2): support sheet
+              onTap: () => showHelpSheet(context),
             ),
             _LinkRow(
-              icon: Icons.info_outline,
+              icon: Icons.info_outline_rounded,
               label: l10n.aboutRow,
-              onTap: null, // TODO(M1): about + licences page
+              onTap: () => showAppAbout(context),
             ),
           ],
         ),
@@ -96,56 +113,63 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
+String _goalSubtitle(AppLocalizations l10n, GoalKind kind) => switch (kind) {
+  GoalKind.lose => l10n.goalLoseSubtitle,
+  GoalKind.maintain => l10n.goalMaintainSubtitle,
+  GoalKind.gain => l10n.goalGainSubtitle,
+};
+
 class _GoalCard extends StatelessWidget {
-  const _GoalCard({required this.subtitle});
+  const _GoalCard({required this.subtitle, required this.onTap});
 
   final String subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
+    final colors = context.appColors;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.x4),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppRadii.card.x),
-        border: Border.all(color: scheme.outline),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(14),
+      onTap: onTap,
       child: Row(
-        spacing: AppSpacing.x3,
+        spacing: 12,
         children: [
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest,
-              shape: BoxShape.circle,
+              color: colors.primaryWash,
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              Icons.flag_outlined,
-              color: scheme.primary,
-              size: 22,
-            ),
+            child: Icon(Icons.flag_rounded, color: scheme.primary, size: 21),
           ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 2,
               children: [
-                Text(l10n.myGoals, style: text.titleSmall),
+                Text(
+                  l10n.myGoals,
+                  style: AppTypography.itemS.copyWith(color: scheme.onSurface),
+                ),
+                const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: text.bodyMedium?.copyWith(
+                  style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
+                    fontSize: 13,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, size: 20),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: scheme.onSurfaceVariant,
+          ),
         ],
       ),
     );
@@ -166,35 +190,27 @@ class _LinkRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    final row = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppRadii.card.x),
-        border: Border.all(color: scheme.outline),
-      ),
-      child: Row(
-        spacing: AppSpacing.x3,
-        children: [
-          Icon(icon, color: scheme.primary, size: 22),
-          Expanded(child: Text(label, style: text.titleSmall)),
-          const Icon(Icons.chevron_right, size: 20),
-        ],
-      ),
-    );
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.x3),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          customBorder: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.card.x),
-          ),
-          child: row,
+      padding: const EdgeInsets.only(bottom: 12),
+      child: AppCard(
+        onTap: onTap,
+        child: Row(
+          spacing: 12,
+          children: [
+            Icon(icon, color: scheme.onSurface, size: 21),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTypography.itemS.copyWith(color: scheme.onSurface),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: scheme.onSurfaceVariant,
+            ),
+          ],
         ),
       ),
     );
