@@ -29,6 +29,20 @@ const List<String> familyOrder = [
   'others',
 ];
 
+final Map<String, String> _dishSearchIndex = {};
+
+String _getSearchableText(DishInfo dish) {
+  return _dishSearchIndex.putIfAbsent(dish.id, () {
+    final parts = [
+      dish.name.toLowerCase(),
+      dish.id.toLowerCase(),
+      dish.family.toLowerCase(),
+      ...dish.ingredients.map((i) => i.toLowerCase()),
+    ];
+    return parts.join(' ');
+  });
+}
+
 /// Filter by free text (name, id, family, ingredients) and family. Pure
 /// function so both the search screen and tests use the same rules.
 List<DishInfo> filterDishes(
@@ -37,16 +51,13 @@ List<DishInfo> filterDishes(
   String? family,
 }) {
   final needle = query.trim().toLowerCase();
+  if (needle.isEmpty && family == null) {
+    return catalog.dishes.values.toList(growable: false);
+  }
   return [
     for (final dish in catalog.dishes.values)
       if ((family == null || dish.family == family) &&
-          (needle.isEmpty ||
-              dish.name.toLowerCase().contains(needle) ||
-              dish.id.toLowerCase().contains(needle) ||
-              dish.family.toLowerCase().contains(needle) ||
-              dish.ingredients.any(
-                (ingredient) => ingredient.toLowerCase().contains(needle),
-              )))
+          (needle.isEmpty || _getSearchableText(dish).contains(needle)))
         dish,
   ];
 }

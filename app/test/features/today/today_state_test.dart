@@ -12,7 +12,39 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('adding a meal refreshes the dashboard totals immediately', () {
-    final container = ProviderContainer();
+    final sampleLog = DayLog(
+      initial: {
+        0: [
+          LogEntry.estimated(
+            mealKind: MealKind.breakfast,
+            dish: 'Poha + chai',
+            kcal: 420,
+            timeLabel: '8:15 AM',
+          ),
+          LogEntry.estimated(
+            mealKind: MealKind.lunch,
+            dish: 'Rajma chawal',
+            kcal: 468,
+            timeLabel: '1:10 PM',
+          ),
+          LogEntry.estimated(
+            mealKind: MealKind.dinner,
+            dish: 'Dal + roti',
+            kcal: 350,
+          ),
+          LogEntry.estimated(
+            mealKind: MealKind.snacks,
+            dish: 'Roasted chana',
+            kcal: 80,
+          ),
+        ],
+      },
+    );
+    final container = ProviderContainer(
+      overrides: [
+        dayLogProvider.overrideWith((ref) => sampleLog),
+      ],
+    );
     addTearDown(container.dispose);
 
     expect(container.read(todayStateProvider).caloriesConsumed, 1318);

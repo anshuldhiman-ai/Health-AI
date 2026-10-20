@@ -32,9 +32,9 @@ class ProfileScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.screenPadding,
-            AppSpacing.x4,
+            AppSpacing.x3,
             AppSpacing.screenPadding,
-            120,
+            88,
           ),
           children: [
             ScreenHeader(
@@ -50,7 +50,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 16),
             Center(
               child: Container(
                 width: 80,
@@ -70,13 +70,13 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               state.displayName,
               textAlign: TextAlign.center,
               style: AppTypography.value20.copyWith(color: scheme.onSurface),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
               l10n.deviceOnly,
               textAlign: TextAlign.center,
@@ -85,12 +85,12 @@ class ProfileScreen extends ConsumerWidget {
                 fontSize: 13,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             _GoalCard(
               subtitle: _goalSubtitle(l10n, goal),
               onTap: () => showGoalSheet(context),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 14),
             _LinkRow(
               icon: Icons.settings_outlined,
               label: l10n.settingsRow,

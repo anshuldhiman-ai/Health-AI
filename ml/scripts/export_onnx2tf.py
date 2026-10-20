@@ -247,8 +247,10 @@ def main() -> None:
     parser.add_argument(
         "--checkpoint",
         type=Path,
-        required=True,
-        help="EMA checkpoint, e.g. weights/baseline/best.pt",
+        default=Path("weights/baseline/best_new2.pt")
+        if Path("weights/baseline/best_new2.pt").exists()
+        else Path("weights/baseline/best.pt"),
+        help="EMA checkpoint (default: weights/baseline/best_new2.pt or best.pt)",
     )
     parser.add_argument(
         "--onnx-out",

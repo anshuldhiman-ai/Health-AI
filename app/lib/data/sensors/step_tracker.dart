@@ -86,10 +86,13 @@ final stepTrackerProvider = StreamProvider<StepSnapshot>((ref) async* {
 
   if (Platform.isAndroid) {
     try {
-      final permission = await Permission.activityRecognition.request();
-      if (!permission.isGranted) {
-        yield const StepSnapshot(status: StepStatus.permissionDenied);
-        return;
+      final status = await Permission.activityRecognition.status;
+      if (!status.isGranted) {
+        final requestStatus = await Permission.activityRecognition.request();
+        if (!requestStatus.isGranted) {
+          yield const StepSnapshot(status: StepStatus.permissionDenied);
+          return;
+        }
       }
     } catch (_) {
       yield const StepSnapshot(status: StepStatus.unavailable);
@@ -129,11 +132,20 @@ final stepTrackerProvider = StreamProvider<StepSnapshot>((ref) async* {
       }
     }
   } on MissingPluginException {
-    yield ledger.snapshot(StepStatus.unavailable, DateTime.now());
+    yield ledger.snapshot(
+      ledger.steps > 0 ? StepStatus.live : StepStatus.unavailable,
+      DateTime.now(),
+    );
   } on PlatformException {
-    yield ledger.snapshot(StepStatus.unavailable, DateTime.now());
+    yield ledger.snapshot(
+      ledger.steps > 0 ? StepStatus.live : StepStatus.unavailable,
+      DateTime.now(),
+    );
   } catch (_) {
-    yield ledger.snapshot(StepStatus.unavailable, DateTime.now());
+    yield ledger.snapshot(
+      ledger.steps > 0 ? StepStatus.live : StepStatus.unavailable,
+      DateTime.now(),
+    );
   }
 });
 
@@ -159,6 +171,7 @@ String formatStepCount(int steps) => formatCount(steps);
 /// or permission is unavailable (never a fake number).
 String stepTileLabel(AsyncValue<StepSnapshot> value) {
   final snapshot = value.valueOrNull;
-  if (snapshot == null || !snapshot.isLive) return '—';
-  return formatStepCount(snapshot.steps);
+  if (snapshot == null) return '—';
+  if (snapshot.isLive || snapshot.steps > 0) return formatStepCount(snapshot.steps);
+  return '—';
 }

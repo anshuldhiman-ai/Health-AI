@@ -34,9 +34,9 @@ __pycache__/
 *.pth
 *.safetensors
 *.onnx
-# Exported LiteRT weights are build artifacts, not source: keep the
-# 34 MB binary out of git. See app/assets/models/README.md.
+# Exported LiteRT mobile model bundled with the app
 app/assets/models/*.tflite
+!app/assets/models/baseline.tflite
 
 # Training/conversion outputs (checkpoints, ONNX, onnx2tf trees).
 ml/weights/

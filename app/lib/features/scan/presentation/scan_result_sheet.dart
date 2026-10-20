@@ -291,13 +291,18 @@ class ScanResultSheet extends ConsumerWidget {
     ref.read(scanSessionProvider.notifier).state = null;
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop(true);
+    messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
+        duration: const Duration(seconds: 4),
         content: Text(l10n.addedToast(l10n.mealLabel(mealKind))),
         action: SnackBarAction(
           label: l10n.undo,
           // Latest-added entry for the selected day is this write.
-          onPressed: () => store.removeNewest(dayOffset),
+          onPressed: () {
+            messenger.hideCurrentSnackBar();
+            store.removeNewest(dayOffset);
+          },
         ),
       ),
     );

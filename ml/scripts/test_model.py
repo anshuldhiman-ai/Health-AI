@@ -8,7 +8,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import torch
 
@@ -79,7 +82,12 @@ def test_model(ckpt_path: Path) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--ckpt", type=Path, required=True)
+    default_ckpt = (
+        Path("weights/baseline/best_new2.pt")
+        if Path("weights/baseline/best_new2.pt").exists()
+        else Path("weights/baseline/best.pt")
+    )
+    ap.add_argument("--ckpt", type=Path, default=default_ckpt, help=f"Checkpoint path (default: {default_ckpt})")
     args = ap.parse_args()
 
     test_model(args.ckpt)

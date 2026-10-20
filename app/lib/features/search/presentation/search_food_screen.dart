@@ -143,72 +143,93 @@ class _SearchFoodScreenState extends ConsumerState<SearchFoodScreen> {
                   );
                   final showPopular = _query.trim().isEmpty && _family == null;
                   final popular = popularDishes(data);
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.screenPadding,
-                      14,
-                      AppSpacing.screenPadding,
-                      32,
-                    ),
-                    children: [
-                      if (showPopular && popular.isNotEmpty) ...[
-                        GroupHeader(title: l10n.popularDishes),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final dish in popular)
-                              ActionChip(
-                                label: Text(dish.name),
-                                onPressed: () {
-                                  _controller.text = dish.name;
-                                  setState(() {
-                                    _query = dish.name;
-                                    _family = null;
-                                  });
-                                },
-                              ),
-                          ],
+                  return CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.screenPadding,
+                          12,
+                          AppSpacing.screenPadding,
+                          8,
                         ),
-                        const SizedBox(height: 22),
-                      ],
-                      GroupHeader(
-                        title: l10n.allDishes,
-                        trailing: Text(
-                          l10n.dishesCount(filtered.length),
-                          style: AppTypography.caption.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontSize: 11.5,
+                        sliver: SliverToBoxAdapter(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (showPopular && popular.isNotEmpty) ...[
+                                GroupHeader(title: l10n.popularDishes),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    for (final dish in popular)
+                                      ActionChip(
+                                        label: Text(dish.name),
+                                        onPressed: () {
+                                          _controller.text = dish.name;
+                                          setState(() {
+                                            _query = dish.name;
+                                            _family = null;
+                                          });
+                                        },
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                              GroupHeader(
+                                title: l10n.allDishes,
+                                trailing: Text(
+                                  l10n.dishesCount(filtered.length),
+                                  style: AppTypography.caption.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    fontSize: 11.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              if (filtered.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 20),
+                                  child: EmptyState(
+                                    icon: Icons.search_off_rounded,
+                                    title: l10n.noDishesFound,
+                                    message: l10n.noDishesFoundHint,
+                                    actionLabel: l10n.categoryAll,
+                                    onAction: () {
+                                      _controller.clear();
+                                      setState(() {
+                                        _query = '';
+                                        _family = null;
+                                      });
+                                    },
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      if (filtered.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 26),
-                          child: EmptyState(
-                            icon: Icons.search_off_rounded,
-                            title: l10n.noDishesFound,
-                            message: l10n.noDishesFoundHint,
-                            actionLabel: l10n.categoryAll,
-                            onAction: () {
-                              _controller.clear();
-                              setState(() {
-                                _query = '';
-                                _family = null;
-                              });
-                            },
+                      if (filtered.isNotEmpty)
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.screenPadding,
+                            0,
+                            AppSpacing.screenPadding,
+                            24,
                           ),
-                        )
-                      else
-                        ...filtered.map(
-                          (dish) => Padding(
-                            padding: const EdgeInsets.only(bottom: 9),
-                            child: _DishRow(
-                              dish: dish,
-                              onTap: () => _openDish(dish),
-                            ),
+                          sliver: SliverList.builder(
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final dish = filtered[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _DishRow(
+                                  dish: dish,
+                                  onTap: () => _openDish(dish),
+                                ),
+                              );
+                            },
                           ),
                         ),
                     ],

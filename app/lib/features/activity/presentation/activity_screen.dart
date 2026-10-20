@@ -30,11 +30,11 @@ class ActivityScreen extends ConsumerWidget {
             AppSpacing.screenPadding,
             AppSpacing.x2,
             AppSpacing.screenPadding,
-            AppSpacing.x8,
+            AppSpacing.x4,
           ),
           children: [
             _Header(title: l10n.activityTitle),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             value.when(
               loading: () => const Padding(
                 padding: EdgeInsets.only(top: 80),
@@ -360,16 +360,23 @@ class _HourlyCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        FractionallySizedBox(
-                          heightFactor: max == 0 ? 0 : buckets[i] / max,
-                          child: Container(
-                            height: 74,
-                            margin: const EdgeInsets.symmetric(horizontal: 7),
-                            decoration: BoxDecoration(
-                              color: i == buckets.length - 1
-                                  ? scheme.primary
-                                  : scheme.primary.withValues(alpha: 0.35),
-                              borderRadius: BorderRadius.circular(6),
+                        SizedBox(
+                          height: 74,
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: FractionallySizedBox(
+                              heightFactor: max == 0
+                                  ? 0
+                                  : (buckets[i] / max).clamp(0.0, 1.0),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 7),
+                                decoration: BoxDecoration(
+                                  color: i == buckets.length - 1
+                                      ? scheme.primary
+                                      : scheme.primary.withValues(alpha: 0.35),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -441,16 +448,23 @@ class _HistoryCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        FractionallySizedBox(
-                          heightFactor: max == 0 ? 0 : history[i].steps / max,
-                          child: Container(
-                            height: 82,
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            decoration: BoxDecoration(
-                              color: i == history.length - 1
-                                  ? scheme.primary
-                                  : scheme.primary.withValues(alpha: 0.35),
-                              borderRadius: BorderRadius.circular(7),
+                        SizedBox(
+                          height: 82,
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: FractionallySizedBox(
+                              heightFactor: max == 0
+                                  ? 0
+                                  : (history[i].steps / max).clamp(0.0, 1.0),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 6),
+                                decoration: BoxDecoration(
+                                  color: i == history.length - 1
+                                      ? scheme.primary
+                                      : scheme.primary.withValues(alpha: 0.35),
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                              ),
                             ),
                           ),
                         ),

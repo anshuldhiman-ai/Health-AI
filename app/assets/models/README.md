@@ -18,11 +18,13 @@ sync with it. Model binaries under `app/assets/models/` are gitignored
 
 ## Current checkpoint
 
-- `ml/weights/baseline/best.pt`, epoch 9, **EMA weights**.
+- `ml/weights/baseline/best_new2.pt` / `ml/weights/baseline/best.pt`, **EMA weights**.
 - `timm` `mobilenetv4_conv_medium`, 80 classes.
-- Export path: PyTorch -> ONNX (opset 17, `dynamo=False`) -> onnx2tf.
+- Export path: PyTorch (`best_new2.pt` / `best.pt`) -> ONNX (opset 17, `dynamo=False`) -> onnx2tf -> LiteRT `.tflite`.
   `ml/scripts/export_tflite.py` is the separate Linux/litert-torch path
   and is not used for this asset.
+- The model is bundled inside the mobile APK at `assets/models/baseline.tflite`
+  and executed completely on-device with `flutter_litert` in a background isolate.
 
 ## Export
 
@@ -31,7 +33,7 @@ The ONNX step needs `onnx` in the ML environment (`python -m pip install onnx`).
 From `ml/` (ONNX output first):
 
 ```bash
-python scripts/export_onnx2tf.py --checkpoint weights/baseline/best.pt
+python scripts/export_onnx2tf.py --checkpoint weights/baseline/best_new2.pt
 ```
 
 Then convert with a Python that has `onnx2tf` and `tensorflow`:

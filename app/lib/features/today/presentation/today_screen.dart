@@ -32,9 +32,6 @@ class TodayScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(todayStateProvider);
-    final steps = ref.watch(stepTrackerProvider);
-    final water = ref.watch(waterTodayProvider);
-    final sleep = ref.watch(sleepTodayProvider);
     final l10n = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
@@ -54,24 +51,24 @@ class TodayScreen extends ConsumerWidget {
             AppSpacing.screenPadding,
             AppSpacing.x2,
             AppSpacing.screenPadding,
-            120, // clears the floating nav + scan button
+            88, // cleanly clears the 66dp floating nav + scan button
           ),
           children: [
             const _Header(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
             Text(greeting, style: text.displayLarge),
             const SizedBox(height: 4),
             Text(
               l10n.todayTagline,
               style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             _CaloriesRingCard(state: state),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             _TrackBanner(state: state),
-            const SizedBox(height: 14),
-            _HealthTiles(steps: steps, water: water, sleep: sleep),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
+            const _HealthTiles(),
+            const SizedBox(height: 12),
             _QuickActions(meal: mealForHour(hour)),
           ],
         ),
@@ -258,19 +255,14 @@ class _TrackBanner extends StatelessWidget {
   }
 }
 
-class _HealthTiles extends StatelessWidget {
-  const _HealthTiles({
-    required this.steps,
-    required this.water,
-    required this.sleep,
-  });
-
-  final AsyncValue<StepSnapshot> steps;
-  final HydrationState water;
-  final SleepRecord? sleep;
+class _HealthTiles extends ConsumerWidget {
+  const _HealthTiles();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final steps = ref.watch(stepTrackerProvider);
+    final water = ref.watch(waterTodayProvider);
+    final sleep = ref.watch(sleepTodayProvider);
     final l10n = AppLocalizations.of(context)!;
     final colors = context.appColors;
     final snapshot = steps.valueOrNull;
@@ -281,7 +273,7 @@ class _HealthTiles extends StatelessWidget {
         : l10n.stepsTile;
     final sleepValue = sleep == null
         ? '—'
-        : formatSleepDuration(l10n, sleep!.durationMinutes);
+        : formatSleepDuration(l10n, sleep.durationMinutes);
 
     return Row(
       spacing: AppSpacing.x3,

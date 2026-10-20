@@ -33,11 +33,11 @@ class WaterScreen extends ConsumerWidget {
             AppSpacing.screenPadding,
             AppSpacing.x2,
             AppSpacing.screenPadding,
-            AppSpacing.x8,
+            AppSpacing.x4,
           ),
           children: [
             _Header(title: l10n.waterTitle),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             AppCard(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
               child: Column(
@@ -226,16 +226,23 @@ class _WeekCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    FractionallySizedBox(
-                      heightFactor: days[i].glasses / max,
-                      child: Container(
-                        height: 76,
-                        margin: const EdgeInsets.symmetric(horizontal: 6),
-                        decoration: BoxDecoration(
-                          color: i == days.length - 1
-                              ? colors.water
-                              : colors.water.withValues(alpha: 0.35),
-                          borderRadius: BorderRadius.circular(7),
+                    SizedBox(
+                      height: 76,
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: FractionallySizedBox(
+                          heightFactor: max == 0
+                              ? 0
+                              : (days[i].glasses / max).clamp(0.0, 1.0),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 6),
+                            decoration: BoxDecoration(
+                              color: i == days.length - 1
+                                  ? colors.water
+                                  : colors.water.withValues(alpha: 0.35),
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                          ),
                         ),
                       ),
                     ),
