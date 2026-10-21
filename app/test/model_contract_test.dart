@@ -35,14 +35,25 @@ void main() {
   test('labels.json and the catalog agree on the class list', () {
     final catalogClasses = (catalog['classes'] as List<dynamic>).cast<String>();
 
-    // The catalog may hold MORE classes than the current model (the
-    // catalog covers the whole taxonomy, the model a subset). What
-    // matters is that the model's label order is a prefix of the
-    // catalog's order, so index -> label -> dish resolves.
+    // The catalog's own order is the taxonomy order (sorted), NOT the
+    // model output order. The app maps a model index to a dish by NAME
+    // (labels.json[index] -> catalog[label]), so what must hold is
+    // that every model label exists in the catalog.
+    for (final label in labels) {
+      expect(
+        catalogClasses.contains(label),
+        isTrue,
+        reason: 'catalog has no class for model label "$label"',
+      );
+    }
+  });
+
+  test('the catalog has no duplicate classes', () {
+    final catalogClasses = (catalog['classes'] as List<dynamic>).cast<String>();
     expect(
-      catalogClasses.take(labels.length).toList(),
-      labels,
-      reason: 'catalog class order must match labels.json order',
+      catalogClasses.length,
+      catalogClasses.toSet().length,
+      reason: 'duplicate class names make index -> class ambiguous',
     );
   });
 

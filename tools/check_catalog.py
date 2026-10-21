@@ -65,16 +65,15 @@ def main() -> int:
         for c in no_dish[:20]:
             print(f"  {c}")
 
-    # The catalog class ORDER must line up with the model's index order.
-    if classes and catalog_classes[: len(classes)] != classes:
-        for i, (a, b) in enumerate(zip(catalog_classes, classes)):
-            if a != b:
-                print(f"\nORDER MISMATCH at index {i}: catalog={a!r} model={b!r}")
-                break
-    elif classes:
-        print("\norder: OK (model classes are a prefix of the catalog order)")
+    # The app maps a model output index to a dish by NAME
+    # (labels.json[index] -> catalog[label]), so the catalog's own
+    # (sorted) order does not have to match the model's order. What
+    # must hold is that every model class has a dish.
+    dupes = [c for c in set(catalog_classes) if catalog_classes.count(c) > 1]
+    if dupes:
+        print(f"\nDUPLICATE class names: {len(dupes)} -> {sorted(dupes)[:10]}")
 
-    if missing or no_dish:
+    if missing or no_dish or dupes:
         print("\nRESULT: the catalog needs regenerating for this model")
         return 1
     print("\nRESULT: catalog covers every model class")

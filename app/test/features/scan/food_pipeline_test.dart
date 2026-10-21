@@ -19,15 +19,24 @@ void main() {
     return DishCatalog.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
-  test('catalog matches the exported label order and is complete', () async {
+  test('catalog covers the exported label set and is complete', () async {
     final labelsRaw = await rootBundle.loadString('assets/models/labels.json');
     final labels =
         (jsonDecode(labelsRaw) as Map<String, dynamic>)['classes']
             as List<dynamic>;
     final catalog = await loadCatalog();
 
-    expect(catalog.classes.take(labels.length).toList(), labels);
+    // The catalog's own order is the taxonomy order; the model output
+    // order lives in labels.json. The app maps a model index to a dish
+    // by NAME, so every label must be present in the catalog.
     expect(catalog.classes.length, greaterThanOrEqualTo(80));
+    for (final id in labels) {
+      expect(
+        catalog.classes.contains(id as String),
+        isTrue,
+        reason: 'catalog has no class row for $id',
+      );
+    }
 
     for (final id in labels) {
       final dish = catalog[id as String];

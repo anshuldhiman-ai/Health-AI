@@ -93,7 +93,14 @@ class DishInfo {
   final List<ServingPreset> servings;
 }
 
-/// The 80-dish catalog. Class order matches the model output.
+/// The dish catalog: every class the app can label, plus its nutrition
+/// knowledge.
+///
+/// The class ORDER here is the catalog's own (sorted) taxonomy order. It
+/// is NOT the model output order: that lives in
+/// `assets/models/labels.json`, and a model output index is mapped to a
+/// dish by NAME (`labels.json[index]` -> `catalog[label]`). Never
+/// index into [classes] with a model output index.
 class DishCatalog {
   const DishCatalog({required this.classes, required this.dishes});
 
@@ -113,13 +120,11 @@ class DishCatalog {
     );
   }
 
+  /// Every class in the catalog, sorted. See the class docs: this is
+  /// the taxonomy order, not the model output order.
   final List<String> classes;
   final Map<String, DishInfo> dishes;
 
+  /// Look a dish up by its model label.
   DishInfo? operator [](String label) => dishes[label];
-
-  DishInfo? byClassIndex(int index) {
-    if (index < 0 || index >= classes.length) return null;
-    return dishes[classes[index]];
-  }
 }
