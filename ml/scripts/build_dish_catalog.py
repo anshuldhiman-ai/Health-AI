@@ -445,6 +445,7 @@ SERVINGS: dict[str, list[tuple[str, int]]] = {
     "katori": [("1 Katori", 150), ("1 Bowl", 250)],
     "chivda": [("1 Handful", 30)],
     "gujhia": [("1 Piece", 60)],
+    "pesarattu": [("1 Piece", 60), ("2 Pieces", 120)],
 }
 
 # Extra rows for classes in the NEW dataset's label set that the
