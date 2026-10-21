@@ -172,6 +172,8 @@ String formatStepCount(int steps) => formatCount(steps);
 String stepTileLabel(AsyncValue<StepSnapshot> value) {
   final snapshot = value.valueOrNull;
   if (snapshot == null) return '—';
-  if (snapshot.isLive || snapshot.steps > 0) return formatStepCount(snapshot.steps);
+  if (snapshot.isLive || snapshot.steps > 0) {
+    return formatStepCount(snapshot.steps);
+  }
   return '—';
 }

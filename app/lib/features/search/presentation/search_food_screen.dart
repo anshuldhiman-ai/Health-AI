@@ -44,11 +44,14 @@ class _SearchFoodScreenState extends ConsumerState<SearchFoodScreen> {
     super.dispose();
   }
 
-  void _openDish(DishInfo dish) {
+  Future<void> _openDish(DishInfo dish) async {
     final id = Uri.encodeComponent(dish.id);
-    context.push(
+    final added = await context.push<bool>(
       '/dish/$id?day=${widget.dayOffset}&meal=${widget.initialMeal.name}',
     );
+    if (added == true && mounted) {
+      Navigator.of(context).maybePop(true);
+    }
   }
 
   @override

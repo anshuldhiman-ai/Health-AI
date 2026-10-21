@@ -32,28 +32,27 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        ndk {
-            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))
-        }
     }
 
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("arm64-v8a", "armeabi-v7a")
-            isUniversalApk = false
-        }
-    }
+    // Note: Use `flutter build apk --split-per-abi` from Flutter CLI rather than
+    // enabling AGP splits here, preventing APK output path lookup errors.
 
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // R8 minification stays ON (smaller APK), but the app relies
+            // on plugins that resolve classes BY NAME at runtime
+            // (shared_preferences via JNI, path_provider, health, Tink).
+            // The matching keep rules live in proguard-rules.pro.
             isMinifyEnabled = true
-            isShrinkResources = true
+            // Resource shrinking is OFF: Flutter keeps its assets in
+            // assets/, but the engine also loads some Android resources
+            // reflectively, and a stripped resource shows up as a blank
+            // window with no logcat error. Keep it on only after the
+            // release APK is verified on a real device.
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

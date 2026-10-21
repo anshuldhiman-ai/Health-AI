@@ -59,11 +59,11 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
       dayOffset: widget.dayOffset,
     );
     final messenger = ScaffoldMessenger.of(context);
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(true);
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 3),
         content: Text(l10n.addedToast(l10n.mealLabel(_meal))),
         action: SnackBarAction(
           label: l10n.undo,

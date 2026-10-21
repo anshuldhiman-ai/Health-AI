@@ -97,7 +97,7 @@ class _WeeklyProgressScreenState extends ConsumerState<WeeklyProgressScreen> {
             AppSpacing.screenPadding,
             AppSpacing.x2,
             AppSpacing.screenPadding,
-            AppSpacing.x8,
+            AppSpacing.x4,
           ),
           children: [
             _Header(title: l10n.weeklyProgress, subtitle: l10n.weeklySubtitle),

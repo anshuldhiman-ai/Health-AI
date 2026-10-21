@@ -11,23 +11,22 @@ void main() {
   testWidgets('SleepScreen renders week history chart without layout crashes', (
     tester,
   ) async {
-    final now = DateTime.now();
     final sampleSleep = SleepState(
       records: {
-        SleepRecord(
+        const SleepRecord(
           date: '2026-10-18',
           bedMinutes: 23 * 60,
           wakeMinutes: 7 * 60,
-        ).date: SleepRecord(
+        ).date: const SleepRecord(
           date: '2026-10-18',
           bedMinutes: 23 * 60,
           wakeMinutes: 7 * 60,
         ),
-        SleepRecord(
+        const SleepRecord(
           date: '2026-10-19',
           bedMinutes: 22 * 60 + 30,
           wakeMinutes: 6 * 60 + 30,
-        ).date: SleepRecord(
+        ).date: const SleepRecord(
           date: '2026-10-19',
           bedMinutes: 22 * 60 + 30,
           wakeMinutes: 6 * 60 + 30,
@@ -37,9 +36,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          initialSleepProvider.overrideWithValue(sampleSleep),
-        ],
+        overrides: [initialSleepProvider.overrideWithValue(sampleSleep)],
         child: MaterialApp(
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,

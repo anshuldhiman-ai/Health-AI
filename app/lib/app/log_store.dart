@@ -43,10 +43,8 @@ class DayTotals {
 }
 
 class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
-  // ignore: prefer_initializing_formals
-  DayLog({SharedPreferences? prefs, Map<int, List<LogEntry>>? initial})
-      : _prefs = prefs,
-        super(initial ?? const {});
+  DayLog({this.prefs, Map<int, List<LogEntry>>? initial})
+    : super(initial ?? const {});
 
   /// Diary shows one week; Insights needs enough history for 90D plus
   /// the preceding 90D comparison window.
@@ -55,7 +53,7 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
 
   static const storageKey = 'food.log.v2';
 
-  final SharedPreferences? _prefs;
+  final SharedPreferences? prefs;
   Future<void> _saveQueue = Future<void>.value();
 
   List<LogEntry> entriesFor(int dayOffset) => state[dayOffset] ?? const [];
@@ -76,26 +74,27 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
     );
   }
 
-  int kcalForMeal(int dayOffset, MealKind kind) => entriesFor(dayOffset)
-      .where((e) => e.mealKind == kind)
-      .fold(0, (sum, e) => sum + e.kcal);
+  int kcalForMeal(int dayOffset, MealKind kind) =>
+      entriesFor(dayOffset)
+          .where((e) => e.mealKind == kind)
+          .fold(0, (sum, e) => sum + e.kcal);
 
   /// Append a confirmed scan/menu pick to the requested day. The UI
   /// never writes raw macro numbers — it gets an estimated entry from
   /// [LogEntry.estimated] or the shared portion math.
   void add(LogEntry entry, {int dayOffset = 0}) {
     if (dayOffset < 0 || dayOffset >= maxDays) return;
-    _commit({...state, dayOffset: [...entriesFor(dayOffset), entry]});
+    _commit({
+      ...state,
+      dayOffset: [...entriesFor(dayOffset), entry],
+    });
   }
 
   /// Undo support: remove the newest entry of any day.
   bool removeNewest(int dayOffset) {
     final entries = entriesFor(dayOffset);
     if (entries.isEmpty) return false;
-    _commit({
-      ...state,
-      dayOffset: entries.sublist(0, entries.length - 1),
-    });
+    _commit({...state, dayOffset: entries.sublist(0, entries.length - 1)});
     return true;
   }
 
@@ -113,7 +112,7 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
 
   void _commit(Map<int, List<LogEntry>> next) {
     state = next;
-    final prefs = _prefs;
+    final prefs = this.prefs;
     if (prefs == null) return;
     final payload = jsonEncode({
       'baseDate': _dateOnly(DateTime.now()).toIso8601String(),
@@ -123,17 +122,35 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
       },
     });
     // Serialize writes so a fast undo cannot land before its add.
-    _saveQueue = _saveQueue.then(
-      (_) => prefs.setString(storageKey, payload),
-    );
+    _saveQueue = _saveQueue.then((_) => prefs.setString(storageKey, payload));
   }
 }
 
 /// Load the on-device diary before the first frame. Entries are
 /// stored against the date they were logged, so shifts forward when
 /// the app opens on a later day.
+///
+/// Never throws: a storage failure returns an empty log so the app can
+/// still paint its first frame (an uncaught throw here means no
+/// `runApp`, which the user sees as a black screen).
 Future<DayLog> loadSavedDayLog() async {
-  final prefs = await SharedPreferences.getInstance();
+  SharedPreferences? prefs;
+  try {
+    prefs = await SharedPreferences.getInstance();
+  } catch (_) {
+    // Storage unavailable: start with an empty, in-memory-only log.
+    return DayLog();
+  }
+  try {
+    return await _loadSavedDayLog(prefs);
+  } catch (_) {
+    // Corrupt payload of any other shape: drop it and start clean.
+    await prefs.remove(DayLog.storageKey).catchError((_) => false);
+    return DayLog(prefs: prefs);
+  }
+}
+
+Future<DayLog> _loadSavedDayLog(SharedPreferences prefs) async {
   final raw = prefs.getString(DayLog.storageKey);
   final entries = <int, List<LogEntry>>{};
   DateTime? base;

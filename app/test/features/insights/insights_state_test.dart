@@ -20,9 +20,7 @@ void main() {
       },
     );
     final container = ProviderContainer(
-      overrides: [
-        dayLogProvider.overrideWith((ref) => sampleLog),
-      ],
+      overrides: [dayLogProvider.overrideWith((ref) => sampleLog)],
     );
     addTearDown(container.dispose);
 

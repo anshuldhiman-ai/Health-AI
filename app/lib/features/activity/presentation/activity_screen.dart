@@ -369,7 +369,9 @@ class _HourlyCard extends StatelessWidget {
                                   ? 0
                                   : (buckets[i] / max).clamp(0.0, 1.0),
                               child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 7),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                ),
                                 decoration: BoxDecoration(
                                   color: i == buckets.length - 1
                                       ? scheme.primary
@@ -457,7 +459,9 @@ class _HistoryCard extends StatelessWidget {
                                   ? 0
                                   : (history[i].steps / max).clamp(0.0, 1.0),
                               child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 6),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
                                 decoration: BoxDecoration(
                                   color: i == history.length - 1
                                       ? scheme.primary

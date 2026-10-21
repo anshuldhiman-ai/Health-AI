@@ -111,8 +111,12 @@ class _NavShell extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       extendBody: true,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: _ScanButton(onPressed: () => context.push('/scan')),
+      floatingActionButton: _ScanButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          context.push('/scan');
+        },
+      ),
       bottomNavigationBar: _BottomBar(navigationShell: navigationShell),
     );
   }
@@ -140,10 +144,13 @@ class _BottomBar extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => navigationShell.goBranch(
-              branchIndex,
-              initialLocation: branchIndex == navigationShell.currentIndex,
-            ),
+            onTap: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              navigationShell.goBranch(
+                branchIndex,
+                initialLocation: branchIndex == navigationShell.currentIndex,
+              );
+            },
             splashFactory: NoSplash.splashFactory,
             highlightColor: Colors.transparent,
             child: Column(

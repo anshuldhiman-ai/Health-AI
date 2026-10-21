@@ -36,7 +36,7 @@ void main() {
   );
 
   test('empty query returns all dishes', () {
-    final results = filterDishes(catalog, query: '');
+    final results = filterDishes(catalog);
     expect(results, hasLength(3));
   });
 

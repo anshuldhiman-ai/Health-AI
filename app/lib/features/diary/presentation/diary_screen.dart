@@ -340,9 +340,12 @@ class _MealBars extends StatelessWidget {
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: FractionallySizedBox(
-                      heightFactor: bar.calories == 0
+                      heightFactor: bar.calories == 0 || maxKcal == 0
                           ? 0
-                          : (10 + 52 * bar.calories / maxKcal) / 62,
+                          : ((10 + 52 * bar.calories / maxKcal) / 62).clamp(
+                              0.0,
+                              1.0,
+                            ),
                       widthFactor: 0.52,
                       child: DecoratedBox(
                         decoration: BoxDecoration(

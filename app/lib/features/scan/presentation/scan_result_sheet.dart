@@ -294,7 +294,7 @@ class ScanResultSheet extends ConsumerWidget {
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 3),
         content: Text(l10n.addedToast(l10n.mealLabel(mealKind))),
         action: SnackBarAction(
           label: l10n.undo,
