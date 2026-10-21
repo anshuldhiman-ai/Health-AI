@@ -287,9 +287,7 @@ def export_labels(
         return None
 
     if splits_csv is None:
-        raise SystemExit(
-            "error: --labels-out needs --splits (the source of the class order)"
-        )
+        raise SystemExit("error: --labels-out needs --splits (the source of the class order)")
     if not splits_csv.is_file():
         raise SystemExit(f"error: splits CSV not found: {splits_csv}")
 
@@ -300,9 +298,7 @@ def export_labels(
             f"has {num_classes}; the model and the data do not match"
         )
 
-    target = out_json or (
-        Path(__file__).resolve().parents[2] / "app/assets/models/labels.json"
-    )
+    target = out_json or (Path(__file__).resolve().parents[2] / "app/assets/models/labels.json")
     write_labels(classes, target)
     print(f"labels.json: {target} ({len(classes)} classes)")
     return target

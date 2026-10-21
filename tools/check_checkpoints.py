@@ -25,17 +25,25 @@ for path in sorted(WEIGHTS.glob("*.pt")):
 
     head = None
     for key, val in ck.get("model", {}).items():
-        if hasattr(val, "dim") and val.dim() == 2 and val.shape[0] != 1:
-            if head is None or val.shape[0] > head[1][0]:
-                head = (key, tuple(val.shape))
+        if (
+            hasattr(val, "dim")
+            and val.dim() == 2
+            and val.shape[0] != 1
+            and (head is None or val.shape[0] > head[1][0])
+        ):
+            head = (key, tuple(val.shape))
 
     ema_head = None
     ema = ck.get("ema")
     if ema:
         for key, val in ema.items():
-            if hasattr(val, "dim") and val.dim() == 2 and val.shape[0] != 1:
-                if ema_head is None or val.shape[0] > ema_head[1][0]:
-                    ema_head = (key, tuple(val.shape))
+            if (
+                hasattr(val, "dim")
+                and val.dim() == 2
+                and val.shape[0] != 1
+                and (ema_head is None or val.shape[0] > ema_head[1][0])
+            ):
+                ema_head = (key, tuple(val.shape))
 
     print(f"{path.name}")
     print(f"  epoch       : {ck.get('epoch')}")

@@ -10,7 +10,8 @@ import struct
 import sys
 
 PATH = sys.argv[1] if len(sys.argv) > 1 else "app/assets/models/baseline.tflite"
-data = open(PATH, "rb").read()
+with open(PATH, "rb") as handle:
+    data = handle.read()
 
 assert data[4:8] == b"TFL3", f"not a tflite file: {data[4:8]!r}"
 

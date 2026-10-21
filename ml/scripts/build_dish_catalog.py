@@ -533,9 +533,7 @@ def _row_to_dish(
             "carbs": carbs,
             "fat": fat,
         },
-        "servings": [
-            {"label": name, "grams": grams} for name, grams in SERVINGS[preset]
-        ],
+        "servings": [{"label": name, "grams": grams} for name, grams in SERVINGS[preset]],
     }
 
 
@@ -558,15 +556,11 @@ def main() -> None:
 
     dishes: dict[str, dict[str, object]] = {}
     for label, display, family, kcal, protein, carbs, fat, ing, preset in ROWS:
-        dishes[label] = _row_to_dish(
-            label, display, family, kcal, protein, carbs, fat, ing, preset
-        )
+        dishes[label] = _row_to_dish(label, display, family, kcal, protein, carbs, fat, ing, preset)
     for label, display, family, kcal, protein, carbs, fat, ing, preset in EXTRA_ROWS:
         dishes.setdefault(
             label,
-            _row_to_dish(
-                label, display, family, kcal, protein, carbs, fat, ing, preset
-            ),
+            _row_to_dish(label, display, family, kcal, protein, carbs, fat, ing, preset),
         )
 
     # Carry over rows that only exist in the shipped catalog.
