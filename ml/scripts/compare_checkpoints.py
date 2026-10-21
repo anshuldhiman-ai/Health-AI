@@ -16,7 +16,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 
-from ml_pipeline.eval.metrics import topk_accuracy, macro_f1, balanced_accuracy
+from ml_pipeline.eval.metrics import balanced_accuracy, macro_f1, topk_accuracy
 from ml_pipeline.models.classifier import build_model
 from ml_pipeline.train.datasets import ManifestDataset
 
@@ -116,7 +116,7 @@ def main() -> None:
     elif metrics1["top1"] > metrics2["top1"]:
         print(f"\n🏆 WINNER: {args.ckpt1.name} (better top-1 accuracy)")
     else:
-        print(f"\n🤝 TIE (same top-1 accuracy)")
+        print("\n🤝 TIE (same top-1 accuracy)")
 
 
 if __name__ == "__main__":

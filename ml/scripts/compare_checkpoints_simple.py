@@ -31,7 +31,7 @@ def compare_metadata(ckpt1: dict, ckpt2: dict) -> None:
     for key in all_keys:
         val1 = meta1.get(key, "N/A")
         val2 = meta2.get(key, "N/A")
-        print(f"{key:<20} {str(val1):<25} {str(val2):<25}")
+        print(f"{key:<20} {val1!s:<25} {val2!s:<25}")
 
     print(f"{'epoch':<20} {ckpt1.get('epoch', 'N/A'):<25} {ckpt2.get('epoch', 'N/A'):<25}")
     print()
@@ -50,7 +50,7 @@ def compare_weights(ckpt1: dict, ckpt2: dict) -> None:
     print("-" * 70)
 
     diffs = []
-    for key in state1.keys():
+    for key in state1:
         if key not in state2:
             continue
         w1 = state1[key]
@@ -92,7 +92,7 @@ def compare_ema_weights(ckpt1: dict, ckpt2: dict) -> None:
     print("-" * 70)
 
     diffs = []
-    for key in state1.keys():
+    for key in state1:
         if key not in state2:
             continue
         w1 = state1[key]

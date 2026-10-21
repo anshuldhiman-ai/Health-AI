@@ -10,16 +10,24 @@ model with the same normalization already applied.
 Pipeline:
   checkpoint (EMA) -> normalized wrapper -> ONNX opset 17
   -> onnx2tf -> <model>_float32.tflite
-  TFLite contract: input [1,224,224,3] float32 0..1 -> output [1,80] raw logits
+  TFLite contract: input [1,224,224,3] float32 0..1 -> output [1,N] raw logits
+
+The app maps a model output index to a dish name through
+app/assets/models/labels.json, so the labels MUST be regenerated
+whenever the class set changes. Pass --splits (the training splits
+CSV) and the export writes labels.json in the exact order the model
+was trained with, and refuses to continue if the class count does not
+match the checkpoint.
 
 Usage (run from ml/):
 
   # ONNX only (needs onnx in this Python)
   python scripts/export_onnx2tf.py --checkpoint weights/baseline/best.pt
 
-  # ONNX + TFLite (converter Python needs onnx2tf + tensorflow)
+  # ONNX + TFLite + regenerated labels.json
   python scripts/export_onnx2tf.py \\
-      --checkpoint weights/baseline/best.pt \\
+      --checkpoint weights/baseline/best_new3.pt \\
+      --splits data/interim/indian_food/manifest_splits.csv \\
       --convert \\
       --converter-python "$TEMP/ai_export_env/Scripts/python.exe"
 
@@ -29,6 +37,7 @@ Do not silently substitute float16: only *_float32.tflite is accepted.
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -239,6 +248,66 @@ def _print_copy_hint(tflite: Path, image_size: int, num_classes: int) -> None:
     print(f'  bash:       cp "{resolved}" "{asset}"')
 
 
+def read_class_order(splits_csv: Path) -> list[str]:
+    """The class order the model was trained with.
+
+    Must match `scripts/train.py::read_classes` exactly: the sorted set
+    of `label` values in the splits CSV. The model head is indexed in
+    this order, so the app's labels.json MUST use the same order.
+    """
+    import csv
+
+    with open(splits_csv, newline="", encoding="utf-8") as f:
+        return sorted({row["label"] for row in csv.DictReader(f)})
+
+
+def write_labels(classes: list[str], out_json: Path) -> Path:
+    """Write the app's labels.json (index -> class name)."""
+    out_json.parent.mkdir(parents=True, exist_ok=True)
+    out_json.write_text(
+        json.dumps({"classes": classes}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return out_json
+
+
+def export_labels(
+    splits_csv: Path | None,
+    num_classes: int,
+    out_json: Path | None,
+) -> Path | None:
+    """Regenerate labels.json from the training splits.
+
+    The app maps a model output index to a dish name through
+    labels.json. If the model is re-trained on a different class set
+    (the new dataset has 239 classes, the old one 80) and labels.json
+    is not regenerated, every prediction is silently mislabelled.
+    """
+    if splits_csv is None and out_json is None:
+        return None
+
+    if splits_csv is None:
+        raise SystemExit(
+            "error: --labels-out needs --splits (the source of the class order)"
+        )
+    if not splits_csv.is_file():
+        raise SystemExit(f"error: splits CSV not found: {splits_csv}")
+
+    classes = read_class_order(splits_csv)
+    if len(classes) != num_classes:
+        raise SystemExit(
+            f"error: splits CSV has {len(classes)} classes but the checkpoint "
+            f"has {num_classes}; the model and the data do not match"
+        )
+
+    target = out_json or (
+        Path(__file__).resolve().parents[2] / "app/assets/models/labels.json"
+    )
+    write_labels(classes, target)
+    print(f"labels.json: {target} ({len(classes)} classes)")
+    return target
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -283,6 +352,24 @@ def main() -> None:
         action="store_true",
         help="run onnx2tf after the ONNX export (otherwise stop at ONNX)",
     )
+    parser.add_argument(
+        "--splits",
+        type=Path,
+        default=None,
+        help=(
+            "training splits CSV; used to regenerate the app's labels.json "
+            "so the label order always matches the model's output order"
+        ),
+    )
+    parser.add_argument(
+        "--labels-out",
+        type=Path,
+        default=None,
+        help=(
+            "where to write labels.json "
+            "(default: app/assets/models/labels.json). Requires --splits."
+        ),
+    )
     args = parser.parse_args()
 
     if args.image_size <= 0:
@@ -296,6 +383,10 @@ def main() -> None:
     )
     print(f"checkpoint: {args.checkpoint} (epoch {epoch}, EMA weights)")
     print(f"model: {args.model_name}, {num_classes} classes, {args.image_size}px")
+
+    # Regenerate labels.json BEFORE the export so a failed export cannot
+    # leave a new model with the old label file.
+    export_labels(args.splits, num_classes, args.labels_out)
 
     export_onnx(model, onnx_out, args.image_size, num_classes)
 

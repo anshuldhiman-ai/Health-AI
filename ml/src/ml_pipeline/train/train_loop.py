@@ -146,7 +146,9 @@ def fit(
 
     best_path = out_dir / "best.pt"
     out_dir.mkdir(parents=True, exist_ok=True)
-    best_ckpt_path = Path(resume_from) if (resume_from and Path(resume_from).exists()) else best_path
+    best_ckpt_path = (
+        Path(resume_from) if (resume_from and Path(resume_from).exists()) else best_path
+    )
 
     # Establish the best-so-far bar so a resumed run never clobbers a
     # better earlier checkpoint on the first epoch. Prefer a value stored

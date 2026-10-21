@@ -85,11 +85,7 @@ void _runApp({required List<Override> overrides}) {
 /// background, which reads as a black screen. The timeout covers the
 /// other failure mode — a plugin call that never returns, which would
 /// hang the bootstrap just as effectively as a throw.
-Future<T> _guard<T>(
-  Future<T> Function() load,
-  T fallback,
-  String label,
-) async {
+Future<T> _guard<T>(Future<T> Function() load, T fallback, String label) async {
   try {
     return await load().timeout(const Duration(seconds: 5));
   } catch (error, stack) {
