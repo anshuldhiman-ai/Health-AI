@@ -31,6 +31,7 @@ Apache-2.0, MPL), size impact, and that it makes **no network calls**.
 | `flutter_local_notifications` | Local reminders | BSD-3 | check pub.dev | None | small | ☐ |
 | `local_auth` | Optional biometric app lock | BSD-3 | Google-maintained | None | small | ☐ |
 | `flutter_localizations` + `intl` | l10n (ARB) | BSD-3 / BSD-3 | Google / Dart team | None | small | ☐ |
+| `cupertino_icons` | Cupertino icon font (referenced by the Flutter framework itself) | BSD-3 | Google / Dart team | None | ~0.3 MB font | 2026-10-21 |
 | `mocktail` | Test mocks | MIT | check pub.dev | None | dev only | ☐ |
 | `golden_toolkit` | Golden tests | MIT | check pub.dev | None | dev only | ☐ |
 

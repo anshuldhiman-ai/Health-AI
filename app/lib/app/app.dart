@@ -1,4 +1,5 @@
 import 'package:app/app/router.dart';
+import 'package:app/core/error/app_log.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/data/preferences/theme_mode_controller.dart';
 import 'package:app/l10n/app_localizations.dart';
@@ -72,4 +73,61 @@ Widget _buildErrorWidget(FlutterErrorDetails details) {
       ),
     ),
   );
+}
+
+/// A screen that shows the startup failure instead of a blank window.
+///
+/// Reached only when the whole bootstrap threw. It lists the recorded
+/// errors so the failure is diagnosable on-device (a release APK has no
+/// debug overlay).
+class StartupErrorScreen extends StatelessWidget {
+  const StartupErrorScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.light();
+    final scheme = theme.colorScheme;
+    final error = lastAppError;
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: theme,
+      home: Scaffold(
+        backgroundColor: scheme.surface,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.error_outline, color: scheme.error, size: 44),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Health AI could not start',
+                    style: theme.textTheme.titleLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    error == null
+                        ? 'An unknown error occurred during startup.'
+                        : '$error',
+                    style: theme.textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Details are in the device log (adb logcat). '
+                    'Restarting the app usually clears it.',
+                    style: theme.textTheme.bodySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -66,10 +66,10 @@ Future<void> bootstrap() async {
       ],
     );
   } catch (error, stack) {
-    // Last resort: still show a window (with the error on it) rather
-    // than leaving the launch background up forever.
+    // Last resort: show the failure on screen rather than leaving the
+    // launch background up forever.
     AppLog.record(error, stack);
-    _runApp(overrides: const []);
+    runApp(const StartupErrorScreen());
   }
 }
 
@@ -77,14 +77,21 @@ void _runApp({required List<Override> overrides}) {
   runApp(ProviderScope(overrides: overrides, child: const App()));
 }
 
-/// Run one startup load, falling back to [fallback] if it throws.
+/// Run one startup load, falling back to [fallback] if it throws or
+/// takes too long.
 ///
 /// A broken preferences file or an unavailable keystore must not stop
 /// the first frame: without this the app stays on the launch
-/// background, which reads as a black screen.
-Future<T> _guard<T>(Future<T> Function() load, T fallback, String label) async {
+/// background, which reads as a black screen. The timeout covers the
+/// other failure mode — a plugin call that never returns, which would
+/// hang the bootstrap just as effectively as a throw.
+Future<T> _guard<T>(
+  Future<T> Function() load,
+  T fallback,
+  String label,
+) async {
   try {
-    return await load();
+    return await load().timeout(const Duration(seconds: 5));
   } catch (error, stack) {
     AppLog.record(error, stack);
     debugPrint('[bootstrap] "$label" failed, using fallback');
