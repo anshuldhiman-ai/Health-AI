@@ -447,47 +447,160 @@ SERVINGS: dict[str, list[tuple[str, int]]] = {
     "gujhia": [("1 Piece", 60)],
 }
 
+# Extra rows for classes in the NEW dataset's label set that the
+# curated Khana 80 list does not cover. Without them the scan screen
+# silently drops a prediction (the catalog lookup returns null).
+EXTRA_ROWS: list[tuple[str, str, str, float, float, float, float, str, str]] = [
+    (
+        "paani puri",
+        "Pani Puri",
+        "chaat",
+        150,
+        3.5,
+        26.0,
+        4.5,
+        "Wheat|Onion|Chana|Mango",
+        "snack",
+    ),
+    (
+        "dahi papdi chaat",
+        "Dahi Papdi Chaat",
+        "chaat",
+        140,
+        5.0,
+        20.0,
+        4.5,
+        "Yogurt|Papdi|Onion|Chutney",
+        "snack",
+    ),
+    (
+        "rajma curry",
+        "Rajma Curry",
+        "curry",
+        130,
+        6.0,
+        18.0,
+        3.5,
+        "Kidney beans|Onion|Tomato|Spices",
+        "curry",
+    ),
+    (
+        "chole",
+        "Chole",
+        "curry",
+        165,
+        8.5,
+        24.0,
+        3.5,
+        "Chickpeas|Onion|Tomato|Spices",
+        "curry",
+    ),
+    (
+        "pesarattu",
+        "Pesarattu",
+        "south indian",
+        210,
+        6.5,
+        38.0,
+        3.5,
+        "Rice|Lentils|Peanut",
+        "pesarattu",
+    ),
+]
+
 LABELS = [row[0] for row in ROWS]
 
 
+def _row_to_dish(
+    label: str,
+    display: str,
+    family: str,
+    kcal: float,
+    protein: float,
+    carbs: float,
+    fat: float,
+    ing: str,
+    preset: str,
+) -> dict[str, object]:
+    return {
+        "name": display,
+        "family": family,
+        "ingredients": ing.split("|"),
+        "per100g": {
+            "kcal": kcal,
+            "protein": protein,
+            "carbs": carbs,
+            "fat": fat,
+        },
+        "servings": [
+            {"label": name, "grams": grams} for name, grams in SERVINGS[preset]
+        ],
+    }
+
+
+def _carry_over(existing_path: Path) -> dict[str, dict[str, object]]:
+    """Keep dish rows that are already in the app but not in ROWS.
+
+    The catalog was hand-extended to cover the new dataset's class
+    list. Those rows are the only source for their nutrition values, so
+    a rebuild must not drop them.
+    """
+    if not existing_path.is_file():
+        return {}
+    data = json.loads(existing_path.read_text(encoding="utf-8"))
+    rows = data.get("dishes") or {}
+    return {k: v for k, v in rows.items() if isinstance(v, dict)}
+
+
 def main() -> None:
-    assert len(LABELS) == 80, len(LABELS)
-    assert sorted(LABELS) == LABELS, "model output order must be sorted()"
+    catalog_path = APP / "assets" / "nutrition" / "khana_catalog.json"
 
     dishes: dict[str, dict[str, object]] = {}
     for label, display, family, kcal, protein, carbs, fat, ing, preset in ROWS:
-        dishes[label] = {
-            "name": display,
-            "family": family,
-            "ingredients": ing.split("|"),
-            "per100g": {
-                "kcal": kcal,
-                "protein": protein,
-                "carbs": carbs,
-                "fat": fat,
-            },
-            "servings": [{"label": name, "grams": grams} for name, grams in SERVINGS[preset]],
-        }
+        dishes[label] = _row_to_dish(
+            label, display, family, kcal, protein, carbs, fat, ing, preset
+        )
+    for label, display, family, kcal, protein, carbs, fat, ing, preset in EXTRA_ROWS:
+        dishes.setdefault(
+            label,
+            _row_to_dish(
+                label, display, family, kcal, protein, carbs, fat, ing, preset
+            ),
+        )
+
+    # Carry over rows that only exist in the shipped catalog.
+    carried = _carry_over(catalog_path)
+    added = 0
+    for label, row in carried.items():
+        if label not in dishes:
+            dishes[label] = row
+            added += 1
+
+    # The class list is the SORTED, DEDUPLICATED union of every class
+    # with a dish. Duplicates would make index -> class ambiguous.
+    classes = sorted(dishes)
 
     catalog = {
-        "version": 1,
-        "source": "Khana 80-class label set; plausible cooked-dish values (NOT lab-measured)",
-        "classes": LABELS,
+        "version": 3,
+        "source": (
+            "Khana 80-class label set plus the new dataset's class list; "
+            "plausible cooked-dish values (NOT lab-measured)"
+        ),
+        "classes": classes,
         "dishes": dishes,
     }
 
-    labels_path = APP / "assets" / "models" / "labels.json"
-    labels_path.parent.mkdir(parents=True, exist_ok=True)
-    labels_path.write_text(json.dumps({"classes": LABELS}, indent=2) + "\n", encoding="utf-8")
-
-    catalog_path = APP / "assets" / "nutrition" / "khana_catalog.json"
     catalog_path.parent.mkdir(parents=True, exist_ok=True)
     catalog_path.write_text(
         json.dumps(catalog, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    print(f"labels: {labels_path} ({len(LABELS)} classes)")
-    print(f"catalog: {catalog_path} ({len(dishes)} dishes)")
+    print(f"catalog: {catalog_path} ({len(dishes)} dishes, {len(classes)} classes)")
+    print(f"  carried over {added} existing rows")
+    print(
+        "  NOTE: labels.json is NOT written here. It must come from the "
+        "model's training splits (export_onnx2tf.py --splits ...)."
+    )
 
 
 if __name__ == "__main__":
