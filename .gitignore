@@ -40,6 +40,8 @@ app/assets/models/*.tflite
 
 # Training/conversion outputs (checkpoints, ONNX, onnx2tf trees).
 ml/weights/
+# onnx2tf conversion trees (84 MB of intermediate files).
+artifacts/
 
 # --- Secrets / local config ---
 .env
