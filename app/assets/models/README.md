@@ -4,17 +4,24 @@
 sync with it. Model binaries under `app/assets/models/` are gitignored
 (`app/assets/models/*.tflite`) and must not be committed.
 
+> The full swap procedure (train -> export -> copy -> verify) is in
+> `docs/model_swap.md` at the repo root. The short version: a new model
+> means a new class set, so `labels.json` **and**
+> `assets/nutrition/khana_catalog.json` must be regenerated together.
+
 ## Model contract
 
 - **Input**: `float32[1,224,224,3]`, NHWC, RGB, raw `0..1`.
   ImageNet normalization (`(x - mean) / std`) is baked into the graph;
   do **not** normalize again in Dart.
-- **Output**: `float32[1,80]` raw logits. The app applies temperature
-  scaling and softmax; the graph must not contain either.
+- **Output**: `float32[1,N]` raw logits, where `N` is the number of
+  classes in `labels.json`. The app applies temperature scaling and
+  softmax; the graph must not contain either.
 - **Preprocessing**: resize the shorter side to 255, then center-crop 224
   (torchvision eval transform), matching `preprocessFoodPhoto`.
-- **Labels**: output index `i` maps to `labels.json["classes"][i]`.
-  Keep that file's order exactly; do not sort it.
+- **Labels**: output index `i` maps to `labels.json["classes"][i]`, and
+  that name must have a row in `assets/nutrition/khana_catalog.json`.
+  Keep the file's order exactly; do not sort it.
 
 ## Current checkpoint
 
