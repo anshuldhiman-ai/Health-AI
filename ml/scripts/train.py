@@ -70,10 +70,13 @@ def main() -> None:
         num_workers=args.num_workers,
         pin_memory=True,
     )
+    # When resuming, weights come from the checkpoint; skip the (slow)
+    # pretrained download to avoid network/size churn on Colab.
+    pretrained = (not args.no_pretrained) and (args.resume is None)
     model = build_model(
         args.model_name,
         num_classes=len(classes),
-        pretrained=not args.no_pretrained,
+        pretrained=pretrained,
     )
     best = fit(
         model,

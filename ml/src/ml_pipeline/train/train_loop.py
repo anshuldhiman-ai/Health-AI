@@ -50,6 +50,7 @@ def save_checkpoint(
     scheduler,
     epoch: int,
     meta: dict,
+    best_top1: float | None = None,
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
@@ -60,6 +61,7 @@ def save_checkpoint(
             "scheduler": scheduler.state_dict(),
             "epoch": epoch,
             "meta": meta,
+            "best_top1": best_top1,
         },
         path,
     )
@@ -75,7 +77,10 @@ def load_checkpoint(path: Path, model, optimizer, scheduler, ema=None):
         # ema.module.state_dict()); load it into the inner module,
         # not the ModelEma wrapper.
         ema.module.load_state_dict(ckpt["ema"])
-    return ckpt["epoch"], ckpt.get("meta", {})
+    best_top1 = ckpt.get("best_top1")
+    if best_top1 is None:
+        best_top1 = (ckpt.get("meta") or {}).get("best_top1")
+    return ckpt["epoch"], ckpt.get("meta", {}), best_top1
 
 
 @torch.no_grad()
@@ -130,13 +135,30 @@ def fit(
 
     meta = {"git_commit": git_commit(), "seed": seed, "num_classes": num_classes}
     start_epoch = 0
+    resumed_best_top1 = None
     if resume_from and Path(resume_from).exists():
-        start_epoch, _ = load_checkpoint(resume_from, model, optimizer, scheduler, ema)
+        start_epoch, loaded_meta, resumed_best_top1 = load_checkpoint(
+            resume_from, model, optimizer, scheduler, ema
+        )
+        if loaded_meta:
+            meta.update({k: v for k, v in loaded_meta.items() if k not in meta})
         print(f"resumed from {resume_from} at epoch {start_epoch}")
 
-    best_top1 = -1.0
     best_path = out_dir / "best.pt"
     out_dir.mkdir(parents=True, exist_ok=True)
+    best_ckpt_path = Path(resume_from) if (resume_from and Path(resume_from).exists()) else best_path
+
+    # Establish the best-so-far bar so a resumed run never clobbers a
+    # better earlier checkpoint on the first epoch. Prefer a value stored
+    # in the checkpoint; otherwise evaluate the restored model once.
+    if resumed_best_top1 is not None:
+        best_top1 = float(resumed_best_top1)
+    elif start_epoch > 0:
+        restored_metrics = evaluate(model, val_loader, device, num_classes, desc="resume-val")
+        best_top1 = float(restored_metrics["top1"])
+        print(f"resume baseline val top1 = {best_top1:.4f}")
+    else:
+        best_top1 = -1.0
 
     for epoch in range(start_epoch, epochs):
         model.train()
@@ -189,6 +211,7 @@ def fit(
         with open(out_dir / "metrics.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(record) + "\n")
 
+        meta["best_top1"] = best_top1
         save_checkpoint(
             out_dir / "last.pt",
             model,
@@ -197,9 +220,11 @@ def fit(
             scheduler,
             epoch + 1,
             meta,
+            best_top1=best_top1,
         )
         if metrics["top1"] > best_top1:
             best_top1 = metrics["top1"]
+            meta["best_top1"] = best_top1
             save_checkpoint(
                 best_path,
                 model,
@@ -208,5 +233,7 @@ def fit(
                 scheduler,
                 epoch + 1,
                 meta,
+                best_top1=best_top1,
             )
-    return best_path
+            best_ckpt_path = best_path
+    return best_ckpt_path
