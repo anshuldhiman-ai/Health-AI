@@ -99,8 +99,10 @@ int _dayFromQuery(String? value) {
 /// Floating white nav bar with rounded top corners and the raised
 /// forest-green scan button (ref_ui.png).
 ///
-/// Today | Diary | (SCAN) | Insights | Profile. The scan button always
-/// pushes the camera flow; it is not a selectable branch.
+/// Today | Diary | (SCAN) | Insights | Profile. The scan button is
+/// CENTRED and docked into the bar (it overlaps the bar's top edge
+/// with a white ring, reading as a notch) - not a floating button in
+/// the corner.
 class _NavShell extends StatelessWidget {
   const _NavShell({required this.navigationShell});
 
@@ -111,11 +113,17 @@ class _NavShell extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       extendBody: true,
-      floatingActionButton: _ScanButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          context.push('/scan');
-        },
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Transform.translate(
+        // The scan disc sits IN the bar: the white ring cuts a notch
+        // out of it, so roughly a third of the disc overlaps the dock.
+        offset: const Offset(0, 20),
+        child: _ScanButton(
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            context.push('/scan');
+          },
+        ),
       ),
       bottomNavigationBar: _BottomBar(navigationShell: navigationShell),
     );
@@ -197,7 +205,7 @@ class _BottomBar extends StatelessWidget {
                 branchIndex: 1,
               ),
               // The scan button is docked over this span.
-              const SizedBox(width: 64),
+              const SizedBox(width: 72),
               destination(
                 icon: Icons.bar_chart_rounded,
                 selectedIcon: Icons.bar_chart_rounded,

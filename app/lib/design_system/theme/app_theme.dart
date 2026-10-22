@@ -77,14 +77,17 @@ abstract final class AppTheme {
         ),
       ),
 
-      // Buttons: pill, 52dp tall like the reference.
+      // Buttons: 52dp tall, rounded rectangle (not a stadium). The
+      // reference uses a 14 radius - a full pill reads as a toy.
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: c.primary,
           foregroundColor: onPrimary,
           textStyle: AppTypography.label,
           minimumSize: const Size.fromHeight(52), // 52dp touch target (R14)
-          shape: const StadiumBorder(),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(AppRadii.button),
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(

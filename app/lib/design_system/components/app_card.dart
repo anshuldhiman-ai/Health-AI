@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:app/design_system/tokens/tokens.dart';
 
-/// The reference card: white surface, 20 radius, soft diffusion
-/// shadow, no border. Use for every content section.
+/// The reference card: white surface, 20 radius, a hairline edge and
+/// barely-there depth. Use for every content section.
 class AppCard extends StatelessWidget {
   const AppCard({
     required this.child,
@@ -27,6 +27,9 @@ class AppCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: borderRadius,
+        // A hairline edge defines the surface on the mist canvas
+        // without the "floating blob" look a strong shadow gives.
+        border: Border.all(color: scheme.outlineVariant),
         boxShadow: AppShadows.card,
       ),
       child: Padding(padding: padding, child: child),

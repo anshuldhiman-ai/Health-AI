@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:app/core/format/count_format.dart';
+import 'package:app/app/log_store.dart';
 import 'package:app/data/preferences/sleep_controller.dart';
 import 'package:app/data/preferences/water_controller.dart';
 import 'package:app/data/sensors/step_tracker.dart';
@@ -14,6 +15,7 @@ import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/domain/entities/meal.dart';
+import 'package:app/domain/entities/log_entry.dart';
 import 'package:app/features/today/application/today_state.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/l10n/extensions.dart';
@@ -48,7 +50,7 @@ class TodayScreen extends ConsumerWidget {
             AppSpacing.screenPadding,
             AppSpacing.x2,
             AppSpacing.screenPadding,
-            88, // cleanly clears the 66dp floating nav + scan button
+            104, // clears the floating nav + docked scan button
           ),
           children: [
             const _Header(),
@@ -65,8 +67,8 @@ class TodayScreen extends ConsumerWidget {
             _TrackBanner(state: state),
             const SizedBox(height: 12),
             const _HealthTiles(),
-            const SizedBox(height: 12),
-            _QuickActions(meal: mealForHour(hour)),
+            const SizedBox(height: 20),
+            const _TodaysMeals(),
           ],
         ),
       ),
@@ -85,11 +87,29 @@ class _Header extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(Icons.calendar_today_outlined, size: 19, color: scheme.onSurface),
-        const SizedBox(width: 10),
+        // Date + chevron: the reference lets the user jump between
+        // days straight from the dashboard header. No chip background:
+        // a filled pill here reads heavier than the reference.
+        Icon(Icons.calendar_today_outlined, size: 17, color: scheme.onSurface),
+        const SizedBox(width: 8),
         Text(
           dateLabel,
-          style: AppTypography.itemS.copyWith(color: scheme.onSurface),
+          style: AppTypography.itemS.copyWith(
+            color: scheme.onSurface,
+            fontSize: 13.5,
+          ),
+        ),
+        Icon(
+          Icons.keyboard_arrow_down_rounded,
+          size: 18,
+          color: scheme.onSurfaceVariant,
+        ),
+        const Spacer(),
+        // Notification bell.
+        Icon(
+          Icons.notifications_none_rounded,
+          size: 21,
+          color: scheme.onSurface,
         ),
       ],
     );
@@ -109,13 +129,13 @@ class _CaloriesRingCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return AppCard(
-      padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
+      padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
       child: Row(
         children: [
           ProgressRing(
             progress: state.ringProgress,
-            size: 146,
-            strokeWidth: 13,
+            size: 122,
+            strokeWidth: 11,
             semanticLabel:
                 '${l10n.remainingKcal}: '
                 '${formatCount(state.caloriesRemaining)} ${l10n.kcalUnit}',
@@ -143,10 +163,10 @@ class _CaloriesRingCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
-              spacing: 15,
+              spacing: 12,
               children: [
                 for (final macro in state.macros)
                   MeterBar(
@@ -304,38 +324,203 @@ class _HealthTiles extends ConsumerWidget {
   }
 }
 
-class _QuickActions extends StatelessWidget {
-  const _QuickActions({required this.meal});
+/// "Today's Meals": the day's meal log, straight from the shared
+/// store. This is the block the reference dashboard is built around -
+/// without it the dashboard ends in a large empty canvas.
+class _TodaysMeals extends ConsumerWidget {
+  const _TodaysMeals();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final log = ref.watch(dayLogProvider);
+    final entries = log[0] ?? const <LogEntry>[];
+
+    final byMeal = <MealKind, List<LogEntry>>{
+      for (final entry in entries) entry.mealKind: [],
+    };
+    for (final entry in entries) {
+      byMeal[entry.mealKind]!.add(entry);
+    }
+
+    // The meals a person eats in order, so the list always reads as a
+    // day rather than as whatever was logged first.
+    const order = [
+      MealKind.breakfast,
+      MealKind.lunch,
+      MealKind.dinner,
+      MealKind.snacks,
+    ];
+    final shown = order.where(byMeal.containsKey).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.todaysMeals,
+          style: AppTypography.titleM.copyWith(color: scheme.onSurface),
+        ),
+        const SizedBox(height: 10),
+        if (shown.isEmpty)
+          AppCard(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.x4,
+              vertical: AppSpacing.x3,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.primaryWash,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.restaurant_rounded,
+                    size: 20,
+                    color: scheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10n.logFirstMealCta,
+                    style: AppTypography.itemS.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _AddFoodChip(
+                  label: l10n.addFood,
+                  onTap: () => context.push(
+                    '/search?day=0&meal=${mealForHour(DateTime.now().hour).name}',
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          for (final meal in shown)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _TodayMealRow(meal: meal, entries: byMeal[meal]!),
+            ),
+      ],
+    );
+  }
+}
+
+/// One meal line: kind, what was logged, and the day's total.
+class _TodayMealRow extends StatelessWidget {
+  const _TodayMealRow({required this.meal, required this.entries});
 
   final MealKind meal;
+  final List<LogEntry> entries;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Row(
-      spacing: 10,
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => context.push('/search?day=0&meal=${meal.name}'),
-            icon: const Icon(Icons.search_rounded, size: 19),
-            label: Text(l10n.searchFood),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(46),
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    final kcal = entries.fold<int>(0, (sum, e) => sum + e.kcal);
+    final dish = entries.length == 1
+        ? entries.first.dish
+        : '${entries.length} ${l10n.mealsTab.toLowerCase()}';
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      onTap: () => context.push('/diary'),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colors.primaryWash,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.restaurant_rounded,
+              size: 19,
+              color: scheme.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.mealLabel(meal),
+                  style: AppTypography.itemS.copyWith(color: scheme.onSurface),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  dish,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${formatCount(kcal)} ${l10n.kcalUnit}',
+            style: AppTypography.caption.copyWith(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: scheme.onSurfaceVariant,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The light-green "Add Food" chip from the reference meal row.
+class _AddFoodChip extends StatelessWidget {
+  const _AddFoodChip({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    return Material(
+      color: colors.primaryWash,
+      borderRadius: BorderRadius.circular(AppRadii.pill.x),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.pill.x),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text(
+            label,
+            style: AppTypography.caption.copyWith(
+              color: scheme.primary,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
             ),
           ),
         ),
-        Expanded(
-          child: FilledButton.tonalIcon(
-            onPressed: () => context.go('/diary'),
-            icon: const Icon(Icons.menu_book_rounded, size: 18),
-            label: Text(l10n.viewDiary),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(46),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

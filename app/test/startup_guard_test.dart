@@ -37,10 +37,19 @@ void main() {
   });
 
   test('loadSavedDayLog round-trips a stored entry', () async {
+    // The store shifts saved days forward when the app is opened on a
+    // later date, so the base date must be TODAY for the entry to stay
+    // on day 0.
+    final today = DateTime.now();
+    final baseDate =
+        '${today.year.toString().padLeft(4, '0')}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       DayLog.storageKey,
-      '{"baseDate":"2026-10-21","days":{"0":[{"mealKind":"lunch",'
+      '{"baseDate":"$baseDate","days":{"0":[{"mealKind":"lunch",'
       '"dish":"dal","kcal":200,"proteinGrams":10,"carbsGrams":20,'
       '"fatGrams":5}]}}',
     );

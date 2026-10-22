@@ -131,26 +131,29 @@ class _RangeChips extends ConsumerWidget {
     final selected = ref.watch(insightsRangeProvider);
 
     return Row(
-      spacing: 10,
+      spacing: 8,
       children: [
         for (var i = 0; i < _ranges.length; i++)
-          Expanded(
-            child: Material(
-              color: _ranges[i] == selected ? scheme.primary : scheme.surface,
-              shape: StadiumBorder(
-                side: BorderSide(
-                  color: _ranges[i] == selected
-                      ? scheme.primary
-                      : scheme.outline,
-                ),
+          // Sized to their content, not expanded: the reference keeps
+          // the range chips small and clustered on the left.
+          Material(
+            color: _ranges[i] == selected ? scheme.primary : scheme.surface,
+            shape: StadiumBorder(
+              side: BorderSide(
+                color: _ranges[i] == selected
+                    ? scheme.primary
+                    : scheme.outlineVariant,
               ),
-              child: InkWell(
-                customBorder: const StadiumBorder(),
-                onTap: () =>
-                    ref.read(insightsRangeProvider.notifier).state = _ranges[i],
-                child: SizedBox(
-                  height: 38,
-                  child: Center(
+            ),
+            child: InkWell(
+              customBorder: const StadiumBorder(),
+              onTap: () =>
+                  ref.read(insightsRangeProvider.notifier).state = _ranges[i],
+              child: SizedBox(
+                height: 34,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       _labels[i],
                       style: AppTypography.caption.copyWith(
@@ -158,7 +161,7 @@ class _RangeChips extends ConsumerWidget {
                             ? scheme.onPrimary
                             : scheme.onSurface,
                         fontWeight: FontWeight.w600,
-                        fontSize: 13.5,
+                        fontSize: 12.5,
                       ),
                     ),
                   ),
@@ -242,27 +245,28 @@ class _TrendCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 148,
+            height: 168,
             // The chart itself is a graphic; the numbers above are the
             // accessible summary of the same data.
             child: LineChart(
               LineChartData(
                 gridData: FlGridData(
                   drawVerticalLine: false,
+                  horizontalInterval: _gridInterval(state.trend),
                   getDrawingHorizontalLine: (v) =>
                       FlLine(color: scheme.outlineVariant, strokeWidth: 1),
                 ),
                 titlesData: FlTitlesData(
                   topTitles: const AxisTitles(),
-                  leftTitles: const AxisTitles(),
-                  bottomTitles: const AxisTitles(),
-                  rightTitles: AxisTitles(
+                  // Calories on the LEFT, days along the bottom - the
+                  // reference layout.
+                  leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 34,
-                      interval: 200,
+                      reservedSize: 38,
+                      interval: _gridInterval(state.trend),
                       getTitlesWidget: (value, meta) => Padding(
-                        padding: const EdgeInsets.only(left: 6),
+                        padding: const EdgeInsets.only(right: 6),
                         child: Text(
                           _compact(value),
                           style: AppTypography.caption.copyWith(
@@ -273,8 +277,27 @@ class _TrendCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  rightTitles: const AxisTitles(),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 26,
+                      interval: _labelInterval(state.trend.length),
+                      getTitlesWidget: (value, meta) => Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          _dayLabel(state.trend, value.round()),
+                          style: AppTypography.caption.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
+                lineTouchData: const LineTouchData(enabled: false),
                 lineBarsData: [
                   LineChartBarData(
                     spots: [
@@ -282,6 +305,7 @@ class _TrendCard extends StatelessWidget {
                         FlSpot(p.dayIndex.toDouble(), p.kcal.toDouble()),
                     ],
                     isCurved: true,
+                    curveSmoothness: 0.24,
                     barWidth: 2.6,
                     color: scheme.primary,
                     dotData: FlDotData(
@@ -309,7 +333,7 @@ class _TrendCard extends StatelessWidget {
                 ],
                 minX: 0,
                 maxX: (state.trend.length - 1).toDouble(),
-                minY: _floor(state.trend),
+                minY: 0,
                 maxY: _ceil(state.trend),
               ),
             ),
@@ -319,6 +343,32 @@ class _TrendCard extends StatelessWidget {
     );
   }
 
+  /// Grid / axis label step, so the ticks land on round numbers.
+  double _gridInterval(List<TrendPoint> s) {
+    final max = _maxKcal(s);
+    if (max <= 400) return 200;
+    if (max <= 1000) return 500;
+    return 1000;
+  }
+
+  /// Show a date label every few days so they never collide.
+  double _labelInterval(int points) {
+    if (points <= 8) return 1;
+    return (points / 4).ceilToDouble();
+  }
+
+  /// "Mon 21" for a trend point (dayIndex 0 = oldest).
+  String _dayLabel(List<TrendPoint> s, int dayIndex) {
+    if (s.isEmpty || dayIndex < 0 || dayIndex >= s.length) return '';
+    final daysAgo = s.length - 1 - dayIndex;
+    final date = DateTime.now().subtract(Duration(days: daysAgo));
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return '${weekdays[date.weekday - 1]} ${date.day}';
+  }
+
+  int _maxKcal(List<TrendPoint> s) =>
+      s.fold<int>(0, (m, p) => p.kcal > m ? p.kcal : m);
+
   static String _compact(double value) {
     if (value >= 1000) {
       final k = value / 1000;
@@ -327,19 +377,12 @@ class _TrendCard extends StatelessWidget {
     return value.round().toString();
   }
 
-  // Pad the y-range to 200-kcal boundaries so the tick labels land on
-  // the chart edges instead of overlapping outside the plot.
-  double _floor(List<TrendPoint> s) {
-    final min = s.fold<double>(
-      1e9,
-      (m, p) => p.kcal < m ? p.kcal.toDouble() : m,
-    );
-    return ((((min - 40) / 200).floor()) * 200).toDouble();
-  }
-
+  // Pad the y-range to a round boundary so the tick labels land on the
+  // chart edges. Calories are never negative, so the floor is 0.
   double _ceil(List<TrendPoint> s) {
-    final max = s.fold<double>(0, (m, p) => p.kcal > m ? p.kcal.toDouble() : m);
-    return ((((max + 40) / 200).ceil()) * 200).toDouble();
+    final max = _maxKcal(s);
+    final step = _gridInterval(s);
+    return ((((max + step * 0.15) / step).ceil()) * step).toDouble();
   }
 }
 

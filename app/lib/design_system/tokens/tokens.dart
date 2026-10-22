@@ -307,7 +307,8 @@ abstract final class AppRadii {
   static const input = Radius.circular(10); // inputs, small tiles
   static const card = Radius.circular(20); // cards
   static const sheet = Radius.circular(28); // bottom sheets, hero surfaces
-  static const pill = Radius.circular(999); // buttons, segmented controls
+  static const button = Radius.circular(14); // primary buttons
+  static const pill = Radius.circular(999); // chips, segmented controls
 }
 
 /// Motion tokens (Section 10.8). Durations 120–240 ms, standard
@@ -329,15 +330,20 @@ abstract final class AppShadows {
   AppShadows._();
 
   /// Cards and tiles.
+  ///
+  /// The reference surfaces are FLAT white on the mist canvas with a
+  /// hairline edge - a heavy shadow made every card read as a floating
+  /// blob. This is now barely-there depth; the hairline border in
+  /// [AppCard] does the defining.
   static const card = [
     BoxShadow(
-      color: Color(0x0F10201A), // 6% ink
-      blurRadius: 18,
-      offset: Offset(0, 6),
+      color: Color(0x0A10201A), // 4% ink
+      blurRadius: 16,
+      offset: Offset(0, 4),
     ),
   ];
 
-  /// Flush chrome: the bottom nav bar lifts upward.
+  /// Flat chrome: the bottom nav bar lifts upward.
   static const nav = [
     BoxShadow(
       color: Color(0x1410201A), // 8% ink

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 
 /// Dashboard quiet tile: a free-standing coloured glyph, a prominent
-/// value and a caption (ref_ui.png). Soft-shadow card, no border.
+/// value and a caption (ref_ui.png). Flat card, hairline edge.
 class StatTile extends StatelessWidget {
   const StatTile({
     required this.icon,
@@ -31,6 +31,7 @@ class StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final glyph = iconColor ?? scheme.primary;
 
     final inner = Padding(
       padding: const EdgeInsets.symmetric(
@@ -40,7 +41,17 @@ class StatTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: iconColor ?? scheme.primary, size: 24),
+          // The reference uses a filled circle behind the glyph, not a
+          // bare square outline.
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: glyph.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: glyph, size: 19),
+          ),
           const SizedBox(height: 10),
           Text(
             value,
@@ -65,6 +76,7 @@ class StatTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outlineVariant),
         boxShadow: AppShadows.card,
       ),
       child: Material(

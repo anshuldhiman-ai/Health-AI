@@ -60,7 +60,7 @@ class MeterBar extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: ratio),
             duration: AppMotion.normal,
@@ -69,8 +69,9 @@ class MeterBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadii.pill.x),
               child: LinearProgressIndicator(
                 value: animated,
-                minHeight: 7,
-                backgroundColor: scheme.outlineVariant,
+                // The reference uses a thin rule, not a chunky bar.
+                minHeight: 5,
+                backgroundColor: scheme.surfaceContainerHighest,
                 valueColor: AlwaysStoppedAnimation(barColor ?? scheme.primary),
               ),
             ),

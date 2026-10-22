@@ -91,20 +91,26 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () => showGoalSheet(context),
             ),
             const SizedBox(height: 14),
-            _LinkRow(
-              icon: Icons.settings_outlined,
-              label: l10n.settingsRow,
-              onTap: () => showSettingsSheet(context),
-            ),
-            _LinkRow(
-              icon: Icons.help_outline_rounded,
-              label: l10n.helpRow,
-              onTap: () => showHelpSheet(context),
-            ),
-            _LinkRow(
-              icon: Icons.info_outline_rounded,
-              label: l10n.aboutRow,
-              onTap: () => showAppAbout(context),
+            _LinkGroup(
+              children: [
+                _LinkRow(
+                  icon: Icons.settings_outlined,
+                  label: l10n.settingsRow,
+                  onTap: () => showSettingsSheet(context),
+                  showDivider: true,
+                ),
+                _LinkRow(
+                  icon: Icons.help_outline_rounded,
+                  label: l10n.helpRow,
+                  onTap: () => showHelpSheet(context),
+                  showDivider: true,
+                ),
+                _LinkRow(
+                  icon: Icons.info_outline_rounded,
+                  label: l10n.aboutRow,
+                  onTap: () => showAppAbout(context),
+                ),
+              ],
             ),
           ],
         ),
@@ -181,37 +187,83 @@ class _LinkRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.showDivider = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
 
+  /// Draw a hairline under this row (used inside a grouped surface).
+  final bool showDivider;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: AppCard(
-        onTap: onTap,
-        child: Row(
-          spacing: 12,
-          children: [
-            Icon(icon, color: scheme.onSurface, size: 21),
-            Expanded(
-              child: Text(
-                label,
-                style: AppTypography.itemS.copyWith(color: scheme.onSurface),
+    return Column(
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+              child: Row(
+                children: [
+                  Icon(icon, color: scheme.onSurface, size: 21),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: AppTypography.itemS.copyWith(
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: scheme.onSurfaceVariant,
-            ),
-          ],
+          ),
         ),
+        if (showDivider)
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: scheme.outlineVariant,
+            indent: 16,
+            endIndent: 16,
+          ),
+      ],
+    );
+  }
+}
+
+/// The reference groups the profile links in ONE white surface with
+/// hairline dividers, not as separate floating cards.
+class _LinkGroup extends StatelessWidget {
+  const _LinkGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: AppShadows.card,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(children: children),
       ),
     );
   }
