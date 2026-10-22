@@ -261,6 +261,14 @@ def read_class_order(splits_csv: Path) -> list[str]:
         return sorted({row["label"] for row in csv.DictReader(f)})
 
 
+def read_class_list(classes_file: Path) -> list[str]:
+    """The class order from a `classes.json` written by train.py."""
+    data = json.loads(classes_file.read_text(encoding="utf-8"))
+    if not isinstance(data, list) or not all(isinstance(c, str) for c in data):
+        raise SystemExit(f"error: {classes_file} is not a list of class names")
+    return list(data)
+
+
 def write_labels(classes: list[str], out_json: Path) -> Path:
     """Write the app's labels.json (index -> class name)."""
     out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -273,34 +281,49 @@ def write_labels(classes: list[str], out_json: Path) -> Path:
 
 def export_labels(
     splits_csv: Path | None,
+    classes_file: Path | None,
     num_classes: int,
     out_json: Path | None,
 ) -> Path | None:
-    """Regenerate labels.json from the training splits.
+    """Regenerate labels.json from the training class order.
 
     The app maps a model output index to a dish name through
     labels.json. If the model is re-trained on a different class set
     (the new dataset has 239 classes, the old one 80) and labels.json
     is not regenerated, every prediction is silently mislabelled.
+
+    The class order comes from EITHER the training splits CSV or the
+    `classes.json` that train.py writes next to the checkpoints.
     """
-    if splits_csv is None and out_json is None:
+    if splits_csv is None and classes_file is None and out_json is None:
         return None
 
-    if splits_csv is None:
-        raise SystemExit("error: --labels-out needs --splits (the source of the class order)")
-    if not splits_csv.is_file():
-        raise SystemExit(f"error: splits CSV not found: {splits_csv}")
+    if splits_csv is not None:
+        if not splits_csv.is_file():
+            raise SystemExit(f"error: splits CSV not found: {splits_csv}")
+        classes = read_class_order(splits_csv)
+        source = str(splits_csv)
+    elif classes_file is not None:
+        if not classes_file.is_file():
+            raise SystemExit(f"error: classes file not found: {classes_file}")
+        classes = read_class_list(classes_file)
+        source = str(classes_file)
+    else:
+        raise SystemExit(
+            "error: --labels-out needs --splits or --classes (the source of the class order)"
+        )
 
-    classes = read_class_order(splits_csv)
     if len(classes) != num_classes:
         raise SystemExit(
-            f"error: splits CSV has {len(classes)} classes but the checkpoint "
+            f"error: {source} has {len(classes)} classes but the checkpoint "
             f"has {num_classes}; the model and the data do not match"
         )
+    if len(set(classes)) != len(classes):
+        raise SystemExit(f"error: {source} has duplicate class names")
 
     target = out_json or (Path(__file__).resolve().parents[2] / "app/assets/models/labels.json")
     write_labels(classes, target)
-    print(f"labels.json: {target} ({len(classes)} classes)")
+    print(f"labels.json: {target} ({len(classes)} classes, from {source})")
     return target
 
 
@@ -358,12 +381,21 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--classes",
+        type=Path,
+        default=None,
+        help=(
+            "classes.json written by train.py (the model's class order). "
+            "Use this when the training splits CSV is not at hand."
+        ),
+    )
+    parser.add_argument(
         "--labels-out",
         type=Path,
         default=None,
         help=(
             "where to write labels.json "
-            "(default: app/assets/models/labels.json). Requires --splits."
+            "(default: app/assets/models/labels.json). Requires --splits or --classes."
         ),
     )
     args = parser.parse_args()
@@ -382,7 +414,7 @@ def main() -> None:
 
     # Regenerate labels.json BEFORE the export so a failed export cannot
     # leave a new model with the old label file.
-    export_labels(args.splits, num_classes, args.labels_out)
+    export_labels(args.splits, args.classes, num_classes, args.labels_out)
 
     export_onnx(model, onnx_out, args.image_size, num_classes)
 

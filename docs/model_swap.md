@@ -1,109 +1,158 @@
 # Swapping in a new model (checklist)
 
 A new checkpoint means a new class set. The app maps a model output
-index to a dish through **two** files, and both must be regenerated
-together or every prediction is silently mislabelled:
+index to a dish through **three** files that must agree:
 
 ```
 model output index  ->  assets/models/labels.json  ->  assets/nutrition/khana_catalog.json
 ```
 
+If they disagree, every prediction is silently mislabelled - a
+confident, WRONG dish. That is the bug the user hit ("it shows kulfi
+for everything"), so it is now checked in CI
+(`app/test/model_contract_test.dart`).
+
 ## 1. Train
 
-Training writes `ml/weights/baseline/{best,last}.pt`. The checkpoint
-records the class count in its meta:
+`ml/scripts/train.py` writes `ml/weights/<out>/best.pt` and, from
+now on, `ml/weights/<out>/classes.json` - the model's class order,
+saved next to the checkpoints so it travels with the run.
+
+Check the checkpoint:
 
 ```bash
-python tools/check_checkpoints.py ml/weights/baseline
+python tools/check_checkpoints.py ml/weights
 ```
 
 ```
-best_new3.pt
+best.pt
   epoch       : 9
   num_classes : 239
   model head  : ('classifier.weight', (239, 1280))
 ```
 
-## 2. Export (this step regenerates labels.json)
+## 2. Get the class list
+
+The model's output index is the SORTED set of the training dataset's
+class folders. Get it from the dataset:
+
+```bash
+python tools/dataset_classes.py
+# writes ml/data/classes.json
+```
+
+The Kaggle API's flat file listing pages at 200 files and its token
+chain expires after ~60 pages, which cannot enumerate a 156k-file
+dataset; `tools/dataset_classes.py` uses the tree endpoint instead.
+
+If the class list is already known (for example `classes.json` was
+synced back from the training run), use it directly.
+
+## 3. Export (this step regenerates labels.json)
 
 ```bash
 cd ml
 python scripts/export_onnx2tf.py \
-    --checkpoint weights/baseline/best_new3.pt \
-    --splits data/interim/indian_food/manifest_splits.csv \
+    --checkpoint weights/best.pt \
+    --classes ../ml/data/classes.json \
+    --onnx-out ../artifacts/newmodel/baseline.onnx \
+    --out-dir ../artifacts/newmodel/onnx2tf \
     --convert \
     --converter-python "$TEMP/ai_export_env/Scripts/python.exe"
 ```
 
-`--splits` is **not optional** for a new model. It makes the export:
+`--classes` (or `--splits`) is **not optional** for a new model. It
+makes the export:
 
-- read the class order from the training splits (the same sorted order
-  `scripts/train.py` used),
-- fail if the split count does not match the checkpoint's head size,
+- read the class order from the training data,
+- fail if the class count does not match the checkpoint's head size,
+- fail if the class list has duplicates,
 - write `app/assets/models/labels.json` in that order.
 
 The export also prints the copy command for the `.tflite` asset.
 
-## 3. Copy the model into the app
+## 4. Verify the export BEFORE shipping it
 
 ```bash
-cp artifacts/baseline/onnx2tf/baseline_float32.tflite \
-   ../app/assets/models/baseline.tflite
+python ml/scripts/verify_export.py \
+    --onnx artifacts/newmodel/baseline.onnx \
+    --tflite artifacts/newmodel/onnx2tf/baseline_float32.tflite \
+    --labels app/assets/models/labels.json
 ```
 
-## 4. Check the catalog covers the new class set
+```
+input                onnx shape         tflite shape       max |diff|   result
+------------------------------------------------------------------------------
+uniform-random       (1, 239)           (1, 239)           6.199e-06    PASS
+flat-blocks          (1, 239)           (1, 239)           1.192e-05    PASS
+horizontal-ramp      (1, 239)           (1, 239)           8.583e-06    PASS
+
+class count: 239 == labels.json (239) OK
+
+worst max |diff| : 1.192e-05  (tolerance 1e-04)
+RESULT: PASS - the TFLite matches the ONNX
+```
+
+Run it with the converter Python (it has TensorFlow):
 
 ```bash
-python tools/check_catalog.py app/assets/models/labels.json
+"$TEMP/ai_export_env/Scripts/python.exe" ml/scripts/verify_export.py ...
 ```
 
-```
-model classes        : 239
-catalog classes      : 258
-catalog dishes       : 258
-classes not in catalog: 0
-classes with no dish : 0
+The tolerance is 1e-4 (the shipped epoch-9 asset measured 5e-6). A
+TFLite that is quietly wrong - transposed axes, wrong normalisation -
+ships a model that looks fine and predicts garbage. This is the check
+that catches it.
 
-RESULT: catalog covers every model class
-```
-
-If it reports missing classes, regenerate the catalog:
+## 5. Rebuild the catalog so every class has a dish
 
 ```bash
-cd ml && python scripts/build_dish_catalog.py
+cd ml
+python scripts/build_dish_catalog.py --classes ../ml/data/classes.json
 ```
 
-The builder merges the curated rows with any rows already in the
-shipped catalog, adds the new-dataset extras, and writes a sorted,
-de-duplicated class list. It does **not** write `labels.json` (that
-comes from the model's splits, step 2).
+The builder keeps every curated nutrition value, and GENERATES a row
+for any class that has none (deterministic, plausible estimates, and
+listed in the catalog's `autoGenerated` array so a human can review
+them). Without this, a model class with no dish row is dropped by the
+scan flow.
 
-## 5. Verify
+## 6. Install the model
 
 ```bash
-# model input/output contract, without tensorflow
+cp artifacts/newmodel/onnx2tf/baseline_float32.tflite \
+   app/assets/models/baseline.tflite
+```
+
+Check the shapes:
+
+```bash
 python tools/tflite_shape.py app/assets/models/baseline.tflite
 ```
 ```
-  INPUT  : image  shape=[1, 224, 224, 3]
-  OUTPUT : logits  shape=[1, 80]
+  INPUT  : pixel_values  shape=[1, 224, 224, 3]
+  OUTPUT : logits  shape=[1, 239]
 ```
 
 The output dimension MUST equal `len(labels.json["classes"])`.
 
+## 7. Verify
+
 ```bash
-cd app && flutter test test/model_contract_test.dart
+cd app
+flutter test test/model_contract_test.dart
 ```
 
 This checks, in CI, that:
 
-- every model label exists in the catalog,
-- every model label has a dish row (otherwise the scan screen drops
-  the prediction),
+- the model asset is bundled and is the expected size,
+- the model outputs exactly as many classes as labels.json lists,
+- every model label has a dish row in the catalog,
+- the catalog's class order equals the model's label order,
 - the catalog has no duplicate class names,
-- the model asset is bundled.
+- every dish row has usable nutrition values.
 
-## 6. Build and install
+## 8. Build and install
 
 ```bash
 cd app
@@ -117,6 +166,7 @@ adb install -r build/app/outputs/flutter-apk/app-release.apk
 |---|---|
 | Every dish is wrong, but the confidence looks plausible | `labels.json` was not regenerated for the new model |
 | The top-3 suggestions are empty for some photos | The class has no row in `khana_catalog.json` |
-| `error: splits CSV has N classes but the checkpoint has M` | The splits CSV is from a different training run |
-| `error: --num-classes ... != checkpoint meta ...` | A stale checkpoint was picked up |
+| The app shows one dish for every photo ("kulfi") | The model and the labels disagree - the output buffer was sized from the label count, so the model wrote past it. The app now checks the shapes at load time and refuses to run |
+| `error: classes.json has N classes but the checkpoint has M` | The checkpoint and the class list are from different runs |
+| `error: the model outputs 239 classes but labels.json lists 80` | `labels.json` is stale |
 | The app shows a blank window | See the black-screen notes in `main.dart`; check `adb logcat` for the `AppLog` lines |

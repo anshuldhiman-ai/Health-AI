@@ -120,7 +120,15 @@
   "scanCameraUnavailableHint": "Check camera permission, or pick a photo from your gallery.",
   "scanPickFromGallery": "Choose from gallery",
   "scanAnalyzing": "Reading your plate…",
-  "scanAnalyzingHint": "Matching 80 Indian dishes on this device.",
+  "scanAnalyzingHint": "Matching Indian dishes on this device.",
+  "@scanAnalyzingHint": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "258"
+      }
+    }
+  },
   "scanModelMissing": "The recognition model isn't installed in this build, so scanning is unavailable.",
   "scanPhotoFailed": "Couldn't read that photo. Try another one.",
   "scanUncertainHint": "Low confidence — check the dish and its ingredients before adding.",
@@ -146,7 +154,15 @@
   "helpOfflineA": "No. Recognition, diary and step tracking run on your phone.",
   "aboutLegalese": "Offline nutrition and activity tracking.",
   "aboutPrivacy": "Health AI has no account and no cloud sync. Everything you log stays on this device.",
-  "aboutModel": "Food recognition runs fully on-device with a MobileNetV4 model trained on 80 Indian dishes.",
+  "aboutModel": "Food recognition runs fully on-device with a MobileNetV4 model trained on Indian dishes.",
+  "@aboutModel": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "258"
+      }
+    }
+  },
   "chooseGoal": "Pick the plan that fits you.",
   "goalLose": "Lose weight",
   "goalLoseHint": "A gentle calorie deficit",
@@ -227,7 +243,15 @@
   "weeklyConsistency": "Days logged",
   "weeklyNote": "Targets are your current plan. Tap a bar for the day's total.",
   "searchFoodTitle": "Search Food",
-  "searchFoodHint": "Search 80 Indian dishes",
+  "searchFoodHint": "Search Indian dishes",
+  "@searchFoodHint": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "258"
+      }
+    }
+  },
   "categoryAll": "All",
   "categoryCurry": "Curry",
   "categoryBread": "Bread",

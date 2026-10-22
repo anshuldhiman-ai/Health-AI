@@ -58,6 +58,7 @@ class _SearchFoodScreenState extends ConsumerState<SearchFoodScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final catalog = ref.watch(dishCatalogProvider);
+    final dishCount = ref.watch(dishCountProvider);
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -91,7 +92,7 @@ class _SearchFoodScreenState extends ConsumerState<SearchFoodScreen> {
                 textInputAction: TextInputAction.search,
                 onChanged: (value) => setState(() => _query = value),
                 decoration: InputDecoration(
-                  hintText: l10n.searchFoodHint,
+                  hintText: l10n.searchFoodHint(dishCount),
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _query.isEmpty
                       ? null

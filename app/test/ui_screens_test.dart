@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:app/app/app.dart';
 import 'package:app/app/router.dart';
+import 'package:app/data/preferences/theme_mode_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,8 +46,17 @@ void main() {
     }
   });
 
+  /// Bounded settle. `pumpAndSettle` never returns on a screen with a
+  /// blinking text cursor (the search screen), so pump a fixed number
+  /// of frames instead.
+  Future<void> settle(WidgetTester tester) async {
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 40));
+    }
+  }
+
   Future<void> shoot(WidgetTester tester, String name) async {
-    await tester.pumpAndSettle();
+    await settle(tester);
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/ui/$name.png'),
@@ -66,19 +76,28 @@ void main() {
         await precacheImage(provider, tester.element(find.byType(MaterialApp)));
       }
     });
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
-  Future<void> open(WidgetTester tester, String route) async {
+  Future<void> open(
+    WidgetTester tester,
+    String route, {
+    ThemeMode themeMode = ThemeMode.light,
+  }) async {
     tester.view.physicalSize = const Size(1179, 2556);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const ProviderScope(child: App()));
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [initialThemeModeProvider.overrideWithValue(themeMode)],
+        child: const App(),
+      ),
+    );
+    await settle(tester);
     if (route != '/welcome') {
       appRouter.go(route);
-      await tester.pumpAndSettle();
+      await settle(tester);
     }
     await precacheImages(tester);
   }
@@ -106,5 +125,15 @@ void main() {
   testWidgets('profile', (tester) async {
     await open(tester, '/profile');
     await shoot(tester, 'profile');
+  }, skip: !runGoldens);
+
+  testWidgets('search', (tester) async {
+    await open(tester, '/search?day=0&meal=lunch');
+    await shoot(tester, 'search');
+  }, skip: !runGoldens);
+
+  testWidgets('today in dark mode', (tester) async {
+    await open(tester, '/today', themeMode: ThemeMode.dark);
+    await shoot(tester, 'today_dark');
   }, skip: !runGoldens);
 }

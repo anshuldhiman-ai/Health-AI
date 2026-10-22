@@ -251,7 +251,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scanAnalyzing => 'आपकी थाली पढ़ी जा रही है…';
 
   @override
-  String get scanAnalyzingHint => 'इस डिवाइस पर 80 भारतीय व्यंजनों से मिलान।';
+  String scanAnalyzingHint(int count) {
+    return 'इस डिवाइस पर भारतीय व्यंजनों से मिलान।';
+  }
 
   @override
   String get scanModelMissing =>
@@ -339,8 +341,9 @@ class AppLocalizationsHi extends AppLocalizations {
       'Health AI में कोई अकाउंट और कोई क्लाउड सिंक नहीं है। आप जो भी दर्ज करते हैं, इसी डिवाइस पर रहता है।';
 
   @override
-  String get aboutModel =>
-      'भोजन की पहचान 80 भारतीय व्यंजनों पर प्रशिक्षित MobileNetV4 मॉडल के साथ पूरी तरह डिवाइस पर चलती है।';
+  String aboutModel(int count) {
+    return 'भोजन की पहचान भारतीय व्यंजनों पर प्रशिक्षित MobileNetV4 मॉडल के साथ पूरी तरह डिवाइस पर चलती है।';
+  }
 
   @override
   String get chooseGoal => 'अपने लिए सही योजना चुनें।';
@@ -611,7 +614,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get searchFoodTitle => 'भोजन खोजें';
 
   @override
-  String get searchFoodHint => '80 भारतीय व्यंजन खोजें';
+  String searchFoodHint(int count) {
+    return '$count भारतीय व्यंजन खोजें';
+  }
 
   @override
   String get categoryAll => 'सभी';

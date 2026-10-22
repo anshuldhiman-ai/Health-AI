@@ -39,6 +39,7 @@ class RecognitionOutput {
   const RecognitionOutput({
     required this.top,
     required this.uncertain,
+    required this.ratio,
     required this.usedTta,
     required this.latencyMs,
   });
@@ -48,6 +49,11 @@ class RecognitionOutput {
   /// True when the model is not confident enough to log without the
   /// user confirming the dish/ingredients.
   final bool uncertain;
+
+  /// How many times more likely the top class is than the runner-up.
+  /// 1.0 means the top two are tied. This is comparable across
+  /// models with different class counts, unlike the raw probability.
+  final double ratio;
 
   /// Whether the flip-TTA fallback ran.
   final bool usedTta;
@@ -59,12 +65,30 @@ class RecognitionOutput {
 const kFoodModelAsset = 'assets/models/baseline.tflite';
 const kFoodLabelsAsset = 'assets/models/labels.json';
 
-// Decision thresholds. TTA is cheap relative to a wrong log; the
-// uncertainty flag only gates the "please confirm" copy, not the UI.
-const _kTtaTop1 = 0.55;
-const _kTtaMargin = 0.12;
-const _kUncertainTop1 = 0.50;
-const _kUncertainMargin = 0.10;
+/// Decision thresholds.
+///
+/// The absolute probability of the top class is NOT comparable across
+/// models: a softmax over 80 classes concentrates far more mass than
+/// the same quality of model over 239. The old model (80 classes) put
+/// ~0.6 on its top guess for a photo of anything; the new model (239
+/// classes) spreads the same evidence thinner, so the same absolute
+/// threshold would call every correct answer "uncertain" and, worse,
+/// the old threshold would have called the old model's confident
+/// garbage "certain".
+///
+/// So the decision uses the MARGIN between the top two classes,
+/// normalised by how much probability mass is available beyond the
+/// runner-up. A margin of 0 is "two classes tied" regardless of the
+/// class count; the ratio top1/top2 says the same thing more
+/// sharply, and unlike an absolute probability it does not move when
+/// the class set changes.
+///
+/// The absolute top-1 probability is still checked, but against a
+/// floor low enough to be meaningful for a many-class model, and the
+/// ratio carries the real weight.
+const _kTtaRatio = 1.6;
+const _kUncertainRatio = 1.35;
+const _kUncertainTop1Floor = 0.12;
 
 const _kImageSize = 224;
 const _kResizeShortSide = 255;
@@ -85,6 +109,35 @@ class RecognitionException implements Exception {
 
   @override
   String toString() => message;
+}
+
+/// How confident the model is, in terms that do not change when the
+/// class count does.
+class TopConfidence {
+  const TopConfidence({
+    required this.top1,
+    required this.top2,
+    required this.ratio,
+  });
+
+  /// Probability of the top class.
+  final double top1;
+
+  /// Probability of the runner-up.
+  final double top2;
+
+  /// top1 / top2. 1.0 means "the top two are tied"; a large value
+  /// means the model is sure.
+  final double ratio;
+
+  /// True when the result should be presented as a guess rather than
+  /// an answer.
+  ///
+  /// Two independent reasons to doubt it: the top class does not
+  /// clearly beat the runner-up, or it does not carry enough
+  /// probability mass on its own.
+  bool get isUncertain =>
+      ratio < _kUncertainRatio || top1 < _kUncertainTop1Floor;
 }
 
 /// Decode, orient, resize + centre-crop, then lay out RGB floats in
@@ -204,6 +257,12 @@ class FoodRecognizer {
       options.delete();
     }
 
+    // The output buffer is sized from the label count, so a model whose
+    // output dimension does not match labels.json would write past
+    // the buffer and produce garbage logits (a confident, wrong dish).
+    // Check the shapes at load time instead.
+    final outputSize = _verifyModelShapes(interpreter, labels.length);
+
     final isolate = await IsolateInterpreter.create(
       address: interpreter.address,
       debugName: 'food-recognizer',
@@ -212,7 +271,48 @@ class FoodRecognizer {
       interpreter: interpreter,
       isolate: isolate,
       labels: labels,
+      outputSize: outputSize,
     );
+  }
+
+  /// Fail loudly if the model's input/output shapes do not match the
+  /// app's contract. Returns the model's output size.
+  static int _verifyModelShapes(Interpreter interpreter, int numLabels) {
+    final inputs = interpreter.getInputTensors();
+    if (inputs.isEmpty) {
+      throw const ModelUnavailableException('The model has no input tensor.');
+    }
+    final inputShape = inputs.first.shape;
+    const expectedInput = [1, 224, 224, 3];
+    if (inputShape.length != expectedInput.length ||
+        !_sameShape(inputShape, expectedInput)) {
+      throw ModelUnavailableException(
+        'The model expects input $inputShape but the app provides '
+        '$expectedInput. Re-export the model.',
+      );
+    }
+
+    final outputs = interpreter.getOutputTensors();
+    if (outputs.isEmpty) {
+      throw const ModelUnavailableException('The model has no output tensor.');
+    }
+    final outputShape = outputs.first.shape;
+    if (outputShape.isEmpty || outputShape.last != numLabels) {
+      throw ModelUnavailableException(
+        'The model outputs ${outputShape.isEmpty ? 0 : outputShape.last} '
+        'classes but labels.json lists $numLabels. The model and the '
+        'labels are out of sync - re-export the model.',
+      );
+    }
+    return outputShape.last;
+  }
+
+  static bool _sameShape(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   /// Run recognition. Serialised so two quick captures cannot mutate
@@ -237,17 +337,21 @@ class FoodRecognizer {
     }
 
     var probs = _softmax(await _run(model, input));
-    var confidence = _top1AndMargin(probs);
+    var confidence = _topConfidence(probs);
     var usedTta = false;
 
-    if (confidence.$1 < _kTtaTop1 || confidence.$2 < _kTtaMargin) {
+    // The flip-TTA runs when the top two classes are close: that is
+    // exactly the case where the model is unsure and a second look
+    // helps. The ratio is the trigger, so it works the same for 80
+    // classes and 239.
+    if (confidence.ratio < _kTtaRatio) {
       final flipped = flipHorizontally(input);
       final flipProbs = _softmax(await _run(model, flipped));
       probs = List<double>.generate(
         probs.length,
         (i) => (probs[i] + flipProbs[i]) / 2,
       );
-      confidence = _top1AndMargin(probs);
+      confidence = _topConfidence(probs);
       usedTta = true;
     }
 
@@ -262,8 +366,8 @@ class FoodRecognizer {
 
     return RecognitionOutput(
       top: top,
-      uncertain:
-          confidence.$1 < _kUncertainTop1 || confidence.$2 < _kUncertainMargin,
+      uncertain: confidence.isUncertain,
+      ratio: confidence.ratio,
       usedTta: usedTta,
       latencyMs: DateTime.now().difference(started).inMilliseconds,
     );
@@ -272,14 +376,24 @@ class FoodRecognizer {
   Future<List<double>> _run(_LoadedModel model, Float32List input) async {
     // ByteBuffer avoids the runtime shape-resize path; the graph is
     // fixed at 1x224x224x3.
-    final outBytes = ByteData(model.labels.length * 4);
+    //
+    // The buffer is sized from the MODEL's output tensor, not from the
+    // label count: if the two ever disagree, sizing from the label
+    // count would make the interpreter write past the end of the
+    // buffer and fill it with garbage.
+    final outBytes = ByteData(model.outputSize * 4);
     await model.isolate
         .run(input.buffer, outBytes.buffer)
         .timeout(const Duration(seconds: 30));
     return outBytes.buffer.asFloat32List().toList(growable: false);
   }
 
-  (double, double) _top1AndMargin(List<double> probs) {
+  /// The top-1 probability, the runner-up, and the ratio between them.
+  ///
+  /// The ratio is what the decision uses: it says "the top class is N
+  /// times more likely than the next one", which means the same thing
+  /// whether the model has 80 classes or 239.
+  TopConfidence _topConfidence(List<double> probs) {
     var first = 0.0, second = 0.0;
     for (final p in probs) {
       if (p > first) {
@@ -289,7 +403,10 @@ class FoodRecognizer {
         second = p;
       }
     }
-    return (first, first - second);
+    // A near-zero runner-up means a ratio of infinity; clamp it so the
+    // value stays finite and comparable.
+    final ratio = second <= 0 ? 1e9 : first / second;
+    return TopConfidence(top1: first, top2: second, ratio: ratio);
   }
 
   List<double> _softmax(List<double> logits) {
@@ -329,11 +446,16 @@ class _LoadedModel {
     required this.interpreter,
     required this.isolate,
     required this.labels,
+    required this.outputSize,
   });
 
   final Interpreter interpreter;
   final IsolateInterpreter isolate;
   final List<String> labels;
+
+  /// Number of floats the model writes. Taken from the model's own
+  /// output tensor, never from the label count.
+  final int outputSize;
 }
 
 /// App-wide recogniser: the model stays warm across scans. The UI never

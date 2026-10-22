@@ -62,6 +62,33 @@ class DishInfo {
     required this.servings,
   });
 
+  /// A placeholder for a model label the catalog has no data for.
+  ///
+  /// The name is the model's own label (title-cased), the family is
+  /// [unknownFamily] and the macros are zero, so the UI can show
+  /// "nutrition data unavailable" instead of a wrong number.
+  factory DishInfo.unknown(String label) {
+    final words = label
+        .replaceAll('-', ' ')
+        .split(' ')
+        .where((w) => w.isNotEmpty);
+    final name = words
+        .map(
+          (w) => w == w.toUpperCase()
+              ? w
+              : '${w[0].toUpperCase()}${w.substring(1)}',
+        )
+        .join(' ');
+    return DishInfo(
+      id: label,
+      name: name.isEmpty ? label : name,
+      family: unknownFamily,
+      ingredients: const [],
+      per100g: const DishMacros(kcal: 0, protein: 0, carbs: 0, fat: 0),
+      servings: const [],
+    );
+  }
+
   /// The model label (lower-case Khana class id).
   factory DishInfo.fromJson(String id, Map<String, dynamic> json) => DishInfo(
     id: id,
@@ -91,6 +118,12 @@ class DishInfo {
 
   final DishMacros per100g;
   final List<ServingPreset> servings;
+
+  /// Family value for a dish with no nutrition data.
+  static const unknownFamily = 'unknown';
+
+  /// True when this dish has no nutrition data (see [DishInfo.unknown]).
+  bool get hasNutritionData => servings.isNotEmpty;
 }
 
 /// The dish catalog: every class the app can label, plus its nutrition
@@ -127,4 +160,16 @@ class DishCatalog {
 
   /// Look a dish up by its model label.
   DishInfo? operator [](String label) => dishes[label];
+
+  /// Look a dish up, or synthesise a placeholder for a label the
+  /// catalog does not know.
+  ///
+  /// A model can name a class the catalog has no nutrition row for
+  /// (a new dataset, a stale catalog). Dropping that prediction
+  /// silently hides a correct answer, so the placeholder keeps the
+  /// dish visible with clearly-flagged "no nutrition data" values.
+  DishInfo lookup(String label) => dishes[label] ?? DishInfo.unknown(label);
+
+  /// Whether the catalog has real nutrition data for [label].
+  bool hasDish(String label) => dishes.containsKey(label);
 }

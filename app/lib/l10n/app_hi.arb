@@ -117,7 +117,15 @@
   "scanCameraUnavailableHint": "कैमरा अनुमति जाँचें, या गैलरी से फ़ोटो चुनें।",
   "scanPickFromGallery": "गैलरी से चुनें",
   "scanAnalyzing": "आपकी थाली पढ़ी जा रही है…",
-  "scanAnalyzingHint": "इस डिवाइस पर 80 भारतीय व्यंजनों से मिलान।",
+  "scanAnalyzingHint": "इस डिवाइस पर भारतीय व्यंजनों से मिलान।",
+  "@scanAnalyzingHint": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "258"
+      }
+    }
+  },
   "scanModelMissing": "इस बिल्ड में पहचान मॉडल इंस्टॉल नहीं है, इसलिए स्कैन उपलब्ध नहीं है।",
   "scanPhotoFailed": "वह फ़ोटो पढ़ी नहीं जा सकी। दूसरी फ़ोटो आज़माएँ।",
   "scanUncertainHint": "कम भरोसा — जोड़ने से पहले व्यंजन और सामग्री जाँचें।",
@@ -143,7 +151,15 @@
   "helpOfflineA": "नहीं। पहचान, डायरी और कदम ट्रैकिंग आपके फ़ोन पर चलते हैं।",
   "aboutLegalese": "ऑफ़लाइन पोषण और गतिविधि ट्रैकिंग।",
   "aboutPrivacy": "Health AI में कोई अकाउंट और कोई क्लाउड सिंक नहीं है। आप जो भी दर्ज करते हैं, इसी डिवाइस पर रहता है।",
-  "aboutModel": "भोजन की पहचान 80 भारतीय व्यंजनों पर प्रशिक्षित MobileNetV4 मॉडल के साथ पूरी तरह डिवाइस पर चलती है।",
+  "aboutModel": "भोजन की पहचान भारतीय व्यंजनों पर प्रशिक्षित MobileNetV4 मॉडल के साथ पूरी तरह डिवाइस पर चलती है।",
+  "@aboutModel": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "258"
+      }
+    }
+  },
   "chooseGoal": "अपने लिए सही योजना चुनें।",
   "goalLose": "वज़न घटाएँ",
   "goalLoseHint": "हल्का कैलोरी घाटा",
@@ -224,7 +240,15 @@
   "weeklyConsistency": "दर्ज किए दिन",
   "weeklyNote": "लक्ष्य आपकी वर्तमान योजना के हैं। दिन का कुल देखने के लिए बार पर टैप करें।",
   "searchFoodTitle": "भोजन खोजें",
-  "searchFoodHint": "80 भारतीय व्यंजन खोजें",
+  "searchFoodHint": "{count} भारतीय व्यंजन खोजें",
+  "@searchFoodHint": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "258"
+      }
+    }
+  },
   "categoryAll": "सभी",
   "categoryCurry": "करी",
   "categoryBread": "रोटी",

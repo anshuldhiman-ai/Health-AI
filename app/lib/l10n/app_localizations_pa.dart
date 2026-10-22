@@ -251,7 +251,9 @@ class AppLocalizationsPa extends AppLocalizations {
   String get scanAnalyzing => 'ਤੁਹਾਡੀ ਥਾਲੀ ਪੜ੍ਹੀ ਜਾ ਰਹੀ ਹੈ…';
 
   @override
-  String get scanAnalyzingHint => 'ਇਸ ਡਿਵਾਈਸ \'ਤੇ 80 ਭਾਰਤੀ ਪਕਵਾਨਾਂ ਨਾਲ ਮਿਲਾਨ।';
+  String scanAnalyzingHint(int count) {
+    return 'ਇਸ ਡਿਵਾਈਸ \'ਤੇ ਭਾਰਤੀ ਪਕਵਾਨਾਂ ਨਾਲ ਮਿਲਾਨ।';
+  }
 
   @override
   String get scanModelMissing =>
@@ -338,8 +340,9 @@ class AppLocalizationsPa extends AppLocalizations {
       'Health AI ਵਿੱਚ ਕੋਈ ਖਾਤਾ ਅਤੇ ਕੋਈ ਕਲਾਊਡ ਸਿੰਕ ਨਹੀਂ। ਤੁਸੀਂ ਜੋ ਵੀ ਦਰਜ ਕਰਦੇ ਹੋ, ਇਸੇ ਡਿਵਾਈਸ \'ਤੇ ਰਹਿੰਦਾ ਹੈ।';
 
   @override
-  String get aboutModel =>
-      'ਭੋਜਨ ਦੀ ਪਛਾਣ 80 ਭਾਰਤੀ ਪਕਵਾਨਾਂ \'ਤੇ ਸਿਖਲਾਈ ਪ੍ਰਾਪਤ MobileNetV4 ਮਾਡਲ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਡਿਵਾਈਸ \'ਤੇ ਚੱਲਦੀ ਹੈ।';
+  String aboutModel(int count) {
+    return 'ਭੋਜਨ ਦੀ ਪਛਾਣ ਭਾਰਤੀ ਪਕਵਾਨਾਂ \'ਤੇ ਸਿਖਲਾਈ ਪ੍ਰਾਪਤ MobileNetV4 ਮਾਡਲ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਡਿਵਾਈਸ \'ਤੇ ਚੱਲਦੀ ਹੈ।';
+  }
 
   @override
   String get chooseGoal => 'ਆਪਣੇ ਲਈ ਸਹੀ ਯੋਜਨਾ ਚੁਣੋ।';
@@ -609,7 +612,9 @@ class AppLocalizationsPa extends AppLocalizations {
   String get searchFoodTitle => 'ਭੋਜਨ ਖੋਜੋ';
 
   @override
-  String get searchFoodHint => '80 ਭਾਰਤੀ ਪਕਵਾਨ ਖੋਜੋ';
+  String searchFoodHint(int count) {
+    return '$count ਭਾਰਤੀ ਪਕਵਾਨ ਖੋਜੋ';
+  }
 
   @override
   String get categoryAll => 'ਸਾਰੇ';

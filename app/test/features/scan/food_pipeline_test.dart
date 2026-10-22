@@ -71,7 +71,7 @@ void main() {
     expect(serving.fatGrams, expected.fat.round());
   });
 
-  test('scan session drops unknown labels and supports selection', () async {
+  test('scan session keeps unknown labels and supports selection', () async {
     final catalog = await loadCatalog();
     final session = scanSessionFrom(
       output: const RecognitionOutput(
@@ -81,6 +81,7 @@ void main() {
           DishScore(label: 'not-a-real-dish', confidence: 0.1),
         ],
         uncertain: true,
+        ratio: 2.9,
         usedTta: true,
         latencyMs: 220,
       ),
@@ -88,8 +89,11 @@ void main() {
       photo: Uint8List(4),
     );
 
-    expect(session.topMatches, hasLength(2));
+    // A label the catalog has no row for is still surfaced: dropping
+    // it silently hides a correct answer.
+    expect(session.topMatches, hasLength(3));
     expect(session.topMatches.first.label, 'Paneer Masala');
+    expect(session.topMatches.last.dish.hasNutritionData, isFalse);
     expect(session.uncertain, isTrue);
     expect(session.usedTta, isTrue);
 

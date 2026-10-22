@@ -184,6 +184,13 @@ class _BottomBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        // A hairline edge: the drop shadow is invisible on the dark
+        // canvas, so without this the bar merges into the background.
+        border: Border(
+          top: BorderSide(color: scheme.outlineVariant),
+          left: BorderSide(color: scheme.outlineVariant),
+          right: BorderSide(color: scheme.outlineVariant),
+        ),
         boxShadow: AppShadows.nav,
       ),
       child: SafeArea(

@@ -553,8 +553,8 @@ abstract class AppLocalizations {
   /// No description provided for @scanAnalyzingHint.
   ///
   /// In en, this message translates to:
-  /// **'Matching 80 Indian dishes on this device.'**
-  String get scanAnalyzingHint;
+  /// **'Matching Indian dishes on this device.'**
+  String scanAnalyzingHint(int count);
 
   /// No description provided for @scanModelMissing.
   ///
@@ -709,8 +709,8 @@ abstract class AppLocalizations {
   /// No description provided for @aboutModel.
   ///
   /// In en, this message translates to:
-  /// **'Food recognition runs fully on-device with a MobileNetV4 model trained on 80 Indian dishes.'**
-  String get aboutModel;
+  /// **'Food recognition runs fully on-device with a MobileNetV4 model trained on Indian dishes.'**
+  String aboutModel(int count);
 
   /// No description provided for @chooseGoal.
   ///
@@ -1195,8 +1195,8 @@ abstract class AppLocalizations {
   /// No description provided for @searchFoodHint.
   ///
   /// In en, this message translates to:
-  /// **'Search 80 Indian dishes'**
-  String get searchFoodHint;
+  /// **'Search Indian dishes'**
+  String searchFoodHint(int count);
 
   /// No description provided for @categoryAll.
   ///

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from pathlib import Path
 
 from torch.utils.data import DataLoader
@@ -25,6 +26,19 @@ from ml_pipeline.utils.seeding import seed_everything
 def read_classes(splits_csv: Path) -> list[str]:
     with open(splits_csv, newline="", encoding="utf-8") as f:
         return sorted({row["label"] for row in csv.DictReader(f)})
+
+
+def write_class_order(classes: list[str], out_dir: Path) -> Path:
+    """Save the model's class order next to the checkpoints.
+
+    The model's output index IS this order, so the app's labels.json
+    must use it. Writing it here means the class list travels with the
+    run instead of having to be reconstructed from the dataset later.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / "classes.json"
+    path.write_text(json.dumps(classes, indent=2) + "\n", encoding="utf-8")
+    return path
 
 
 def main() -> None:
@@ -51,7 +65,9 @@ def main() -> None:
     args = ap.parse_args()
     seed_everything(args.seed)
     classes = read_classes(args.splits)
+    class_order_path = write_class_order(classes, args.out)
     print(f"{len(classes)} classes: {classes[:5]}...")
+    print(f"class order: {class_order_path}")
     train_ds = ManifestDataset(
         args.splits, "train", classes, train=True, image_size=args.image_size
     )

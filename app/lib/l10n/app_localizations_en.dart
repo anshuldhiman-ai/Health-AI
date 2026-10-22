@@ -250,7 +250,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanAnalyzing => 'Reading your plate…';
 
   @override
-  String get scanAnalyzingHint => 'Matching 80 Indian dishes on this device.';
+  String scanAnalyzingHint(int count) {
+    return 'Matching Indian dishes on this device.';
+  }
 
   @override
   String get scanModelMissing =>
@@ -337,8 +339,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Health AI has no account and no cloud sync. Everything you log stays on this device.';
 
   @override
-  String get aboutModel =>
-      'Food recognition runs fully on-device with a MobileNetV4 model trained on 80 Indian dishes.';
+  String aboutModel(int count) {
+    return 'Food recognition runs fully on-device with a MobileNetV4 model trained on Indian dishes.';
+  }
 
   @override
   String get chooseGoal => 'Pick the plan that fits you.';
@@ -608,7 +611,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchFoodTitle => 'Search Food';
 
   @override
-  String get searchFoodHint => 'Search 80 Indian dishes';
+  String searchFoodHint(int count) {
+    return 'Search Indian dishes';
+  }
 
   @override
   String get categoryAll => 'All';

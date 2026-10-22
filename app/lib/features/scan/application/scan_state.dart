@@ -91,8 +91,13 @@ ScanSession scanSessionFrom({
 }) {
   final matches = <ScanPrediction>[
     for (final score in output.top)
-      if (catalog[score.label] case final dish?)
-        ScanPrediction(dish: dish, confidence: score.confidence),
+      // A label the catalog has no row for still gets shown (as a
+      // placeholder): dropping it silently hides a correct answer, and
+      // if EVERY candidate were dropped the scan would fail outright.
+      ScanPrediction(
+        dish: catalog.lookup(score.label),
+        confidence: score.confidence,
+      ),
   ];
   if (matches.isEmpty) {
     throw const RecognitionException('No known dish was recognised.');

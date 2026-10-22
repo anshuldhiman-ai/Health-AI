@@ -117,7 +117,15 @@
   "scanCameraUnavailableHint": "ਕੈਮਰਾ ਇਜਾਜ਼ਤ ਜਾਂਚੋ, ਜਾਂ ਗੈਲਰੀ ਤੋਂ ਫੋਟੋ ਚੁਣੋ।",
   "scanPickFromGallery": "ਗੈਲਰੀ ਤੋਂ ਚੁਣੋ",
   "scanAnalyzing": "ਤੁਹਾਡੀ ਥਾਲੀ ਪੜ੍ਹੀ ਜਾ ਰਹੀ ਹੈ…",
-  "scanAnalyzingHint": "ਇਸ ਡਿਵਾਈਸ 'ਤੇ 80 ਭਾਰਤੀ ਪਕਵਾਨਾਂ ਨਾਲ ਮਿਲਾਨ।",
+  "scanAnalyzingHint": "ਇਸ ਡਿਵਾਈਸ 'ਤੇ ਭਾਰਤੀ ਪਕਵਾਨਾਂ ਨਾਲ ਮਿਲਾਨ।",
+  "@scanAnalyzingHint": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "258"
+      }
+    }
+  },
   "scanModelMissing": "ਇਸ ਬਿਲਡ ਵਿੱਚ ਪਛਾਣ ਮਾਡਲ ਨਹੀਂ ਇੰਸਟਾਲ, ਇਸ ਲਈ ਸਕੈਨ ਉਪਲਬਧ ਨਹੀਂ।",
   "scanPhotoFailed": "ਉਹ ਫੋਟੋ ਪੜ੍ਹੀ ਨਹੀਂ ਜਾ ਸਕੀ। ਦੂਜੀ ਫੋਟੋ ਅਜ਼ਮਾਓ।",
   "scanUncertainHint": "ਘੱਟ ਭਰੋਸਾ — ਸ਼ਾਮਲ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ ਪਕਵਾਨ ਅਤੇ ਸਮੱਗਰੀ ਜਾਂਚੋ।",
@@ -143,7 +151,15 @@
   "helpOfflineA": "ਨਹੀਂ। ਪਛਾਣ, ਡਾਇਰੀ ਅਤੇ ਕਦਮ ਟਰੈਕਿੰਗ ਤੁਹਾਡੇ ਫ਼ੋਨ 'ਤੇ ਚੱਲਦੇ ਹਨ।",
   "aboutLegalese": "ਆਫ਼ਲਾਈਨ ਪੋਸ਼ਣ ਅਤੇ ਸਰਗਰਮੀ ਟਰੈਕਿੰਗ।",
   "aboutPrivacy": "Health AI ਵਿੱਚ ਕੋਈ ਖਾਤਾ ਅਤੇ ਕੋਈ ਕਲਾਊਡ ਸਿੰਕ ਨਹੀਂ। ਤੁਸੀਂ ਜੋ ਵੀ ਦਰਜ ਕਰਦੇ ਹੋ, ਇਸੇ ਡਿਵਾਈਸ 'ਤੇ ਰਹਿੰਦਾ ਹੈ।",
-  "aboutModel": "ਭੋਜਨ ਦੀ ਪਛਾਣ 80 ਭਾਰਤੀ ਪਕਵਾਨਾਂ 'ਤੇ ਸਿਖਲਾਈ ਪ੍ਰਾਪਤ MobileNetV4 ਮਾਡਲ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਡਿਵਾਈਸ 'ਤੇ ਚੱਲਦੀ ਹੈ।",
+  "aboutModel": "ਭੋਜਨ ਦੀ ਪਛਾਣ ਭਾਰਤੀ ਪਕਵਾਨਾਂ 'ਤੇ ਸਿਖਲਾਈ ਪ੍ਰਾਪਤ MobileNetV4 ਮਾਡਲ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਡਿਵਾਈਸ 'ਤੇ ਚੱਲਦੀ ਹੈ।",
+  "@aboutModel": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "258"
+      }
+    }
+  },
   "chooseGoal": "ਆਪਣੇ ਲਈ ਸਹੀ ਯੋਜਨਾ ਚੁਣੋ।",
   "goalLose": "ਭਾਰ ਘਟਾਓ",
   "goalLoseHint": "ਹਲਕੀ ਕੈਲੋਰੀ ਘਾਟ",
@@ -224,7 +240,15 @@
   "weeklyConsistency": "ਦਰਜ ਦਿਨ",
   "weeklyNote": "ਟੀਚੇ ਤੁਹਾਡੀ ਮੌਜੂਦਾ ਯੋਜਨਾ ਦੇ ਹਨ। ਦਿਨ ਦਾ ਕੁੱਲ ਵੇਖਣ ਲਈ ਬਾਰ 'ਤੇ ਟੈਪ ਕਰੋ।",
   "searchFoodTitle": "ਭੋਜਨ ਖੋਜੋ",
-  "searchFoodHint": "80 ਭਾਰਤੀ ਪਕਵਾਨ ਖੋਜੋ",
+  "searchFoodHint": "{count} ਭਾਰਤੀ ਪਕਵਾਨ ਖੋਜੋ",
+  "@searchFoodHint": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "258"
+      }
+    }
+  },
   "categoryAll": "ਸਾਰੇ",
   "categoryCurry": "ਕੜੀ",
   "categoryBread": "ਰੋਟੀ",

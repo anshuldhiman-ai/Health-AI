@@ -293,6 +293,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final dishCount = ref.watch(dishCountProvider);
     final controller = _controller;
     final initializing = _initializing != null && controller == null;
 
@@ -431,7 +432,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
             _AnalyzingOverlay(
               photo: _pendingPhoto,
               title: l10n.scanAnalyzing,
-              hint: l10n.scanAnalyzingHint,
+              hint: l10n.scanAnalyzingHint(dishCount),
             ),
         ],
       ),
