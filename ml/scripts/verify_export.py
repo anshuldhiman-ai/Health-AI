@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -49,7 +48,6 @@ def build_inputs(rng: np.random.Generator) -> list[tuple[str, np.ndarray]]:
 
 
 def run_onnx(path: Path, inputs: list[np.ndarray]) -> list[np.ndarray]:
-    import onnx
     import onnxruntime as ort  # type: ignore[import-not-found]
 
     session = ort.InferenceSession(str(path), providers=["CPUExecutionProvider"])
@@ -102,14 +100,13 @@ def main() -> int:
 
     worst = 0.0
     failed = False
-    for (name, _), a, b in zip(cases, onnx_out, tflite_out):
+    for (name, _), a, b in zip(cases, onnx_out, tflite_out, strict=True):
         diff = float(np.max(np.abs(a.astype(np.float64) - b.astype(np.float64))))
         worst = max(worst, diff)
         ok = diff <= args.tolerance
         failed = failed or not ok
         print(
-            f"{name:<20} {str(a.shape):<18} {str(b.shape):<18} "
-            f"{diff:<12.3e} {'PASS' if ok else 'FAIL'}"
+            f"{name:<20} {a.shape!s:<18} {b.shape!s:<18} {diff:<12.3e} {'PASS' if ok else 'FAIL'}"
         )
 
     # The class count must match the app's label file, or the app maps
