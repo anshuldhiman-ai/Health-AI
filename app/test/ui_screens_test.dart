@@ -11,10 +11,17 @@ import 'package:flutter_test/flutter_test.dart';
 /// (a widget test asserting "no exception" cannot tell you that a
 /// screen looks cheap).
 ///
-/// Run:  flutter test test/ui_screens_test.dart --update-goldens
-/// Then:  open test/goldens/ui/*.png
+/// The PNGs are a VISUAL BASELINE for humans, not a CI gate: font
+/// rasterising differs per platform, so a byte comparison would fail
+/// on CI for the wrong reason. The test therefore only runs when asked:
+///
+///   RUN_UI_GOLDENS=1 flutter test test/ui_screens_test.dart --update-goldens
+///
+/// then open test/goldens/ui/*.png to review the result.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  final runGoldens = Platform.environment['RUN_UI_GOLDENS'] == '1';
 
   setUpAll(() async {
     // Real font, or every glyph renders as a filled box. The app's own
@@ -23,12 +30,13 @@ void main() {
     final fontDir = Directory(
       Platform.environment['FLUTTER_ROOT'] ?? r'F:\Flutter\flutter',
     );
-    for (final entry in {
+    final fonts = {
       'PlusJakartaSans': 'assets/fonts/PlusJakartaSans-Regular.ttf',
       'MaterialIcons':
           '${fontDir.path}\\bin\\cache\\artifacts\\material_fonts\\'
           'materialicons-regular.otf',
-    }.entries) {
+    };
+    for (final entry in fonts.entries) {
       final loader = FontLoader(entry.key);
       final file = File(entry.value);
       if (!file.existsSync()) continue;
@@ -61,66 +69,42 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('welcome', (tester) async {
+  Future<void> open(WidgetTester tester, String route) async {
     tester.view.physicalSize = const Size(1179, 2556);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(const ProviderScope(child: App()));
-    await shoot(tester, 'welcome');
+    await tester.pumpAndSettle();
+    if (route != '/welcome') {
+      appRouter.go(route);
+      await tester.pumpAndSettle();
+    }
     await precacheImages(tester);
+  }
+
+  testWidgets('welcome', (tester) async {
+    await open(tester, '/welcome');
     await shoot(tester, 'welcome');
-  });
+  }, skip: !runGoldens);
 
   testWidgets('today', (tester) async {
-    tester.view.physicalSize = const Size(1179, 2556);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(const ProviderScope(child: App()));
-    await tester.pumpAndSettle();
-    appRouter.go('/today');
+    await open(tester, '/today');
     await shoot(tester, 'today');
-    await precacheImages(tester);
-    await shoot(tester, 'today');
-  });
+  }, skip: !runGoldens);
 
   testWidgets('diary', (tester) async {
-    tester.view.physicalSize = const Size(1179, 2556);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(const ProviderScope(child: App()));
-    await tester.pumpAndSettle();
-    appRouter.go('/diary');
+    await open(tester, '/diary');
     await shoot(tester, 'diary');
-    await precacheImages(tester);
-    await shoot(tester, 'diary');
-  });
+  }, skip: !runGoldens);
 
   testWidgets('insights', (tester) async {
-    tester.view.physicalSize = const Size(1179, 2556);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(const ProviderScope(child: App()));
-    await tester.pumpAndSettle();
-    appRouter.go('/insights');
+    await open(tester, '/insights');
     await shoot(tester, 'insights');
-    await precacheImages(tester);
-    await shoot(tester, 'insights');
-  });
+  }, skip: !runGoldens);
 
   testWidgets('profile', (tester) async {
-    tester.view.physicalSize = const Size(1179, 2556);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(const ProviderScope(child: App()));
-    await tester.pumpAndSettle();
-    appRouter.go('/profile');
+    await open(tester, '/profile');
     await shoot(tester, 'profile');
-    await precacheImages(tester);
-    await shoot(tester, 'profile');
-  });
+  }, skip: !runGoldens);
 }

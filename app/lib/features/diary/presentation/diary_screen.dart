@@ -57,10 +57,10 @@ class DiaryScreen extends ConsumerWidget {
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(0, 40),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  textStyle: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  // A raw TextStyle REPLACES the theme's style, so it
+                  // must carry the brand family itself - otherwise the
+                  // label falls back to the system font.
+                  textStyle: AppTypography.label.copyWith(fontSize: 12.5),
                 ),
               ),
             ),
@@ -142,13 +142,20 @@ class _DayChip extends StatelessWidget {
 
     return Material(
       color: selected ? scheme.primary : scheme.surface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 9),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          // The reference chips are bordered rounded squares, not
+          // near-stadium blobs floating on the canvas.
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: selected ? null : Border.all(color: scheme.outlineVariant),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 label,
@@ -159,7 +166,7 @@ class _DayChip extends StatelessWidget {
                   fontSize: 11,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Text(
                 '$dayOfMonth',
                 style: AppTypography.itemTitle.copyWith(

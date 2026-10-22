@@ -378,7 +378,7 @@ class _CaloriesTab extends StatelessWidget {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) =>
                         BarTooltipItem(
                           '${formatCount(rod.toY.round())} ${l10n.kcalUnit}',
-                          TextStyle(
+                          AppTypography.caption.copyWith(
                             color: scheme.onInverseSurface,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,

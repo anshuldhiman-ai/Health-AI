@@ -724,7 +724,9 @@ class _AddBar extends StatelessWidget {
                             selected: meal == kind,
                             onSelected: (_) => onMeal(kind),
                             visualDensity: VisualDensity.compact,
-                            labelStyle: const TextStyle(fontSize: 11),
+                            labelStyle: AppTypography.caption.copyWith(
+                              fontSize: 11,
+                            ),
                           ),
                       ],
                     ),
