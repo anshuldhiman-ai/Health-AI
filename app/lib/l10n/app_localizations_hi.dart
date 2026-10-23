@@ -268,6 +268,22 @@ class AppLocalizationsHi extends AppLocalizations {
       'कम भरोसा — जोड़ने से पहले व्यंजन और सामग्री जाँचें।';
 
   @override
+  String get scanDetecting => 'पहचान रहे हैं…';
+
+  @override
+  String get scanNotFoodTitle => 'यह खाने की चीज़ नहीं है';
+
+  @override
+  String get scanNotFoodBody =>
+      'इस फ़ोटो में कोई व्यंजन नहीं मिला। फ़ोटो में खाना ज़्यादा भरकर दोबारा कोशिश करें, या व्यंजन का नाम खोजें।';
+
+  @override
+  String get scanTryAgain => 'दोबारा कोशिश करें';
+
+  @override
+  String get scanSearchManually => 'खुद खोजें';
+
+  @override
   String get settingsTitle => 'सेटिंग्स';
 
   @override

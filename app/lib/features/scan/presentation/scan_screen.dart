@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:app/design_system/tokens/tokens.dart';
@@ -60,6 +61,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     _mealKind = widget.mealKind;
     WidgetsBinding.instance.addObserver(this);
     _initializing = _initCamera();
+    // Drop whatever the last visit left in the provider, and do it after
+    // the first frame so we are not mutating provider state during
+    // initState. Until a scan completes in THIS visit, `session` stays
+    // null and the camera shows no detection pills at all.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(scanSessionProvider.notifier).state = null;
+    });
   }
 
   @override
@@ -167,6 +176,15 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
 
     try {
       final output = await ref.read(foodRecognizerProvider).recognize(bytes);
+
+      // Non-food gate. Checked before the catalog is even loaded: a photo
+      // of a keyboard must never reach a "Confirm & Add to Diary" button,
+      // so there is nothing to build a session for.
+      if (!output.isFood) {
+        if (mounted) await _showNotFoodDialog();
+        return;
+      }
+
       final catalog = await ref.read(dishCatalogProvider.future);
       final session = scanSessionFrom(
         output: output,
@@ -188,7 +206,12 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
         builder: (_) =>
             ScanResultSheet(mealKind: _mealKind, dayOffset: widget.dayOffset),
       );
-      if (added == true && mounted) {
+      if (!mounted) return;
+      // Whether the user confirmed or swiped the sheet away, the
+      // prediction is finished with. Leaving it set is what made a stale
+      // dish appear as a detection pill on the next visit.
+      ref.read(scanSessionProvider.notifier).state = null;
+      if (added == true) {
         Navigator.of(context).pop();
       }
     } on ModelUnavailableException {
@@ -205,6 +228,37 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
         });
       }
     }
+  }
+
+  /// "Not a food item": what happened, and the two things the user can
+  /// do next. Deliberately not an error - the photo was fine, it just
+  /// wasn't a dish.
+  Future<void> _showNotFoodDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    final searchManually = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.scanNotFoodTitle),
+        content: Text(l10n.scanNotFoodBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.scanTryAgain),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.scanSearchManually),
+          ),
+        ],
+      ),
+    );
+    if (searchManually != true || !mounted) return;
+    // Replace rather than push: the camera has nothing left to show, and
+    // stacking search on top of it would leave the viewfinder running
+    // behind the search screen.
+    context.pushReplacement(
+      '/search?meal=${_mealKind.name}&day=${widget.dayOffset}',
+    );
   }
 
   Future<void> _toggleTorch() async {
@@ -410,40 +464,53 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                   ),
                 ),
                 const SizedBox(height: 10),
-                // "Detecting..." pill badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.45),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.5), width: 1),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF4CC18F),
-                          shape: BoxShape.circle,
-                        ),
+                // "Detecting…" status badge. Only while a capture is
+                // actually being analysed — it used to sit on the screen
+                // permanently, which read as "the app is looking at a
+                // dish" before the user had taken a photo.
+                if (_analyzing)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
+                        width: 1,
                       ),
-                      const SizedBox(width: 7),
-                      const Text(
-                        'Detecting...',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4CC18F),
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 7),
+                        Text(
+                          l10n.scanDetecting,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 const Spacer(),
-                // Candidate detection pills row (only show after actual scan)
+                // Candidate detection pills. Only during an active scan, or
+                // from the scan that just finished in this visit — the
+                // session is cleared on entry and on sheet dismissal, so a
+                // dish from an earlier visit can never appear here.
                 if (_analyzing || session != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -451,13 +518,20 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         if (session != null && session.topMatches.isNotEmpty)
-                          for (var i = 0; i < session.topMatches.length && i < 3; i++)
+                          for (
+                            var i = 0;
+                            i < session.topMatches.length && i < 3;
+                            i++
+                          )
                             _DetectionPill(
                               label: session.topMatches[i].label,
                               confidence: '${session.topMatches[i].percent}%',
                             ),
                         if (_analyzing)
-                          const _DetectionPill(label: 'Analyzing...', confidence: ''),
+                          _DetectionPill(
+                            label: l10n.scanDetecting,
+                            confidence: '',
+                          ),
                       ],
                     ),
                   ),

@@ -574,6 +574,36 @@ abstract class AppLocalizations {
   /// **'Low confidence — check the dish and its ingredients before adding.'**
   String get scanUncertainHint;
 
+  /// No description provided for @scanDetecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Detecting…'**
+  String get scanDetecting;
+
+  /// No description provided for @scanNotFoodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a food item'**
+  String get scanNotFoodTitle;
+
+  /// No description provided for @scanNotFoodBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find a dish in this photo. Try again with the food filling more of the frame, or search for the dish by name.'**
+  String get scanNotFoodBody;
+
+  /// No description provided for @scanTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get scanTryAgain;
+
+  /// No description provided for @scanSearchManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Search manually'**
+  String get scanSearchManually;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

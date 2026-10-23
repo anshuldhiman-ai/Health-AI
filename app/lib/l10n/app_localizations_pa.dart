@@ -267,6 +267,22 @@ class AppLocalizationsPa extends AppLocalizations {
       'ਘੱਟ ਭਰੋਸਾ — ਸ਼ਾਮਲ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ ਪਕਵਾਨ ਅਤੇ ਸਮੱਗਰੀ ਜਾਂਚੋ।';
 
   @override
+  String get scanDetecting => 'ਪਛਾਣ ਰਹੇ ਹਾਂ…';
+
+  @override
+  String get scanNotFoodTitle => 'ਇਹ ਖਾਣ ਵਾਲੀ ਚੀਜ਼ ਨਹੀਂ ਹੈ';
+
+  @override
+  String get scanNotFoodBody =>
+      'ਇਸ ਫੋਟੋ ਵਿੱਚ ਕੋਈ ਪਕਵਾਨ ਨਹੀਂ ਮਿਲਿਆ। ਫੋਟੋ ਵਿੱਚ ਖਾਣਾ ਵੱਧ ਭਰ ਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ, ਜਾਂ ਪਕਵਾਨ ਦਾ ਨਾਂ ਲੱਭੋ।';
+
+  @override
+  String get scanTryAgain => 'ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ';
+
+  @override
+  String get scanSearchManually => 'ਖੁਦ ਲੱਭੋ';
+
+  @override
   String get settingsTitle => 'ਸੈਟਿੰਗਾਂ';
 
   @override

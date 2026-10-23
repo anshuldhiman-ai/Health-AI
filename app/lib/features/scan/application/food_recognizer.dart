@@ -94,6 +94,31 @@ const _kTtaRatio = 1.6;
 const _kUncertainRatio = 1.35;
 const _kUncertainTop1Floor = 0.12;
 
+/// Food / not-food thresholds, used by [TopConfidence.isLikelyFood].
+///
+/// PROVISIONAL. The bundled label set is 239 Indian dishes and holds no
+/// `not_food` / `other_food` class, so there is nothing to train or
+/// calibrate this decision against - it is a heuristic on the shape of
+/// the probability distribution, not a learned reject class.
+///
+/// Validating these numbers needs a labelled set of real non-food phone
+/// photos (keyboards, pets, walls, furniture) pushed through this exact
+/// model, which does not exist yet. Until it does, treat every constant
+/// here as an unmeasured guess. The unit tests cover the decision LOGIC;
+/// they cannot tell you these cut-offs are right.
+///
+/// Erring strict is deliberate: a false "not a food item" costs the user
+/// one tap on Search manually, while a false "food" writes a confident
+/// wrong dish into their diary (R4).
+const _kFoodTop1Floor = 0.20;
+const _kFoodTop3MassFloor = 0.55;
+
+/// A margin this wide is food evidence on its own: the model separated
+/// one distinctive dish from everything else. It rescues a picture whose
+/// mass sits mostly on the top class, which [_kFoodTop3MassFloor] alone
+/// would reject.
+const _kFoodClearMarginRatio = 3.0;
+
 const _kImageSize = 224;
 const _kResizeShortSide = 255;
 
@@ -122,7 +147,37 @@ class TopConfidence {
     required this.top1,
     required this.top2,
     required this.ratio,
+    required this.top3Mass,
   });
+
+  /// Summarise a full probability distribution.
+  ///
+  /// Kept as a factory rather than a private method on the recogniser so
+  /// the decision can be unit-tested without a LiteRT interpreter.
+  factory TopConfidence.fromProbabilities(List<double> probs) {
+    var first = 0.0, second = 0.0, third = 0.0;
+    for (final p in probs) {
+      if (p > first) {
+        third = second;
+        second = first;
+        first = p;
+      } else if (p > second) {
+        third = second;
+        second = p;
+      } else if (p > third) {
+        third = p;
+      }
+    }
+    // A near-zero runner-up means a ratio of infinity; clamp it so the
+    // value stays finite and comparable.
+    final ratio = second <= 0 ? 1e9 : first / second;
+    return TopConfidence(
+      top1: first,
+      top2: second,
+      ratio: ratio,
+      top3Mass: first + second + third,
+    );
+  }
 
   /// Probability of the top class.
   final double top1;
@@ -134,6 +189,14 @@ class TopConfidence {
   /// means the model is sure.
   final double ratio;
 
+  /// Combined probability of the three best classes.
+  ///
+  /// The distribution signal: a real dish photo concentrates its mass on
+  /// a few plausible dishes, whereas a keyboard or a wall spreads the
+  /// same total thinly across 239 unrelated classes, so the top three
+  /// hold much less of it.
+  final double top3Mass;
+
   /// True when the result should be presented as a guess rather than
   /// an answer.
   ///
@@ -142,6 +205,32 @@ class TopConfidence {
   /// probability mass on its own.
   bool get isUncertain =>
       ratio < _kUncertainRatio || top1 < _kUncertainTop1Floor;
+
+  /// True when the photo plausibly contains a dish at all.
+  ///
+  /// This asks only "is there food here?", never "which dish?" — that is
+  /// [isUncertain]'s job. The two questions need different evidence, and
+  /// conflating them produces a bad answer for real food:
+  ///
+  /// - [top1]: *some* class must carry real mass. A softmax over 239
+  ///   classes always returns a biggest number, so "there is a maximum"
+  ///   means nothing on its own.
+  /// - [top3Mass] or [ratio]: the mass must sit on a few dishes rather
+  ///   than be smeared over the whole class list, either because the top
+  ///   three hold it ([top3Mass]) or because the winner is far ahead of
+  ///   everything else ([ratio]).
+  ///
+  /// A LOW [ratio] is deliberately NOT treated as evidence of non-food.
+  /// "Dal tadka vs dal makhani" produces a near-tie between two dishes,
+  /// which is strong evidence the picture IS food and merely ambiguous
+  /// between two labels — [isUncertain] flags it, the user picks. Using
+  /// the margin as a food gate would answer a photo of a real dish with
+  /// "Not a food item", which is worse than a guess the user can correct.
+  ///
+  /// See the threshold constants for why these numbers are provisional.
+  bool get isLikelyFood =>
+      top1 >= _kFoodTop1Floor &&
+      (top3Mass >= _kFoodTop3MassFloor || ratio >= _kFoodClearMarginRatio);
 }
 
 /// Decode, orient, resize + centre-crop, then lay out RGB floats in
@@ -341,7 +430,7 @@ class FoodRecognizer {
     }
 
     var probs = _softmax(await _run(model, input));
-    var confidence = _topConfidence(probs);
+    var confidence = TopConfidence.fromProbabilities(probs);
     var usedTta = false;
 
     // The flip-TTA runs when the top two classes are close: that is
@@ -355,7 +444,7 @@ class FoodRecognizer {
         probs.length,
         (i) => (probs[i] + flipProbs[i]) / 2,
       );
-      confidence = _topConfidence(probs);
+      confidence = TopConfidence.fromProbabilities(probs);
       usedTta = true;
     }
 
@@ -368,10 +457,9 @@ class FoodRecognizer {
           DishScore(label: model.labels[index], confidence: probs[index]),
     ];
 
-    // Non-food rejection: If model confidence is diffused across many classes
-    // or top probability is below the threshold, classify as non-food.
-    final isFood = confidence.top1 >= 0.18 &&
-        (confidence.top1 >= 0.25 || confidence.ratio >= 1.25);
+    // Non-food rejection. Computed AFTER the TTA block above, so it
+    // judges the averaged distribution rather than the first pass.
+    final isFood = confidence.isLikelyFood;
 
     return RecognitionOutput(
       top: top,
@@ -398,26 +486,6 @@ class FoodRecognizer {
     return outBytes.buffer.asFloat32List().toList(growable: false);
   }
 
-  /// The top-1 probability, the runner-up, and the ratio between them.
-  ///
-  /// The ratio is what the decision uses: it says "the top class is N
-  /// times more likely than the next one", which means the same thing
-  /// whether the model has 80 classes or 239.
-  TopConfidence _topConfidence(List<double> probs) {
-    var first = 0.0, second = 0.0;
-    for (final p in probs) {
-      if (p > first) {
-        second = first;
-        first = p;
-      } else if (p > second) {
-        second = p;
-      }
-    }
-    // A near-zero runner-up means a ratio of infinity; clamp it so the
-    // value stays finite and comparable.
-    final ratio = second <= 0 ? 1e9 : first / second;
-    return TopConfidence(top1: first, top2: second, ratio: ratio);
-  }
 
   List<double> _softmax(List<double> logits) {
     if (logits.isEmpty) {

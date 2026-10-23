@@ -32,6 +32,7 @@ class ScanSession {
     required this.usedTta,
     required this.photo,
     required this.latencyMs,
+    this.isFood = true,
   });
 
   final List<ScanPrediction> topMatches;
@@ -41,6 +42,11 @@ class ScanSession {
 
   /// Model was not confident enough to log without confirmation.
   final bool uncertain;
+
+  /// False when the photo probably contains no dish at all (a keyboard,
+  /// a pet, a wall). The camera UI checks this before opening the result
+  /// sheet: a non-food photo must never reach a "Confirm" button.
+  final bool isFood;
 
   /// The flip-TTA fallback ran.
   final bool usedTta;
@@ -66,6 +72,7 @@ class ScanSession {
       usedTta: usedTta,
       photo: photo,
       latencyMs: latencyMs,
+      isFood: isFood,
     );
   }
 
@@ -78,6 +85,7 @@ class ScanSession {
     usedTta: usedTta,
     photo: photo,
     latencyMs: latencyMs,
+    isFood: isFood,
   );
 }
 
@@ -112,8 +120,16 @@ ScanSession scanSessionFrom({
     usedTta: output.usedTta,
     photo: photo,
     latencyMs: output.latencyMs,
+    isFood: output.isFood,
   );
 }
 
-/// Null until a real scan completes; the sheet only opens with data.
+/// The in-flight scan result. Null until a scan completes *in the
+/// current visit to the camera*.
+///
+/// The camera screen owns this: it clears the session on entry and again
+/// when the result sheet closes. Without that, a prediction from an
+/// earlier scan survives in the provider and shows up as a detection
+/// pill the next time the camera opens, reading as if the app had
+/// already recognised a dish it has not seen.
 final scanSessionProvider = StateProvider<ScanSession?>((ref) => null);

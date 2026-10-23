@@ -266,6 +266,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Low confidence — check the dish and its ingredients before adding.';
 
   @override
+  String get scanDetecting => 'Detecting…';
+
+  @override
+  String get scanNotFoodTitle => 'Not a food item';
+
+  @override
+  String get scanNotFoodBody =>
+      'We couldn\'t find a dish in this photo. Try again with the food filling more of the frame, or search for the dish by name.';
+
+  @override
+  String get scanTryAgain => 'Try again';
+
+  @override
+  String get scanSearchManually => 'Search manually';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
