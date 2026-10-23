@@ -52,6 +52,11 @@ artifacts/
 key.properties
 google-services.json
 
+# --- Build outputs ---
+# Locally-built APKs/AABs for manual on-device testing. Each is ~130 MB, so
+# they must never enter git history; publish them as release assets instead.
+releases/
+
 # --- OS ---
 .DS_Store
 Thumbs.db

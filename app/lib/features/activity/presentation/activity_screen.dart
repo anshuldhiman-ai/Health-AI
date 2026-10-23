@@ -84,20 +84,82 @@ class _LiveActivity extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _HeroCard(snapshot: snapshot),
+          _HeroCard(snapshot: snapshot),
         const SizedBox(height: 14),
         _MetricsGrid(snapshot: snapshot),
-        const SizedBox(height: 26),
+        const SizedBox(height: 14),
+        _CaloriesBurnedCard(steps: snapshot.steps),
+        const SizedBox(height: 20),
         GroupHeader(title: l10n.todayByHour),
         const SizedBox(height: 12),
         _HourlyCard(hourly: snapshot.hourlySteps),
-        const SizedBox(height: 26),
+        const SizedBox(height: 24),
         GroupHeader(title: l10n.last7Days),
         const SizedBox(height: 12),
         _HistoryCard(history: snapshot.history),
         const SizedBox(height: 18),
         _NoteCard(text: l10n.activityPrivacyNote),
       ],
+    );
+  }
+}
+
+class _CaloriesBurnedCard extends StatelessWidget {
+  const _CaloriesBurnedCard({required this.steps});
+  final int steps;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: colors.primaryWash,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.local_fire_department_rounded,
+              color: colors.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Calories Burned',
+                style: AppTypography.itemS.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${(steps * 0.04).round()} kcal',
+                style: AppTypography.itemTitle.copyWith(
+                  color: scheme.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: scheme.onSurfaceVariant,
+            size: 22,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -120,8 +182,12 @@ class _Header extends StatelessWidget {
         const SizedBox(width: 2),
         Expanded(
           child: Text(
-            title,
-            style: AppTypography.titleL.copyWith(color: scheme.onSurface),
+            'Step Counter & Activity',
+            style: AppTypography.titleL.copyWith(
+              color: scheme.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],
@@ -138,76 +204,60 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-    final progress = (snapshot.goalProgress * 100).round();
+    final displaySteps = snapshot.steps;
+    final progress = (displaySteps / kDailyStepGoal).clamp(0.0, 1.0);
 
     return AppCard(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Column(
         children: [
-          Text(
-            l10n.activityToday,
-            style: AppTypography.itemS.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontSize: 13.5,
-            ),
-          ),
-          const SizedBox(height: 14),
           ProgressRing(
-            progress: snapshot.goalProgress,
-            size: 174,
-            strokeWidth: 14,
+            progress: progress,
+            size: 190,
+            strokeWidth: 15,
+            gradientColors: const [
+              Color(0xFF0D5C3A),
+              Color(0xFF28B781),
+              Color(0xFF48ABD9),
+              Color(0xFFE5B25D),
+            ],
             semanticLabel:
-                '${formatCount(snapshot.steps)} ${l10n.stepsLabel}, '
-                '$progress% ${l10n.progressLabel}',
+                '${formatCount(displaySteps)} ${l10n.stepsLabel}, '
+                '${(progress * 100).round()}% ${l10n.progressLabel}',
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  formatCount(snapshot.steps),
-                  style: AppTypography.value20.copyWith(
-                    color: scheme.onSurface,
-                    fontSize: 36,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  l10n.stepsLabel,
+                  'Daily steps',
                   style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  formatCount(displaySteps),
+                  style: TextStyle(
+                    fontFamily: AppTypography.family,
+                    color: scheme.onSurface,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${formatCount(kDailyStepGoal)} steps',
+                  style: AppTypography.caption.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: colors.primaryWash,
-              borderRadius: BorderRadius.circular(AppRadii.pill.x),
-            ),
-            child: Text(
-              l10n.stepGoal(formatCount(kDailyStepGoal)),
-              style: AppTypography.caption.copyWith(
-                color: scheme.primary,
-                fontWeight: FontWeight.w700,
-                fontSize: 12.5,
-              ),
-            ),
-          ),
-          if (snapshot.status == StepStatus.live) ...[
-            const SizedBox(height: 8),
-            Text(
-              '${(snapshot.goalProgress * 100).round()}% '
-              '${l10n.progressLabel.toLowerCase()}',
-              style: AppTypography.caption.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontSize: 11.5,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -221,53 +271,25 @@ class _MetricsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final pace = snapshot.paceMinPerKm;
-    final cadence = snapshot.displayCadence;
-    return Column(
-      spacing: 10,
+    final distance = snapshot.distanceKm;
+    final activeMinutes = (snapshot.activeSeconds ~/ 60);
+
+    return Row(
       children: [
-        Row(
-          spacing: 10,
-          children: [
-            Expanded(
-              child: _MetricTile(
-                icon: Icons.route_rounded,
-                label: l10n.distanceLabel,
-                value:
-                    '${snapshot.distanceKm.toStringAsFixed(1)} '
-                    '${l10n.kmUnit}',
-              ),
-            ),
-            Expanded(
-              child: _MetricTile(
-                icon: Icons.timer_outlined,
-                label: l10n.activeTimeLabel,
-                value: formatActiveTime(l10n, snapshot.activeSeconds),
-              ),
-            ),
-          ],
+        Expanded(
+          child: _MetricTile(
+            icon: Icons.location_on_outlined,
+            label: 'Distance',
+            value: '${distance.toStringAsFixed(1)} km',
+          ),
         ),
-        Row(
-          spacing: 10,
-          children: [
-            Expanded(
-              child: _MetricTile(
-                icon: Icons.speed_rounded,
-                label: l10n.avgPaceLabel,
-                value: pace == null
-                    ? '—'
-                    : '${formatPace(pace)} ${l10n.minPerKm}',
-              ),
-            ),
-            Expanded(
-              child: _MetricTile(
-                icon: Icons.directions_run_rounded,
-                label: l10n.cadenceLabel,
-                value: cadence <= 0 ? '—' : '$cadence ${l10n.spmUnit}',
-              ),
-            ),
-          ],
+        const SizedBox(width: 12),
+        Expanded(
+          child: _MetricTile(
+            icon: Icons.access_time_rounded,
+            label: 'Active Time',
+            value: '$activeMinutes mins',
+          ),
         ),
       ],
     );

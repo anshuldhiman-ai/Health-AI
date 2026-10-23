@@ -1,181 +1,483 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app/core/format/count_format.dart';
-import 'package:app/design_system/components/app_sheet.dart';
+import 'package:app/design_system/components/app_card.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/nutrition_targets.dart';
 import 'package:app/data/preferences/goal_kind_controller.dart';
-import 'package:app/l10n/app_localizations.dart';
 
 /// Goal card entry point. Choosing a plan updates the calorie ring,
 /// macro meters, diary and insights immediately.
 Future<void> showGoalSheet(BuildContext context) {
-  return showAppSheet<void>(context, child: const GoalSheet());
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const GoalSettingsScreen(isModal: true),
+  );
 }
 
-class GoalSheet extends ConsumerWidget {
+class GoalSheet extends StatelessWidget {
   const GoalSheet({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final selected = ref.watch(goalKindProvider);
+  Widget build(BuildContext context) => const GoalSettingsScreen(isModal: true);
+}
+
+/// Target Goals / Goal Settings screen from ui_design2.jpg Screen 6 & ui_design.jpg Screen 8
+class GoalSettingsScreen extends ConsumerStatefulWidget {
+  const GoalSettingsScreen({super.key, this.isModal = false});
+
+  final bool isModal;
+
+  @override
+  ConsumerState<GoalSettingsScreen> createState() => _GoalSettingsScreenState();
+}
+
+class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
+  bool _caloriesOn = true;
+  bool _proteinOn = true;
+  bool _carbsOn = true;
+  bool _fatOn = false;
+
+  bool _targetWeightOn = true;
+  bool _dailyActiveCalOn = true;
+  bool _proteinTargetOn = true;
+  bool _waterIntakeOn = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final selectedKind = ref.watch(goalKindProvider);
+    final targets = targetsForGoal(selectedKind);
+
+    final content = ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.x2,
+        AppSpacing.screenPadding,
+        32,
+      ),
+      children: [
+        _Header(isModal: widget.isModal),
+        const SizedBox(height: 16),
+        // Archery Target Hero Graphic
+        Center(
+          child: SizedBox(
+            width: 130,
+            height: 130,
+            child: CustomPaint(
+              painter: _ArcheryTargetPainter(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        // Goal Category Section
+        Text(
+          'Goal category',
+          style: AppTypography.titleM.copyWith(
+            color: scheme.onSurface,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _GoalToggleTile(
+          icon: Icons.local_fire_department_outlined,
+          iconColor: const Color(0xFFD4AF37),
+          title: 'Calories',
+          subtitle: 'Elegant subtle accents',
+          value: _caloriesOn,
+          onChanged: (v) => setState(() => _caloriesOn = v),
+          trailingValue: '${formatCount(targets.kcal)} kcal',
+        ),
+        const SizedBox(height: 10),
+        _GoalToggleTile(
+          icon: Icons.fitness_center_rounded,
+          iconColor: colors.macroProtein,
+          title: 'Protein',
+          subtitle: 'Elegant subtle accents',
+          value: _proteinOn,
+          onChanged: (v) => setState(() => _proteinOn = v),
+          trailingValue: '${targets.protein}g',
+        ),
+        const SizedBox(height: 10),
+        _GoalToggleTile(
+          icon: Icons.bakery_dining_outlined,
+          iconColor: colors.macroCarbs,
+          title: 'Carbs',
+          subtitle: 'Elegant subtle accents',
+          value: _carbsOn,
+          onChanged: (v) => setState(() => _carbsOn = v),
+          trailingValue: '${targets.carbs}g',
+        ),
+        const SizedBox(height: 10),
+        _GoalToggleTile(
+          icon: Icons.water_drop_outlined,
+          iconColor: colors.macroFat,
+          title: 'Fat',
+          subtitle: 'Elegant subtle accents',
+          value: _fatOn,
+          onChanged: (v) => setState(() => _fatOn = v),
+          trailingValue: '${targets.fat}g',
+        ),
+        const SizedBox(height: 22),
+        // Plan Preset Selector
+        Text(
+          'Active Plan',
+          style: AppTypography.titleM.copyWith(
+            color: scheme.onSurface,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            for (final kind in GoalKind.values)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Material(
+                    color: kind == selectedKind ? colors.primary : scheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      onTap: () => ref.read(goalKindProvider.notifier).select(kind),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: kind == selectedKind ? colors.primary : scheme.outlineVariant,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              switch (kind) {
+                                GoalKind.lose => 'Weight Loss',
+                                GoalKind.maintain => 'Maintain',
+                                GoalKind.gain => 'Muscle Gain',
+                              },
+                              style: TextStyle(
+                                color: kind == selectedKind ? Colors.white : scheme.onSurface,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${formatCount(targetsForGoal(kind).kcal)} kcal',
+                              style: TextStyle(
+                                color: kind == selectedKind ? Colors.white70 : scheme.onSurfaceVariant,
+                                fontSize: 10.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 22),
+        // Customization Section from ui_design.jpg Screen 8
+        Text(
+          'Customization',
+          style: AppTypography.titleM.copyWith(
+            color: scheme.onSurface,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _GoalToggleTile(
+          icon: Icons.monitor_weight_outlined,
+          iconColor: scheme.primary,
+          title: 'Target Weight',
+          subtitle: 'Track toward desired weight goal',
+          value: _targetWeightOn,
+          onChanged: (v) => setState(() => _targetWeightOn = v),
+        ),
+        const SizedBox(height: 10),
+        _GoalToggleTile(
+          icon: Icons.directions_run_rounded,
+          iconColor: const Color(0xFFE59C39),
+          title: 'Daily Active Calories',
+          subtitle: 'Active energy burn objective',
+          value: _dailyActiveCalOn,
+          onChanged: (v) => setState(() => _dailyActiveCalOn = v),
+        ),
+        const SizedBox(height: 10),
+        _GoalToggleTile(
+          icon: Icons.egg_alt_outlined,
+          iconColor: colors.macroProtein,
+          title: 'Protein Target',
+          subtitle: 'Sufficient daily intake',
+          value: _proteinTargetOn,
+          onChanged: (v) => setState(() => _proteinTargetOn = v),
+        ),
+        const SizedBox(height: 10),
+        _GoalToggleTile(
+          icon: Icons.water_drop_rounded,
+          iconColor: colors.water,
+          title: 'Water intake',
+          subtitle: 'Stay hydrated consistently',
+          value: _waterIntakeOn,
+          onChanged: (v) => setState(() => _waterIntakeOn = v),
+        ),
+        const SizedBox(height: 24),
+        // Bottom Emerald Button "Motivational Icons" / "Confirm Target Goals"
+        Container(
+          width: double.infinity,
+          height: 52,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0D5C3A), Color(0xFF1B8255)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0D5C3A).withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.of(context).maybePop();
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: const Center(
+                child: Text(
+                  'Motivational Icons',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (widget.isModal) {
+      return Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: content,
+      );
+    }
+
+    return Scaffold(
+      body: SafeArea(child: content),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.isModal});
+
+  final bool isModal;
+
+  @override
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return AppSheet(
-      icon: Icons.flag_rounded,
-      title: l10n.myGoals,
-      subtitle: l10n.chooseGoal,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final kind in GoalKind.values) ...[
-            _GoalOption(
-              kind: kind,
-              selected: kind == selected,
-              onTap: () {
-                ref.read(goalKindProvider.notifier).select(kind);
-              },
-            ),
-            const SizedBox(height: 10),
-          ],
-          const SizedBox(height: 10),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              backgroundColor: scheme.primary,
-            ),
-            child: Text(l10n.doneLabel),
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: Icon(
+            isModal ? Icons.close_rounded : Icons.arrow_back_rounded,
+            color: scheme.onSurface,
           ),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          'Target Goals',
+          style: AppTypography.titleL.copyWith(
+            color: scheme.onSurface,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const Spacer(),
+        IconButton(
+          onPressed: () {},
+          icon: Icon(Icons.settings_outlined, color: scheme.onSurface),
+        ),
+      ],
+    );
+  }
+}
+
+class _GoalToggleTile extends StatelessWidget {
+  const _GoalToggleTile({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+    this.trailingValue,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final String? trailingValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: iconColor, size: 21),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.itemTitle.copyWith(
+                        color: scheme.onSurface,
+                        fontSize: 14.5,
+                      ),
+                    ),
+                    if (trailingValue != null) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        '($trailingValue)',
+                        style: AppTypography.caption.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: AppTypography.caption.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 11.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            activeColor: const Color(0xFF0D5C3A),
+            onChanged: onChanged,
+          ),
+          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant, size: 20),
         ],
       ),
     );
   }
 }
 
-class _GoalOption extends StatelessWidget {
-  const _GoalOption({
-    required this.kind,
-    required this.selected,
-    required this.onTap,
-  });
+/// Custom Painter for the Archery Target from ui_design2.jpg Screen 6
+class _ArcheryTargetPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxR = size.width / 2;
 
-  final GoalKind kind;
-  final bool selected;
-  final VoidCallback onTap;
+    // Rings
+    final paint1 = Paint()
+      ..color = const Color(0xFFE6F3EC)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, maxR, paint1);
+
+    final stroke1 = Paint()
+      ..color = const Color(0xFF28B781).withValues(alpha: 0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawCircle(center, maxR, stroke1);
+
+    final paint2 = Paint()
+      ..color = const Color(0xFFC7E6D7)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, maxR * 0.75, paint2);
+
+    final stroke2 = Paint()
+      ..color = const Color(0xFF0D5C3A).withValues(alpha: 0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawCircle(center, maxR * 0.75, stroke2);
+
+    final paint3 = Paint()
+      ..color = const Color(0xFF0D5C3A)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, maxR * 0.5, paint3);
+
+    // Bullseye
+    final bullseye = Paint()
+      ..color = const Color(0xFFD4AF37)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, maxR * 0.22, bullseye);
+
+    // Arrow hitting bullseye from top-right
+    final arrowPaint = Paint()
+      ..color = const Color(0xFF16211C)
+      ..strokeWidth = 3.5
+      ..strokeCap = StrokeCap.round;
+
+    final start = Offset(center.dx + maxR * 0.85, center.dy - maxR * 0.85);
+    final end = Offset(center.dx + 2, center.dy - 2);
+    canvas.drawLine(start, end, arrowPaint);
+
+    // Arrow fletching
+    final fletchPaint = Paint()
+      ..color = const Color(0xFF28B781)
+      ..style = PaintingStyle.fill;
+    final fletchPath = Path();
+    fletchPath.moveTo(start.dx, start.dy);
+    fletchPath.lineTo(start.dx + 12, start.dy - 6);
+    fletchPath.lineTo(start.dx + 6, start.dy + 12);
+    fletchPath.close();
+    canvas.drawPath(fletchPath, fletchPaint);
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-    final targets = targetsForGoal(kind);
-    final (icon, label, hint) = switch (kind) {
-      GoalKind.lose => (
-        Icons.trending_down_rounded,
-        l10n.goalLose,
-        l10n.goalLoseHint,
-      ),
-      GoalKind.maintain => (
-        Icons.trending_flat_rounded,
-        l10n.goalMaintain,
-        l10n.goalMaintainHint,
-      ),
-      GoalKind.gain => (
-        Icons.trending_up_rounded,
-        l10n.goalGain,
-        l10n.goalGainHint,
-      ),
-    };
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: BorderSide(
-        color: selected ? scheme.primary : scheme.outlineVariant,
-        width: selected ? 1.5 : 1,
-      ),
-    );
-
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: Material(
-        color: selected ? colors.primaryWash : scheme.surface,
-        shape: shape,
-        child: InkWell(
-          customBorder: shape,
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: selected ? scheme.primary : colors.primaryWash,
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 19,
-                    color: selected ? scheme.onPrimary : scheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: AppTypography.itemS.copyWith(
-                          color: scheme.onSurface,
-                          fontSize: 13.5,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        hint,
-                        style: AppTypography.caption.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 11.5,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        '${formatCount(targets.kcal)} ${l10n.kcalUnit}  ·  '
-                        '${targets.protein}g ${l10n.macroProtein}  ·  '
-                        '${targets.carbs}g ${l10n.macroCarbs}  ·  '
-                        '${targets.fat}g ${l10n.macroFat}',
-                        maxLines: 2,
-                        style: AppTypography.caption.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 10.5,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Icon(
-                  selected ? Icons.check_circle_rounded : Icons.circle_outlined,
-                  size: 20,
-                  color: selected ? scheme.primary : scheme.outlineVariant,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

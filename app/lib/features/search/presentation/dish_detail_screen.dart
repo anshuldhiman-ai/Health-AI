@@ -144,26 +144,11 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
                   child: ListView(
                     padding: const EdgeInsets.only(bottom: 24),
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.screenPadding,
-                          AppSpacing.x2,
-                          AppSpacing.screenPadding,
-                          0,
-                        ),
-                        child: _Header(
-                          title: dish.name,
-                          subtitle: widget.dayOffset == 0
-                              ? null
-                              : l10n.dayOffsetLabel(widget.dayOffset),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.screenPadding,
-                        ),
-                        child: _DishHero(dish: dish, serving: serving),
+                      // Full food image banner from ui_design2.jpg Screen 8
+                      _FoodImageBanner(
+                        dish: dish,
+                        serving: serving,
+                        onBack: () => Navigator.of(context).maybePop(),
                       ),
                       const SizedBox(height: 16),
                       _ServingStrip(
@@ -171,6 +156,74 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
                         selected: index,
                         onSelected: (value) =>
                             setState(() => _servingIndex = value),
+                      ),
+                      const SizedBox(height: 16),
+                      // Accordion Sections: "Beautiful ingredients" & "AI health benefits"
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.screenPadding,
+                        ),
+                        child: Column(
+                          children: [
+                            _AccordionSection(
+                              title: 'Beautiful ingredients',
+                              initiallyExpanded: false,
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  for (final ingredient in dish.ingredients)
+                                    Chip(
+                                      label: Text(ingredient),
+                                      side: BorderSide.none,
+                                      backgroundColor: context.appColors.canvas,
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _AccordionSection(
+                              title: 'AI health benefits',
+                              initiallyExpanded: true,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0D5C3A).withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: const [
+                                        Icon(Icons.auto_awesome_rounded, size: 15, color: Color(0xFF0D5C3A)),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'Great for muscle recovery',
+                                          style: TextStyle(
+                                            color: Color(0xFF0D5C3A),
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Rich in bioavailable dairy proteins and healthy fats, aiding post-workout satiety and energy sustained release.',
+                                    style: AppTypography.caption.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      fontSize: 12,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Padding(
@@ -219,6 +272,262 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
   }
 }
 
+class _FoodImageBanner extends StatelessWidget {
+  const _FoodImageBanner({
+    required this.dish,
+    required this.serving,
+    required this.onBack,
+  });
+
+  final DishInfo dish;
+  final FoodPortion serving;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Large Food Image Banner with rounded bottom corners
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+          child: Container(
+            height: 250,
+            width: double.infinity,
+            color: colors.primaryWash,
+            child: Image.asset(
+              'assets/brand/meal_thali.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Center(
+                child: Icon(Icons.restaurant_rounded, size: 64, color: scheme.primary),
+              ),
+            ),
+          ),
+        ),
+        // Gradient overlay
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withValues(alpha: 0.5),
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.7),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+        // Top Floating Action Buttons
+        Positioned(
+          top: 12,
+          left: 16,
+          right: 16,
+          child: Row(
+            children: [
+              Material(
+                color: Colors.black.withValues(alpha: 0.4),
+                shape: const CircleBorder(),
+                child: IconButton(
+                  onPressed: onBack,
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  tooltip: 'Back',
+                ),
+              ),
+              const Spacer(),
+              Material(
+                color: Colors.black.withValues(alpha: 0.4),
+                shape: const CircleBorder(),
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.favorite_border_rounded, color: Colors.white),
+                  tooltip: 'Favorite',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Material(
+                color: Colors.black.withValues(alpha: 0.4),
+                shape: const CircleBorder(),
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.share_outlined, color: Colors.white),
+                  tooltip: 'Share',
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Overlay Card with Dish Name and Macro Pills
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: -24,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  dish.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.titleL.copyWith(
+                    color: scheme.onSurface,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _MacroDetailPill(
+                      label: 'Protein',
+                      amount: '${serving.proteinGrams}g',
+                      color: colors.macroProtein,
+                    ),
+                    _MacroDetailPill(
+                      label: 'Carbs',
+                      amount: '${serving.carbsGrams}g',
+                      color: colors.macroCarbs,
+                    ),
+                    _MacroDetailPill(
+                      label: 'Fat',
+                      amount: '${serving.fatGrams}g',
+                      color: colors.macroFat,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MacroDetailPill extends StatelessWidget {
+  const _MacroDetailPill({
+    required this.label,
+    required this.amount,
+    required this.color,
+  });
+
+  final String label;
+  final String amount;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            amount,
+            style: TextStyle(
+              fontSize: 13.5,
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AccordionSection extends StatefulWidget {
+  const _AccordionSection({
+    required this.title,
+    required this.child,
+    this.initiallyExpanded = false,
+  });
+
+  final String title;
+  final Widget child;
+  final bool initiallyExpanded;
+
+  @override
+  State<_AccordionSection> createState() => _AccordionSectionState();
+}
+
+class _AccordionSectionState extends State<_AccordionSection> {
+  late bool _expanded = widget.initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
+              children: [
+                Text(
+                  widget.title,
+                  style: AppTypography.itemTitle.copyWith(
+                    color: scheme.onSurface,
+                    fontSize: 15,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                  color: scheme.onSurfaceVariant,
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
+          if (_expanded) ...[
+            const SizedBox(height: 12),
+            widget.child,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _Header extends StatelessWidget {
   const _Header({required this.title, this.subtitle});
 
@@ -262,70 +571,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _DishHero extends StatelessWidget {
-  const _DishHero({required this.dish, required this.serving});
-
-  final DishInfo dish;
-  final FoodPortion serving;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-    return AppCard(
-      child: Row(
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: colors.primaryWash,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              familyIcon(dish.family),
-              size: 34,
-              color: scheme.primary,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.dishFamilyLabel(dish.family),
-                  style: AppTypography.caption.copyWith(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  dish.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.titleM.copyWith(color: scheme.onSurface),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  '${serving.lowKcal}–${serving.highKcal} ${l10n.kcalUnit} · '
-                  '${l10n.perServing}',
-                  style: AppTypography.caption.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 11.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _ServingStrip extends StatelessWidget {
   const _ServingStrip({
@@ -733,11 +978,47 @@ class _AddBar extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              Row(
+                children: [
+                  InkWell(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Saved to favorites')),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      child: Row(
+                        children: [
+                          Icon(Icons.favorite_border_rounded, size: 20, color: scheme.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Save to favorites',
+                            style: AppTypography.caption.copyWith(
+                              color: scheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {},
+                    icon: Icon(Icons.share_outlined, size: 20, color: scheme.onSurfaceVariant),
+                    tooltip: 'Share',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
               FilledButton(
                 onPressed: onAdd,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
+                  backgroundColor: const Color(0xFF0D5C3A),
                 ),
                 child: Text(
                   '${l10n.addToDiary} · ${serving.midKcal} ${l10n.kcalUnit}',

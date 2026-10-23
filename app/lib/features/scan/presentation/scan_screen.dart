@@ -294,6 +294,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final dishCount = ref.watch(dishCountProvider);
+    final session = ref.watch(scanSessionProvider);
     final controller = _controller;
     final initializing = _initializing != null && controller == null;
 
@@ -311,21 +312,39 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
               message: _cameraError ?? l10n.scanCameraUnavailableHint,
               onGallery: _pickFromGallery,
             ),
-          // Scrims instead of gradients (flat design language).
+          // Subtle top and bottom scrims
           const Positioned(
             top: 0,
             left: 0,
             right: 0,
             height: 140,
-            child: ColoredBox(color: Color(0x66000000)),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0x99000000), Colors.transparent],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
           ),
           const Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            height: 190,
-            child: ColoredBox(color: Color(0x66000000)),
+            height: 220,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.transparent, Color(0xCC000000)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
           ),
+          // Golden Viewfinder Frame in the center per ui_design.jpg Screen 4 & ui_design2.jpg Screen 2
+          const Center(child: _GoldenViewfinder()),
           SafeArea(
             child: Column(
               children: [
@@ -339,8 +358,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                         semanticLabel: l10n.closeLabel,
                       ),
                       const Spacer(),
+                      // "Settings" pill button from ui_design2.jpg
                       Material(
-                        color: Colors.white.withValues(alpha: 0.16),
+                        color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(999),
                         child: InkWell(
                           onTap: _pickMeal,
@@ -353,6 +373,12 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                const Icon(
+                                  Icons.settings_outlined,
+                                  color: Colors.white,
+                                  size: 15,
+                                ),
+                                const SizedBox(width: 5),
                                 Text(
                                   l10n.mealLabel(_mealKind),
                                   style: AppTypography.caption.copyWith(
@@ -383,44 +409,106 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                     ],
                   ),
                 ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 26),
-                  child: Column(
+                const SizedBox(height: 10),
+                // "Detecting..." pill badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.5), width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        l10n.pointAtPlate,
-                        textAlign: TextAlign.center,
-                        style: AppTypography.itemS.copyWith(
-                          color: Colors.white,
-                          fontSize: 14,
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF4CC18F),
+                          shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(height: 22),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: _RoundIconButton(
-                                icon: Icons.photo_library_outlined,
-                                onTap: _analyzing ? null : _pickFromGallery,
-                                semanticLabel: l10n.scanPickFromGallery,
-                                size: 50,
-                              ),
+                      const SizedBox(width: 7),
+                      const Text(
+                        'Detecting...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                // Candidate detection pills row (only show after actual scan)
+                if (_analyzing || session != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (session != null && session.topMatches.isNotEmpty)
+                          for (var i = 0; i < session.topMatches.length && i < 3; i++)
+                            _DetectionPill(
+                              label: session.topMatches[i].label,
+                              confidence: '${session.topMatches[i].percent}%',
                             ),
+                        if (_analyzing)
+                          const _DetectionPill(label: 'Analyzing...', confidence: ''),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 14),
+                // Bottom Shutter & Controls per ui_design2.jpg Screen 2
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _RoundIconButton(
+                            icon: Icons.photo_library_outlined,
+                            onTap: _analyzing ? null : _pickFromGallery,
+                            semanticLabel: l10n.scanPickFromGallery,
+                            size: 48,
                           ),
-                          _ShutterButton(
-                            enabled:
-                                controller != null &&
+                          _MetallicShutterButton(
+                            enabled: controller != null &&
                                 controller.value.isInitialized &&
                                 !_analyzing,
                             busy: _analyzing,
-                            semanticLabel: l10n.scanCapture,
                             onTap: _capture,
                           ),
-                          const Expanded(child: SizedBox()),
+                          _RoundIconButton(
+                            icon: Icons.qr_code_scanner_rounded,
+                            onTap: () {
+                              _showError('Quick add feature coming soon: will scan barcodes to add packaged foods.');
+                            },
+                            semanticLabel: 'Quick Add (Barcode)',
+                            size: 48,
+                          ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Capture Your Meal',
+                        style: AppTypography.itemS.copyWith(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '3D scanning animations identifying dish...',
+                        style: AppTypography.caption.copyWith(
+                          color: Colors.white60,
+                          fontSize: 11.5,
+                        ),
                       ),
                     ],
                   ),
@@ -435,6 +523,189 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
               hint: l10n.scanAnalyzingHint(dishCount),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Candidate detection pill matching ui_design.jpg Screen 4
+class _DetectionPill extends StatelessWidget {
+  const _DetectionPill({required this.label, required this.confidence});
+
+  final String label;
+  final String confidence;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (confidence.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              confidence,
+              style: const TextStyle(
+                color: Color(0xFF4CC18F),
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Golden Viewfinder Frame matching ui_design.jpg & ui_design2.jpg
+class _GoldenViewfinder extends StatelessWidget {
+  const _GoldenViewfinder();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 250,
+      height: 250,
+      child: CustomPaint(painter: _GoldenBracketPainter()),
+    );
+  }
+}
+
+class _GoldenBracketPainter extends CustomPainter {
+  const _GoldenBracketPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const goldColor = Color(0xFFD4AF37);
+    final paint = Paint()
+      ..color = goldColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final w = size.width;
+    final h = size.height;
+    const arm = 36.0;
+    const r = 16.0;
+
+    // Top-left corner
+    final tl = Path()
+      ..moveTo(0, arm)
+      ..lineTo(0, r)
+      ..quadraticBezierTo(0, 0, r, 0)
+      ..lineTo(arm, 0);
+    canvas.drawPath(tl, paint);
+
+    // Top-right corner
+    final tr = Path()
+      ..moveTo(w - arm, 0)
+      ..lineTo(w - r, 0)
+      ..quadraticBezierTo(w, 0, w, r)
+      ..lineTo(w, arm);
+    canvas.drawPath(tr, paint);
+
+    // Bottom-left corner
+    final bl = Path()
+      ..moveTo(0, h - arm)
+      ..lineTo(0, h - r)
+      ..quadraticBezierTo(0, h, r, h)
+      ..lineTo(arm, h);
+    canvas.drawPath(bl, paint);
+
+    // Bottom-right corner
+    final br = Path()
+      ..moveTo(w - arm, h)
+      ..lineTo(w - r, h)
+      ..quadraticBezierTo(w, h, w, h - r)
+      ..lineTo(w, h - arm);
+    canvas.drawPath(br, paint);
+  }
+
+  @override
+  bool shouldRepaint(_GoldenBracketPainter oldDelegate) => false;
+}
+
+/// Metallic gradient glowing shutter button from ui_design2.jpg Screen 2
+class _MetallicShutterButton extends StatelessWidget {
+  const _MetallicShutterButton({
+    required this.enabled,
+    required this.busy,
+    required this.onTap,
+  });
+
+  final bool enabled;
+  final bool busy;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: 76,
+        height: 76,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const RadialGradient(
+            colors: [
+              Color(0xFF34D399),
+              Color(0xFF0D5C3A),
+              Color(0xFF083C25),
+            ],
+          ),
+          border: Border.all(color: const Color(0xFFD4AF37), width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF34D399).withValues(alpha: 0.4),
+              blurRadius: 18,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Center(
+          child: busy
+              ? const SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: Colors.white,
+                  ),
+                )
+              : Container(
+                  width: 54,
+                  height: 54,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF10B981), Color(0xFF047857)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+        ),
       ),
     );
   }
@@ -555,66 +826,6 @@ class _RoundIconButton extends StatelessWidget {
   }
 }
 
-class _ShutterButton extends StatelessWidget {
-  const _ShutterButton({
-    required this.enabled,
-    required this.busy,
-    required this.semanticLabel,
-    required this.onTap,
-  });
-
-  final bool enabled;
-  final bool busy;
-  final String semanticLabel;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: semanticLabel,
-      child: GestureDetector(
-        onTap: enabled ? onTap : null,
-        child: Container(
-          width: 74,
-          height: 74,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: enabled ? Colors.white : Colors.white38,
-              width: 4,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: enabled ? Colors.white : Colors.white38,
-                shape: BoxShape.circle,
-              ),
-              child: busy
-                  ? Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        color: scheme.primary,
-                      ),
-                    )
-                  : Icon(
-                      Icons.camera_alt_rounded,
-                      color: scheme.primary,
-                      size: 26,
-                    ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _AnalyzingOverlay extends StatelessWidget {
   const _AnalyzingOverlay({

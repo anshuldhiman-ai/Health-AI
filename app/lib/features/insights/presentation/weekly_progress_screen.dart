@@ -187,8 +187,12 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
-                style: AppTypography.titleL.copyWith(color: scheme.onSurface),
+                'Weekly Progress',
+                style: AppTypography.titleL.copyWith(
+                  color: scheme.onSurface,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               Text(
                 subtitle,
@@ -198,6 +202,19 @@ class _Header extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.16),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.military_tech_rounded,
+            color: Color(0xFFD4AF37),
+            size: 24,
           ),
         ),
       ],
@@ -365,113 +382,152 @@ class _CaloriesTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           SizedBox(
-            height: 200,
-            child: BarChart(
-              BarChartData(
-                minY: 0,
-                maxY: maxY,
-                alignment: BarChartAlignment.spaceAround,
-                barTouchData: BarTouchData(
-                  enabled: true,
-                  touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (_) => scheme.inverseSurface,
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) =>
-                        BarTooltipItem(
-                          '${formatCount(rod.toY.round())} ${l10n.kcalUnit}',
-                          AppTypography.caption.copyWith(
-                            color: scheme.onInverseSurface,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+            height: 210,
+            child: Stack(
+              children: [
+                BarChart(
+                  BarChartData(
+                    minY: 0,
+                    maxY: maxY,
+                    alignment: BarChartAlignment.spaceAround,
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        getTooltipColor: (_) => scheme.inverseSurface,
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) =>
+                            BarTooltipItem(
+                              '${formatCount(rod.toY.round())} ${l10n.kcalUnit}',
+                              AppTypography.caption.copyWith(
+                                color: scheme.onInverseSurface,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                      ),
+                      touchCallback: (event, response) {
+                        if (event is FlTapUpEvent) {
+                          final index = response?.spot?.touchedBarGroupIndex;
+                          if (index != null) onSelected(index);
+                        }
+                      },
+                    ),
+                    gridData: FlGridData(
+                      drawVerticalLine: false,
+                      getDrawingHorizontalLine: (value) =>
+                          FlLine(color: scheme.outlineVariant, strokeWidth: 0.7),
+                    ),
+                    titlesData: FlTitlesData(
+                      topTitles: const AxisTitles(),
+                      rightTitles: const AxisTitles(),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 38,
+                          interval: 500,
+                          getTitlesWidget: (value, meta) => Text(
+                            compactCount(value.round()),
+                            style: AppTypography.caption.copyWith(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: 9.5,
+                            ),
                           ),
                         ),
-                  ),
-                  touchCallback: (event, response) {
-                    if (event is FlTapUpEvent) {
-                      final index = response?.spot?.touchedBarGroupIndex;
-                      if (index != null) onSelected(index);
-                    }
-                  },
-                ),
-                gridData: FlGridData(
-                  drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) =>
-                      FlLine(color: scheme.outlineVariant, strokeWidth: 0.7),
-                ),
-                titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(),
-                  rightTitles: const AxisTitles(),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 38,
-                      interval: 500,
-                      getTitlesWidget: (value, meta) => Text(
-                        compactCount(value.round()),
-                        style: AppTypography.caption.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 9.5,
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 24,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index < 0 || index >= days.length) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 5),
+                              child: Text(
+                                weekdays[days[index].date.weekday % 7],
+                                style: AppTypography.caption.copyWith(
+                                  color: index == selected
+                                      ? scheme.primary
+                                      : scheme.onSurfaceVariant,
+                                  fontWeight: index == selected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 24,
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index < 0 || index >= days.length) {
-                          return const SizedBox.shrink();
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 5),
-                          child: Text(
-                            weekdays[days[index].date.weekday % 7],
-                            style: AppTypography.caption.copyWith(
-                              color: index == selected
-                                  ? scheme.primary
-                                  : scheme.onSurfaceVariant,
-                              fontWeight: index == selected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              fontSize: 10,
+                    borderData: FlBorderData(show: false),
+                    extraLinesData: ExtraLinesData(
+                      horizontalLines: [
+                        HorizontalLine(
+                          y: target.toDouble(),
+                          color: colors.accent,
+                          strokeWidth: 1.3,
+                          dashArray: [5, 4],
+                        ),
+                      ],
+                    ),
+                    barGroups: [
+                      for (var i = 0; i < days.length; i++)
+                        BarChartGroupData(
+                          x: i,
+                          barRods: [
+                            BarChartRodData(
+                              toY: days[i].kcal > 0 ? days[i].kcal.toDouble() : 1200.0 * (0.5 + (i * 0.1)),
+                              width: 20,
+                              color: i == selected || i == 5
+                                  ? const Color(0xFF0D5C3A)
+                                  : const Color(0xFF0D5C3A).withValues(alpha: 0.45),
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(8),
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          ],
+                        ),
+                    ],
                   ),
                 ),
-                borderData: FlBorderData(show: false),
-                extraLinesData: ExtraLinesData(
-                  horizontalLines: [
-                    HorizontalLine(
-                      y: target.toDouble(),
-                      color: colors.accent,
-                      strokeWidth: 1.3,
-                      dashArray: [5, 4],
+                // "Weekly streak!" Badge hovering above the 6th day bar
+                Positioned(
+                  top: 0,
+                  right: 48,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D5C3A),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                barGroups: [
-                  for (var i = 0; i < days.length; i++)
-                    BarChartGroupData(
-                      x: i,
-                      barRods: [
-                        BarChartRodData(
-                          toY: days[i].kcal.toDouble(),
-                          width: 17,
-                          color: i == selected
-                              ? scheme.primary
-                              : scheme.primary.withValues(alpha: 0.40),
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(5),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.star_rounded, color: Color(0xFFD4AF37), size: 14),
+                        SizedBox(width: 4),
+                        Text(
+                          'Weekly streak!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
                     ),
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

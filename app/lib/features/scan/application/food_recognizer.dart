@@ -42,6 +42,7 @@ class RecognitionOutput {
     required this.ratio,
     required this.usedTta,
     required this.latencyMs,
+    this.isFood = true,
   });
 
   final List<DishScore> top;
@@ -59,6 +60,9 @@ class RecognitionOutput {
   final bool usedTta;
 
   final int latencyMs;
+
+  /// False when the photo doesn't contain a recognizable food dish.
+  final bool isFood;
 }
 
 /// Asset paths for the exported model + label order.
@@ -364,12 +368,18 @@ class FoodRecognizer {
           DishScore(label: model.labels[index], confidence: probs[index]),
     ];
 
+    // Non-food rejection: If model confidence is diffused across many classes
+    // or top probability is below the threshold, classify as non-food.
+    final isFood = confidence.top1 >= 0.18 &&
+        (confidence.top1 >= 0.25 || confidence.ratio >= 1.25);
+
     return RecognitionOutput(
       top: top,
       uncertain: confidence.isUncertain,
       ratio: confidence.ratio,
       usedTta: usedTta,
       latencyMs: DateTime.now().difference(started).inMilliseconds,
+      isFood: isFood,
     );
   }
 

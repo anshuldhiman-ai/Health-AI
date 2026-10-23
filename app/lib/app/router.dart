@@ -11,6 +11,7 @@ import 'package:app/features/diary/presentation/diary_screen.dart';
 import 'package:app/features/insights/presentation/insights_screen.dart';
 import 'package:app/features/insights/presentation/weekly_progress_screen.dart';
 import 'package:app/features/onboarding/presentation/welcome_screen.dart';
+import 'package:app/features/profile/presentation/goal_sheet.dart';
 import 'package:app/features/profile/presentation/profile_screen.dart';
 import 'package:app/features/scan/presentation/scan_screen.dart';
 import 'package:app/features/search/presentation/dish_detail_screen.dart';
@@ -58,6 +59,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/water', builder: (_, _) => const WaterScreen()),
     GoRoute(path: '/sleep', builder: (_, _) => const SleepScreen()),
     GoRoute(path: '/weekly', builder: (_, _) => const WeeklyProgressScreen()),
+    GoRoute(path: '/goals', builder: (_, _) => const GoalSettingsScreen()),
     GoRoute(
       path: '/search',
       builder: (_, state) => SearchFoodScreen(

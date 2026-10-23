@@ -154,7 +154,13 @@ final stepTrackerProvider = StreamProvider<StepSnapshot>((ref) async* {
 Future<bool> requestStepPermission() async {
   if (!Platform.isAndroid) return true;
   try {
-    final status = await Permission.activityRecognition.request();
+    var status = await Permission.activityRecognition.status;
+    if (!status.isGranted) {
+      status = await Permission.activityRecognition.request();
+    }
+    if (status.isPermanentlyDenied) {
+      await openAppSettings();
+    }
     return status.isGranted;
   } catch (_) {
     return false;

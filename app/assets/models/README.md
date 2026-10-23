@@ -25,11 +25,10 @@ sync with it. Model binaries under `app/assets/models/` are gitignored
 
 ## Current checkpoint
 
-- `ml/weights/best.pt`, **EMA weights**, epoch 9, **239 classes**,
-  validation top-1 **86.5%** on 15,642 held-out images.
+- `ml/weights/baseline/best_new4.pt`, **EMA weights**, epoch 17, **239 classes**.
 - `timm` `mobilenetv4_conv_medium`, 239 classes (the new Kaggle
   dataset: 156k images over 239 food items).
-- Export path: PyTorch (`best.pt`) -> ONNX (opset 17, `dynamo=False`)
+- Export path: PyTorch (`best_new4.pt`) -> ONNX (opset 17, `dynamo=False`)
   -> onnx2tf -> LiteRT `.tflite`.
   `ml/scripts/export_tflite.py` is the separate Linux/litert-torch path
   and is not used for this asset.

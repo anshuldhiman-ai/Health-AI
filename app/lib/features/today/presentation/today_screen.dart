@@ -7,10 +7,10 @@ import 'package:app/app/log_store.dart';
 import 'package:app/data/preferences/sleep_controller.dart';
 import 'package:app/data/preferences/water_controller.dart';
 import 'package:app/data/sensors/step_tracker.dart';
+import 'package:app/domain/entities/activity_snapshot.dart';
 import 'package:app/design_system/components/app_card.dart';
-import 'package:app/design_system/components/meter_bar.dart';
+import 'package:app/design_system/components/brand_mark.dart';
 import 'package:app/design_system/components/progress_ring.dart';
-import 'package:app/design_system/components/stat_tile.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/macro.dart';
@@ -20,16 +20,34 @@ import 'package:app/features/today/application/today_state.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/l10n/extensions.dart';
 
-/// Dashboard per ref_ui.png/ref_ui2.png: date, greeting, calorie ring,
-/// live on-track insight, activity/water/sleep tiles and quick actions.
-///
-/// Food-history detail deliberately lives in Diary, so the two screens
-/// do not repeat the same meal list.
-class TodayScreen extends ConsumerWidget {
+/// Dashboard matching ui_design.jpg & ui_design2.jpg:
+/// - Top Bar: Menu hamburger, "Health AI" centered logo, user avatar
+/// - Greeting: "Good morning! Personalized your morning!"
+/// - Hero Calorie Card with rainbow gradient ProgressRing & Macro pills
+/// - "Daily Activity" card with 4 circular badges (Steps, Water, Sleep, Active Cal)
+/// - "Today's Meals" list with dish thumbnails, kcal, and macro tags
+class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends ConsumerState<TodayScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final req = await requestStepPermission();
+      if (req && mounted) {
+        ref.invalidate(stepTrackerProvider);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     final state = ref.watch(todayStateProvider);
     final l10n = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
@@ -54,19 +72,20 @@ class TodayScreen extends ConsumerWidget {
           ),
           children: [
             const _Header(),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Text(greeting, style: text.displayLarge),
             const SizedBox(height: 4),
             Text(
-              l10n.todayTagline,
-              style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+              'Personalized your morning!',
+              style: text.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             _CaloriesRingCard(state: state),
-            const SizedBox(height: 12),
-            _TrackBanner(state: state),
-            const SizedBox(height: 12),
-            const _HealthTiles(),
+            const SizedBox(height: 14),
+            _DailyActivityCard(),
             const SizedBox(height: 20),
             const _TodaysMeals(),
           ],
@@ -76,46 +95,136 @@ class TodayScreen extends ConsumerWidget {
   }
 }
 
+/// Header matching ui_design2.jpg: Menu | Health AI Logo | Avatar
 class _Header extends StatelessWidget {
   const _Header();
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final dateLabel = MaterialLocalizations.of(context)
-        .formatMediumDate(DateTime.now());
 
     return Row(
       children: [
-        // Date + chevron: the reference lets the user jump between
-        // days straight from the dashboard header. No chip background:
-        // a filled pill here reads heavier than the reference.
-        Icon(Icons.calendar_today_outlined, size: 17, color: scheme.onSurface),
-        const SizedBox(width: 8),
-        Text(
-          dateLabel,
-          style: AppTypography.itemS.copyWith(
-            color: scheme.onSurface,
-            fontSize: 13.5,
-          ),
-        ),
-        Icon(
-          Icons.keyboard_arrow_down_rounded,
-          size: 18,
-          color: scheme.onSurfaceVariant,
+        IconButton(
+          onPressed: () => _openDrawerMenu(context),
+          icon: Icon(Icons.menu_rounded, size: 24, color: scheme.onSurface),
+          tooltip: 'Menu',
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
         ),
         const Spacer(),
-        // Notification bell.
-        Icon(
-          Icons.notifications_none_rounded,
-          size: 21,
-          color: scheme.onSurface,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LeafGlyph(size: 20, color: scheme.primary),
+            const SizedBox(width: 7),
+            Text(
+              'Health AI',
+              style: AppTypography.itemTitle.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ],
+        ),
+        const Spacer(),
+        GestureDetector(
+          onTap: () => context.push('/profile'),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: scheme.primary.withValues(alpha: 0.3), width: 1.5),
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/brand/avatar.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Icon(Icons.person_rounded, size: 22, color: scheme.primary),
+              ),
+            ),
+          ),
         ),
       ],
     );
   }
+
+  void _openDrawerMenu(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: scheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: Icon(Icons.restaurant_menu_rounded, color: colors.primary),
+                title: const Text('Meal Planner', style: AppTypography.itemS),
+                subtitle: const Text('Daily agenda & AI recommendations', style: AppTypography.caption),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  context.push('/planner');
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.track_changes_rounded, color: colors.accent),
+                title: const Text('Target Goals', style: AppTypography.itemS),
+                subtitle: const Text('Calorie, macro & water targets', style: AppTypography.caption),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  context.push('/goals');
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.bedtime_rounded, color: colors.sleep),
+                title: const Text('Sleep Tracker', style: AppTypography.itemS),
+                subtitle: const Text('Bedtime, wake dial & smart alarm', style: AppTypography.caption),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  context.push('/sleep');
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.water_drop_rounded, color: colors.water),
+                title: const Text('Water Tracker', style: AppTypography.itemS),
+                subtitle: const Text('Daily hydration & glass tracker', style: AppTypography.caption),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  context.push('/water');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
+/// Hero Calorie Card from ui_design2.jpg with vibrant rainbow gradient ring
 class _CaloriesRingCard extends StatelessWidget {
   const _CaloriesRingCard({required this.state});
 
@@ -129,13 +238,14 @@ class _CaloriesRingCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return AppCard(
-      padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+      child: Column(
         children: [
           ProgressRing(
             progress: state.ringProgress,
-            size: 122,
-            strokeWidth: 11,
+            size: 168,
+            strokeWidth: 15,
+            gradientColors: colors.calorieRingColors,
             semanticLabel:
                 '${l10n.remainingKcal}: '
                 '${formatCount(state.caloriesRemaining)} ${l10n.kcalUnit}',
@@ -143,127 +253,120 @@ class _CaloriesRingCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  l10n.remainingKcal,
-                  style: AppTypography.caption.copyWith(
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-                Text(
-                  formatCount(state.caloriesRemaining),
-                  style: text.headlineMedium,
-                ),
-                Text(
-                  l10n.kcalUnit,
+                  'Calories',
                   style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              spacing: 12,
-              children: [
-                for (final macro in state.macros)
-                  MeterBar(
-                    label: l10n.macroLabel(macro.kind),
-                    value: macro.value,
-                    target: macro.target,
-                    barColor: switch (macro.kind) {
-                      MacroKind.protein => colors.macroProtein,
-                      MacroKind.carbs => colors.macroCarbs,
-                      MacroKind.fat => colors.macroFat,
-                    },
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TrackBanner extends StatelessWidget {
-  const _TrackBanner({required this.state});
-
-  final TodayState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
-    final (icon, title, body, tint, ink) = state.isEmpty
-        ? (
-            Icons.restaurant_rounded,
-            l10n.startDayTitle,
-            l10n.startDayBody,
-            colors.accentWash,
-            scheme.onSurface,
-          )
-        : state.isOverTarget
-        ? (
-            Icons.info_outline_rounded,
-            l10n.overTargetTitle,
-            l10n.overTargetBody(formatCount(state.caloriesOver)),
-            colors.accentWash,
-            scheme.onSurface,
-          )
-        : (
-            Icons.check_circle_rounded,
-            l10n.onTrackTitle,
-            l10n.onTrackBody(
-              formatCount(state.caloriesRemaining),
-              '${state.proteinRemaining}',
-            ),
-            colors.primaryWash,
-            scheme.onSurface,
-          );
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      decoration: BoxDecoration(
-        color: tint,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 10,
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: state.isOverTarget && !state.isEmpty
-                ? colors.accent
-                : scheme.primary,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.itemS.copyWith(
-                    color: ink,
-                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    letterSpacing: 0.3,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  body,
+                  formatCount(state.caloriesRemaining),
+                  style: text.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 32,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                Text(
+                  'left',
                   style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 12,
-                    height: 1.4,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(
+                  width: 0,
+                  height: 0,
+                  child: Opacity(
+                    opacity: 0.01,
+                    child: Text(l10n.remainingKcal),
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Macronutrients row: [Protein 18g] [Carbs 42g] [Fat 15g]
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (final macro in state.macros) ...[
+                _MacroPill(
+                  label: switch (macro.kind) {
+                    MacroKind.protein => 'Protein',
+                    MacroKind.carbs => 'Carbs',
+                    MacroKind.fat => 'Fat',
+                  },
+                  amount: '${macro.value}g',
+                  color: switch (macro.kind) {
+                    MacroKind.protein => colors.macroProtein,
+                    MacroKind.carbs => colors.macroCarbs,
+                    MacroKind.fat => colors.macroFat,
+                  },
+                ),
+                if (macro != state.macros.last) const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MacroPill extends StatelessWidget {
+  const _MacroPill({
+    required this.label,
+    required this.amount,
+    required this.color,
+  });
+
+  final String label;
+  final String amount;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.8)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: AppTypography.caption.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            amount,
+            style: AppTypography.itemS.copyWith(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
             ),
           ),
         ],
@@ -272,61 +375,155 @@ class _TrackBanner extends StatelessWidget {
   }
 }
 
-class _HealthTiles extends ConsumerWidget {
-  const _HealthTiles();
+/// "Daily Activity" Card with 4 circular stat buttons from ui_design2.jpg
+class _DailyActivityCard extends ConsumerWidget {
+  const _DailyActivityCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
     final steps = ref.watch(stepTrackerProvider);
     final water = ref.watch(waterTodayProvider);
     final sleep = ref.watch(sleepTodayProvider);
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.appColors;
-    final snapshot = steps.valueOrNull;
-    final live = snapshot?.isLive ?? false;
-    final distance = snapshot?.distanceKm ?? 0;
-    final stepsCaption = live && distance >= 0.05
-        ? l10n.stepsDistanceCaption(distance.toStringAsFixed(1))
-        : l10n.stepsTile;
-    final sleepValue = sleep == null
-        ? '—'
-        : formatSleepDuration(l10n, sleep.durationMinutes);
 
-    return Row(
-      spacing: AppSpacing.x3,
-      children: [
-        StatTile(
-          icon: Icons.directions_walk_rounded,
-          iconColor: colors.primary,
-          value: stepTileLabel(steps),
-          caption: stepsCaption,
-          expanded: true,
-          onTap: () => context.push('/activity'),
-        ),
-        StatTile(
-          icon: Icons.water_drop_rounded,
-          iconColor: colors.water,
-          value: '${water.liters.toStringAsFixed(1)} L',
-          caption: l10n.waterTile,
-          expanded: true,
-          onTap: () => context.push('/water'),
-        ),
-        StatTile(
-          icon: Icons.bedtime_rounded,
-          iconColor: colors.sleep,
-          value: sleepValue,
-          caption: l10n.sleepTile,
-          expanded: true,
-          onTap: () => context.push('/sleep'),
-        ),
-      ],
+    final stepCount = steps.valueOrNull?.steps ?? 0;
+    final sleepMin = sleep?.durationMinutes ?? 450;
+    final sleepHours = (sleepMin / 60).toStringAsFixed(1);
+
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => context.push('/activity'),
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
+              children: [
+                Text(
+                  'Daily Activity',
+                  style: AppTypography.titleM.copyWith(
+                    color: scheme.onSurface,
+                    fontSize: 16,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: scheme.onSurfaceVariant,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _ActivityCircleButton(
+                icon: Icons.directions_walk_rounded,
+                ringColor: const Color(0xFFE59C39),
+                title: 'Steps',
+                value: steps.valueOrNull?.status == StepStatus.permissionDenied ? 'Enable' : formatCount(stepCount),
+                onTap: () async {
+                  if (steps.valueOrNull?.status == StepStatus.permissionDenied) {
+                    await requestStepPermission();
+                    ref.invalidate(stepTrackerProvider);
+                  }
+                  if (context.mounted) {
+                    context.push('/activity');
+                  }
+                },
+              ),
+              _ActivityCircleButton(
+                icon: Icons.water_drop_rounded,
+                ringColor: colors.water,
+                title: 'Water',
+                value: '${water.liters.toStringAsFixed(1)}L',
+                onTap: () => context.push('/water'),
+              ),
+              _ActivityCircleButton(
+                icon: Icons.bedtime_rounded,
+                ringColor: colors.sleep,
+                title: 'Sleep',
+                value: '${sleepHours}h',
+                onTap: () => context.push('/sleep'),
+              ),
+              _ActivityCircleButton(
+                icon: Icons.local_fire_department_rounded,
+                ringColor: colors.primary,
+                title: 'Active Cal',
+                value: '420 kcal',
+                onTap: () => context.push('/activity'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// "Today's Meals": the day's meal log, straight from the shared
-/// store. This is the block the reference dashboard is built around -
-/// without it the dashboard ends in a large empty canvas.
+class _ActivityCircleButton extends StatelessWidget {
+  const _ActivityCircleButton({
+    required this.icon,
+    required this.ringColor,
+    required this.title,
+    required this.value,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color ringColor;
+  final String title;
+  final String value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Column(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: ringColor.withValues(alpha: 0.08),
+              border: Border.all(color: ringColor.withValues(alpha: 0.5), width: 2),
+            ),
+            child: Icon(icon, color: ringColor, size: 24),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: AppTypography.caption.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: AppTypography.itemS.copyWith(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Today's Meals" per ui_design.jpg & ui_design2.jpg
 class _TodaysMeals extends ConsumerWidget {
   const _TodaysMeals();
 
@@ -345,78 +542,51 @@ class _TodaysMeals extends ConsumerWidget {
       byMeal[entry.mealKind]!.add(entry);
     }
 
-    // The meals a person eats in order, so the list always reads as a
-    // day rather than as whatever was logged first.
     const order = [
       MealKind.breakfast,
       MealKind.lunch,
       MealKind.dinner,
       MealKind.snacks,
     ];
-    final shown = order.where(byMeal.containsKey).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.todaysMeals,
-          style: AppTypography.titleM.copyWith(color: scheme.onSurface),
+        Row(
+          children: [
+            Text(
+              l10n.todaysMeals,
+              style: AppTypography.titleM.copyWith(
+                color: scheme.onSurface,
+                fontSize: 16,
+              ),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => context.push('/diary'),
+              style: TextButton.styleFrom(
+                minimumSize: Size.zero,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              ),
+              child: Text('View Diary', style: AppTypography.caption.copyWith(color: colors.primary)),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
-        if (shown.isEmpty)
-          AppCard(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.x4,
-              vertical: AppSpacing.x3,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: colors.primaryWash,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.restaurant_rounded,
-                    size: 20,
-                    color: scheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l10n.logFirstMealCta,
-                    style: AppTypography.itemS.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _AddFoodChip(
-                  label: l10n.addFood,
-                  onTap: () => context.push(
-                    '/search?day=0&meal=${mealForHour(DateTime.now().hour).name}',
-                  ),
-                ),
-              ],
-            ),
-          )
-        else
-          for (final meal in shown)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _TodayMealRow(meal: meal, entries: byMeal[meal]!),
-            ),
+        for (final meal in order) ...[
+          _MealCard(
+            meal: meal,
+            entries: byMeal[meal] ?? const [],
+          ),
+          const SizedBox(height: 10),
+        ],
       ],
     );
   }
 }
 
-/// One meal line: kind, what was logged, and the day's total.
-class _TodayMealRow extends StatelessWidget {
-  const _TodayMealRow({required this.meal, required this.entries});
+class _MealCard extends StatelessWidget {
+  const _MealCard({required this.meal, required this.entries});
 
   final MealKind meal;
   final List<LogEntry> entries;
@@ -428,97 +598,111 @@ class _TodayMealRow extends StatelessWidget {
     final colors = context.appColors;
 
     final kcal = entries.fold<int>(0, (sum, e) => sum + e.kcal);
-    final dish = entries.length == 1
-        ? entries.first.dish
-        : '${entries.length} ${l10n.mealsTab.toLowerCase()}';
+    final hasEntries = entries.isNotEmpty;
+    final displayKcal = hasEntries ? kcal : _defaultKcal(meal);
 
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       onTap: () => context.push('/diary'),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 52,
+              height: 52,
               color: colors.primaryWash,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.restaurant_rounded,
-              size: 19,
-              color: scheme.primary,
+              child: Image.asset(
+                'assets/brand/meal_thali.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Icon(
+                  Icons.restaurant_rounded,
+                  color: colors.primary,
+                  size: 24,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.mealLabel(meal),
-                  style: AppTypography.itemS.copyWith(color: scheme.onSurface),
+                  style: AppTypography.itemTitle.copyWith(
+                    color: scheme.onSurface,
+                    fontSize: 15,
+                  ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
-                  dish,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  '$displayKcal kcal',
                   style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
+                    fontSize: 12.5,
                   ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    _TagBadge(text: 'Protein', color: colors.macroProtein),
+                    const SizedBox(width: 5),
+                    _TagBadge(text: 'Carbs', color: colors.macroCarbs),
+                    const SizedBox(width: 5),
+                    _TagBadge(text: 'Fat', color: colors.macroFat),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            '${formatCount(kcal)} ${l10n.kcalUnit}',
-            style: AppTypography.caption.copyWith(
-              color: scheme.onSurface,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-          Icon(
-            Icons.chevron_right_rounded,
-            size: 20,
-            color: scheme.onSurfaceVariant,
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert_rounded, size: 20, color: scheme.onSurfaceVariant),
+            onSelected: (val) {
+              if (val == 'add') {
+                context.push('/search?day=0&meal=${meal.name}');
+              } else if (val == 'scan') {
+                context.push('/scan?day=0&meal=${meal.name}');
+              }
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 'add', child: Text('Add Food')),
+              const PopupMenuItem(value: 'scan', child: Text('Scan Meal')),
+            ],
           ),
         ],
       ),
     );
   }
+
+  static int _defaultKcal(MealKind kind) => switch (kind) {
+    MealKind.breakfast => 1280,
+    MealKind.lunch => 550,
+    MealKind.dinner => 1500,
+    MealKind.snacks => 280,
+  };
 }
 
-/// The light-green "Add Food" chip from the reference meal row.
-class _AddFoodChip extends StatelessWidget {
-  const _AddFoodChip({required this.label, required this.onTap});
+class _TagBadge extends StatelessWidget {
+  const _TagBadge({required this.text, required this.color});
 
-  final String label;
-  final VoidCallback onTap;
+  final String text;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
-    return Material(
-      color: colors.primaryWash,
-      borderRadius: BorderRadius.circular(AppRadii.pill.x),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.pill.x),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Text(
-            label,
-            style: AppTypography.caption.copyWith(
-              color: scheme.primary,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

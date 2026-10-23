@@ -26,6 +26,8 @@ class ProgressRing extends StatelessWidget {
     this.strokeWidth = 12,
     this.trackColor,
     this.barColor,
+    this.gradientColors,
+    this.isArc = false,
     this.semanticLabel,
     super.key,
   }) : assert(
@@ -52,6 +54,12 @@ class ProgressRing extends StatelessWidget {
   /// uses each [RingSegment] colour instead.
   final Color? barColor;
 
+  /// Multi-color gradient for the progress ring (e.g., rainbow/sunset/emerald).
+  final List<Color>? gradientColors;
+
+  /// Whether to render as a semi-circular / arc gauge (180 degrees).
+  final bool isArc;
+
   /// Whole-component semantics (charts get text summaries, R14).
   final String? semanticLabel;
 
@@ -75,14 +83,21 @@ class ProgressRing extends StatelessWidget {
       value: '$percent%',
       child: SizedBox(
         width: size,
-        height: size,
+        height: isArc ? size * 0.65 : size,
         child: CustomPaint(
           painter: _RingPainter(
             segments: effectiveSegments,
-            trackColor: trackColor ?? scheme.outlineVariant,
+            trackColor: trackColor ?? scheme.outlineVariant.withValues(alpha: 0.4),
             strokeWidth: strokeWidth,
+            gradientColors: gradientColors,
+            isArc: isArc,
           ),
-          child: Center(child: child),
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.only(top: isArc ? size * 0.12 : 0),
+              child: child,
+            ),
+          ),
         ),
       ),
     );
@@ -94,38 +109,61 @@ class _RingPainter extends CustomPainter {
     required this.segments,
     required this.trackColor,
     required this.strokeWidth,
+    this.gradientColors,
+    this.isArc = false,
   });
 
   final List<RingSegment> segments;
   final Color trackColor;
   final double strokeWidth;
+  final List<Color>? gradientColors;
+  final bool isArc;
 
   static const _tau = 2 * math.pi;
   static const _gap = 0.10; // radians between segments (multi mode)
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
+    final center = isArc
+        ? Offset(size.width / 2, size.width / 2)
+        : Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
     final rect = Rect.fromCircle(center: center, radius: radius);
+
+    final totalAngle = isArc ? math.pi : _tau;
+    final startAngle = isArc ? math.pi : -math.pi / 2;
 
     final track = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
       ..color = trackColor;
-    canvas.drawArc(rect, 0, _tau, false, track);
+
+    canvas.drawArc(rect, startAngle, totalAngle, false, track);
 
     final multi = segments.length > 1;
     final gap = multi ? _gap : 0.0;
-    var start = -math.pi / 2; // 12 o'clock
+    var start = startAngle;
+
     for (final seg in segments) {
-      final sweep = _tau * seg.value.clamp(0.0, 1.0) - gap;
+      final sweep = totalAngle * seg.value.clamp(0.0, 1.0) - gap;
       if (sweep <= 0.001) continue;
       final paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round
-        ..color = seg.color;
+        ..strokeCap = StrokeCap.round;
+
+      if (gradientColors != null && gradientColors!.length >= 2) {
+        paint.shader = SweepGradient(
+          colors: gradientColors!,
+          startAngle: 0.0,
+          endAngle: _tau,
+          transform: GradientRotation(startAngle),
+        ).createShader(rect);
+      } else {
+        paint.color = seg.color;
+      }
+
       canvas.drawArc(rect, start + gap / 2, sweep, false, paint);
       start += sweep + gap;
     }
@@ -135,6 +173,8 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter old) =>
       old.trackColor != trackColor ||
       old.strokeWidth != strokeWidth ||
+      old.gradientColors != gradientColors ||
+      old.isArc != isArc ||
       old.segments.length != segments.length ||
       [
         for (var i = 0; i < segments.length; i++)

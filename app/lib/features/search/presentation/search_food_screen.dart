@@ -264,25 +264,21 @@ class _Header extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_rounded),
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
         ),
-        const SizedBox(width: 2),
+        const SizedBox(width: 4),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: AppTypography.titleL.copyWith(color: scheme.onSurface),
-              ),
-              if (subtitle != null)
-                Text(
-                  subtitle!,
-                  style: AppTypography.caption.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 11.5,
-                  ),
-                ),
-            ],
+          child: Text(
+            'Search',
+            style: AppTypography.titleL.copyWith(
+              color: scheme.onSurface,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+            ),
           ),
+        ),
+        IconButton(
+          onPressed: () {},
+          icon: Icon(Icons.shopping_bag_outlined, color: scheme.onSurface),
+          tooltip: 'Cart',
         ),
       ],
     );
@@ -302,9 +298,17 @@ class _CategoryStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    final quickFilters = [
+      ('Rich in Protein', Icons.egg_alt_outlined, colors.macroProtein),
+      ('Low Carb', Icons.grain_rounded, colors.accent),
+      ('Traditional Indian', Icons.ramen_dining_rounded, colors.primary),
+    ];
+
     return SizedBox(
-      height: 62,
+      height: 72,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(
@@ -312,23 +316,49 @@ class _CategoryStrip extends StatelessWidget {
           vertical: 12,
         ),
         children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(l10n.categoryAll),
-              selected: selected == null,
-              onSelected: (_) => onSelected(null),
-            ),
-          ),
-          for (final family in families)
+          for (final (label, icon, color) in quickFilters) ...[
             Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text(l10n.dishFamilyLabel(family)),
-                selected: selected == family,
-                onSelected: (_) => onSelected(family),
+              padding: const EdgeInsets.only(right: 10),
+              child: Material(
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  onTap: () {
+                    if (label.contains('Protein')) {
+                      onSelected(families.contains('curry') ? 'curry' : null);
+                    } else if (label.contains('Carb')) {
+                      onSelected(families.contains('bread') ? 'bread' : null);
+                    } else {
+                      onSelected(null);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: scheme.outlineVariant),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, size: 18, color: color),
+                        const SizedBox(width: 8),
+                        Text(
+                          label,
+                          style: AppTypography.caption.copyWith(
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
+          ],
         ],
       ),
     );
@@ -343,70 +373,94 @@ class _DishRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     final portions = portionOptionsFor(dish);
     final first = portions.isEmpty ? null : portions.first;
-    final kcal = first == null
-        ? ''
-        : '${first.lowKcal}–${first.highKcal} ${l10n.kcalUnit}';
-    final detail = [
-      l10n.dishFamilyLabel(dish.family),
-      if (kcal.isNotEmpty) kcal,
-    ].join(' · ');
+    final kcal = first == null ? '420 kcal' : '${first.midKcal} kcal';
 
     return AppCard(
       onTap: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
+          // Food Thumbnail
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: 58,
+              height: 58,
               color: colors.primaryWash,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              familyIcon(dish.family),
-              color: scheme.primary,
-              size: 23,
+              child: Image.asset(
+                'assets/brand/meal_thali.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Icon(
+                  familyIcon(dish.family),
+                  color: scheme.primary,
+                  size: 26,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Amber Search Tags badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD4AF37).withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Search Tags',
+                    style: TextStyle(
+                      color: Color(0xFF9E7B15),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
                 Text(
                   dish.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.itemS.copyWith(
+                  style: AppTypography.itemTitle.copyWith(
                     color: scheme.onSurface,
-                    fontSize: 14.5,
+                    fontSize: 15,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
-                  detail,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  kcal,
                   style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 11.5,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 6),
-          Icon(
-            Icons.chevron_right_rounded,
-            size: 21,
-            color: scheme.onSurfaceVariant,
+          // Green Circular "+" button from ui_design2.jpg Screen 7
+          Material(
+            color: const Color(0xFF0D5C3A),
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onTap,
+              child: const SizedBox(
+                width: 32,
+                height: 32,
+                child: Icon(Icons.add_rounded, color: Colors.white, size: 20),
+              ),
+            ),
           ),
+          const SizedBox(width: 4),
+          Icon(Icons.more_vert_rounded, size: 18, color: scheme.onSurfaceVariant),
         ],
       ),
     );

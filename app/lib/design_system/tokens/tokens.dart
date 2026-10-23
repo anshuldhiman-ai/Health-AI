@@ -23,18 +23,22 @@ abstract final class AppColors {
     surfaceRaised: Color(0xFFFFFFFF),
     ink: Color(0xFF16211C),
     inkMuted: Color(0xFF6B7A72),
-    primary: Color(0xFF0F6D49),
-    primaryWash: Color(0xFFDFF0E5),
-    accent: Color(0xFFEA9907),
-    accentWash: Color(0xFFFDF3E2),
-    accentSoft: Color(0xFFFBD474),
+    primary: Color(0xFF0D5C3A),
+    primaryWash: Color(0xFFE6F3EC),
+    accent: Color(0xFFE5B25D),
+    accentWash: Color(0xFFFBF6EC),
+    accentSoft: Color(0xFFF3D28E),
+    gold: Color(0xFFD4AF37),
+    goldWash: Color(0xFFFBF6EC),
+    deepSage: Color(0xFF4A6B5D),
+    obsidian: Color(0xFF121614),
     water: Color(0xFF48ABD9),
     sleep: Color(0xFF5860AF),
-    macroProtein: Color(0xFF0F6D49),
-    macroCarbs: Color(0xFFEA9907),
+    macroProtein: Color(0xFF0D5C3A),
+    macroCarbs: Color(0xFFE5B25D),
     macroFat: Color(0xFF4FA576),
     danger: Color(0xFFB3392A),
-    line: Color(0xFFE7ECE8),
+    line: Color(0xFFE9EFEA),
   );
 
   // --- dark theme ---
@@ -49,6 +53,10 @@ abstract final class AppColors {
     accent: Color(0xFFF0B429),
     accentWash: Color(0xFF3A2C12),
     accentSoft: Color(0xFF8A6A1F),
+    gold: Color(0xFFE5B25D),
+    goldWash: Color(0xFF332914),
+    deepSage: Color(0xFF729986),
+    obsidian: Color(0xFF0E1613),
     water: Color(0xFF6FC1E6),
     sleep: Color(0xFF8A90D8),
     macroProtein: Color(0xFF4CC18F),
@@ -77,6 +85,10 @@ class AppColorScheme {
     required this.accent,
     required this.accentWash,
     required this.accentSoft,
+    required this.gold,
+    required this.goldWash,
+    required this.deepSage,
+    required this.obsidian,
     required this.water,
     required this.sleep,
     required this.macroProtein,
@@ -99,6 +111,10 @@ class AppColorScheme {
       accent: Color.lerp(a.accent, b.accent, t)!,
       accentWash: Color.lerp(a.accentWash, b.accentWash, t)!,
       accentSoft: Color.lerp(a.accentSoft, b.accentSoft, t)!,
+      gold: Color.lerp(a.gold, b.gold, t)!,
+      goldWash: Color.lerp(a.goldWash, b.goldWash, t)!,
+      deepSage: Color.lerp(a.deepSage, b.deepSage, t)!,
+      obsidian: Color.lerp(a.obsidian, b.obsidian, t)!,
       water: Color.lerp(a.water, b.water, t)!,
       sleep: Color.lerp(a.sleep, b.sleep, t)!,
       macroProtein: Color.lerp(a.macroProtein, b.macroProtein, t)!,
@@ -139,6 +155,18 @@ class AppColorScheme {
   /// Soft gold for the "left today" chip.
   final Color accentSoft;
 
+  /// Premium gold accent (from ui_design.jpg).
+  final Color gold;
+
+  /// Soft gold wash behind premium elements.
+  final Color goldWash;
+
+  /// Deep sage green (from ui_design.jpg).
+  final Color deepSage;
+
+  /// Obsidian dark contrast (from ui_design.jpg).
+  final Color obsidian;
+
   /// Water data-viz only.
   final Color water;
 
@@ -156,6 +184,30 @@ class AppColorScheme {
 
   /// Hairline borders, dividers.
   final Color line;
+
+  /// Emerald gradient for primary buttons and banners.
+  LinearGradient get emeraldGradient => LinearGradient(
+    colors: [primary, Color.lerp(primary, const Color(0xFF1B8255), 0.5)!],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Gold gradient for premium badges and accents.
+  LinearGradient get goldGradient => LinearGradient(
+    colors: [gold, const Color(0xFFC59A3F)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Calorie ring multi-tone vibrant gradient (from ui_design2.jpg).
+  List<Color> get calorieRingColors => [
+    const Color(0xFF0D5C3A),
+    const Color(0xFF28B781),
+    const Color(0xFFE5B25D),
+    const Color(0xFFEE6A50),
+    const Color(0xFF8A58D6),
+    const Color(0xFF0D5C3A),
+  ];
 }
 
 /// Typography scale (Section 10.3): Plus Jakarta Sans (OFL), bundled
