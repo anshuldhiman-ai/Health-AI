@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app/data/preferences/water_controller.dart';
 import 'package:app/design_system/components/app_card.dart';
 import 'package:app/design_system/components/group_header.dart';
-import 'package:app/design_system/components/progress_ring.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/hydration.dart';
@@ -20,10 +19,6 @@ class WaterScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final water = ref.watch(waterTodayProvider);
     final notifier = ref.read(waterProvider.notifier);
-    final glassesLabel = l10n.glassesCount(
-      '${water.glasses}',
-      '${HydrationState.goalGlasses}',
-    );
 
     return Scaffold(
       body: SafeArea(
@@ -36,64 +31,14 @@ class WaterScreen extends ConsumerWidget {
             AppSpacing.x4,
           ),
           children: [
-            _Header(title: l10n.waterTitle),
+            _Header(title: 'Water Tracker'),
             const SizedBox(height: 14),
-            AppCard(
-              padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-              child: Column(
-                children: [
-                  Text(
-                    l10n.waterIntake,
-                    style: AppTypography.itemS.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  ProgressRing(
-                    progress: water.progress,
-                    size: 176,
-                    strokeWidth: 14,
-                    barColor: context.appColors.water,
-                    semanticLabel:
-                        '${water.liters.toStringAsFixed(1)} L, $glassesLabel',
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${water.liters.toStringAsFixed(1)} L',
-                          style: AppTypography.value20.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          l10n.glassesCount(
-                            '${water.glasses}',
-                            '${HydrationState.goalGlasses}',
-                          ),
-                          style: AppTypography.caption.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                            fontSize: 11.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.waterGoal(water.goalLiters.toStringAsFixed(1)),
-                    style: AppTypography.caption.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _WaterWaveHeroCard(water: water),
+            const SizedBox(height: 14),
+            _WaterQuickCards(notifier: notifier),
+            const SizedBox(height: 18),
+            GroupHeader(title: l10n.waterIntake),
+            const SizedBox(height: 10),
             const SizedBox(height: 14),
             _GlassGrid(glasses: water.glasses),
             const SizedBox(height: 14),
@@ -300,6 +245,234 @@ class _NoteCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 13D-effect Wave Display Card from ui_design2.jpg Screen 10
+class _WaterWaveHeroCard extends StatelessWidget {
+  const _WaterWaveHeroCard({required this.water});
+
+  final HydrationState water;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final displayAmount = water.liters.toStringAsFixed(2);
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: SizedBox(
+          height: 168,
+          child: Stack(
+            children: [
+              // Blue Wave Gradient Graphic
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _WaterWavePainter(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: scheme.surface.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: scheme.outlineVariant),
+                      ),
+                      child: Text(
+                        '13D-effect',
+                        style: AppTypography.caption.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      displayAmount,
+                      style: TextStyle(
+                        fontFamily: AppTypography.family,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurface,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    Text(
+                      'Water',
+                      style: AppTypography.caption.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WaterWavePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+    path.moveTo(0, size.height * 0.7);
+    path.cubicTo(
+      size.width * 0.25,
+      size.height * 0.35,
+      size.width * 0.65,
+      size.height * 0.85,
+      size.width,
+      size.height * 0.45,
+    );
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        colors: [
+          Color(0x3348ABD9),
+          Color(0x8848ABD9),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawPath(path, paint);
+
+    // Wave line top border
+    final linePaint = Paint()
+      ..color = const Color(0xFF48ABD9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+
+    final linePath = Path();
+    linePath.moveTo(0, size.height * 0.7);
+    linePath.cubicTo(
+      size.width * 0.25,
+      size.height * 0.35,
+      size.width * 0.65,
+      size.height * 0.85,
+      size.width,
+      size.height * 0.45,
+    );
+    canvas.drawPath(linePath, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _WaterQuickCards extends StatelessWidget {
+  const _WaterQuickCards({required this.notifier});
+
+  final dynamic notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    return Row(
+      children: [
+        Expanded(
+          child: AppCard(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            onTap: () => notifier.addGlass(),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: colors.water.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.water_drop_rounded, color: colors.water, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Progress',
+                      style: AppTypography.caption.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '28 ml',
+                      style: AppTypography.itemS.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: AppCard(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            onTap: () => notifier.addGlass(),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.local_cafe_outlined, color: colors.primary, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Stylish drink',
+                      style: AppTypography.caption.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '5 m',
+                      style: AppTypography.itemS.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
