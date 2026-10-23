@@ -13,7 +13,6 @@ import 'package:app/domain/entities/food_portion.dart';
 import 'package:app/domain/entities/log_entry.dart';
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/domain/entities/meal.dart';
-import 'package:app/features/search/presentation/dish_visuals.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/l10n/extensions.dart';
 

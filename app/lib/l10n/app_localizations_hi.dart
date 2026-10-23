@@ -284,6 +284,45 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scanSearchManually => 'खुद खोजें';
 
   @override
+  String get scanTorchOn => 'लाइट चालू करें';
+
+  @override
+  String get scanTorchOff => 'लाइट बंद करें';
+
+  @override
+  String get scanCaptureHeading => 'अपना खाना कैप्चर करें';
+
+  @override
+  String get scanCaptureHint => 'फ़्रेम को एक व्यंजन पर रखें और शटर दबाएँ।';
+
+  @override
+  String get scanQuickAdd => 'नाम से खाना जल्दी जोड़ें';
+
+  @override
+  String get quickAddTitle => 'जल्दी जोड़ें';
+
+  @override
+  String get quickAddSubtitle =>
+      'आपके डिवाइस में मौजूद व्यंजन खोजें। कुछ भी कहीं नहीं भेजा जाता।';
+
+  @override
+  String get quickAddSearchHint => 'व्यंजन खोजें';
+
+  @override
+  String get quickAddPicks => 'जल्दी चुनें';
+
+  @override
+  String get quickAddNoMatch =>
+      'इससे कोई व्यंजन नहीं मिला। छोटा शब्द आज़माएँ या वर्तनी जाँचें।';
+
+  @override
+  String get quickAddNoNutrition => 'अभी पोषण डेटा नहीं है';
+
+  @override
+  String get quickAddUnavailable =>
+      'व्यंजन सूची लोड नहीं हुई, इसलिए जल्दी जोड़ें उपलब्ध नहीं है। थोड़ी देर बाद कोशिश करें।';
+
+  @override
   String get settingsTitle => 'सेटिंग्स';
 
   @override

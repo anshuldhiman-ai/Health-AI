@@ -1,5 +1,5 @@
 import 'package:app/domain/entities/dish_info.dart';
-import 'package:app/features/search/application/food_search.dart';
+import 'package:app/data/nutrition/dish_query.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

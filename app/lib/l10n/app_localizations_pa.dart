@@ -283,6 +283,45 @@ class AppLocalizationsPa extends AppLocalizations {
   String get scanSearchManually => 'ਖੁਦ ਲੱਭੋ';
 
   @override
+  String get scanTorchOn => 'ਲਾਈਟ ਚਾਲੂ ਕਰੋ';
+
+  @override
+  String get scanTorchOff => 'ਲਾਈਟ ਬੰਦ ਕਰੋ';
+
+  @override
+  String get scanCaptureHeading => 'ਆਪਣਾ ਖਾਣਾ ਕੈਪਚਰ ਕਰੋ';
+
+  @override
+  String get scanCaptureHint => 'ਫਰੇਮ ਨੂੰ ਇੱਕ ਪਕਵਾਨ ਉੱਤੇ ਰੱਖੋ ਅਤੇ ਸ਼ਟਰ ਦਬਾਓ।';
+
+  @override
+  String get scanQuickAdd => 'ਨਾਂ ਨਾਲ ਖਾਣਾ ਛੇਤੀ ਸ਼ਾਮਲ ਕਰੋ';
+
+  @override
+  String get quickAddTitle => 'ਛੇਤੀ ਸ਼ਾਮਲ ਕਰੋ';
+
+  @override
+  String get quickAddSubtitle =>
+      'ਤੁਹਾਡੇ ਡਿਵਾਈਸ ਵਿੱਚ ਮੌਜੂਦ ਪਕਵਾਨ ਲੱਭੋ। ਕੁਝ ਵੀ ਕਿਤੇ ਨਹੀਂ ਭੇਜਿਆ ਜਾਂਦਾ।';
+
+  @override
+  String get quickAddSearchHint => 'ਪਕਵਾਨ ਲੱਭੋ';
+
+  @override
+  String get quickAddPicks => 'ਛੇਤੀ ਚੋਣਾਂ';
+
+  @override
+  String get quickAddNoMatch =>
+      'ਇਸ ਨਾਲ ਕੋਈ ਪਕਵਾਨ ਨਹੀਂ ਮਿਲਿਆ। ਛੋਟਾ ਸ਼ਬਦ ਅਜ਼ਮਾਓ ਜਾਂ ਸ਼ਬਦ-ਜੋੜ ਵੇਖੋ।';
+
+  @override
+  String get quickAddNoNutrition => 'ਹਾਲੇ ਪੋਸ਼ਣ ਡੇਟਾ ਨਹੀਂ';
+
+  @override
+  String get quickAddUnavailable =>
+      'ਪਕਵਾਨ ਸੂਚੀ ਲੋਡ ਨਹੀਂ ਹੋਈ, ਇਸ ਲਈ ਛੇਤੀ ਸ਼ਾਮਲ ਕਰਨਾ ਉਪਲਬਧ ਨਹੀਂ। ਥੋੜ੍ਹੀ ਦੇਰ ਬਾਅਦ ਕੋਸ਼ਿਸ਼ ਕਰੋ।';
+
+  @override
   String get settingsTitle => 'ਸੈਟਿੰਗਾਂ';
 
   @override

@@ -282,6 +282,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanSearchManually => 'Search manually';
 
   @override
+  String get scanTorchOn => 'Turn the light on';
+
+  @override
+  String get scanTorchOff => 'Turn the light off';
+
+  @override
+  String get scanCaptureHeading => 'Capture your meal';
+
+  @override
+  String get scanCaptureHint =>
+      'Point the frame at one dish and tap the shutter.';
+
+  @override
+  String get scanQuickAdd => 'Quick add a food by name';
+
+  @override
+  String get quickAddTitle => 'Quick add';
+
+  @override
+  String get quickAddSubtitle =>
+      'Search the dishes bundled on your device. Nothing is sent anywhere.';
+
+  @override
+  String get quickAddSearchHint => 'Search a dish';
+
+  @override
+  String get quickAddPicks => 'Quick picks';
+
+  @override
+  String get quickAddNoMatch =>
+      'No dish matches that. Try a shorter word, or check the spelling.';
+
+  @override
+  String get quickAddNoNutrition => 'No nutrition data yet';
+
+  @override
+  String get quickAddUnavailable =>
+      'The dish catalog didn\'t load, so quick add is unavailable. Try again in a moment.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

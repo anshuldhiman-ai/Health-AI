@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// Shared family icon used by manual search and dish detail. Purely
-/// decorative; the family label is always shown as text too.
+/// Decorative icon for a catalog family id (`curry`, `bread`, ...).
+///
+/// Lives in `core/` rather than in a feature because both the search
+/// screen and the scan screen's quick-add sheet render catalog rows, and
+/// R9 forbids one feature importing another. Purely decorative: a family
+/// label or dish name is always shown as text too, so nothing depends on
+/// the icon to be understood (R14).
 IconData familyIcon(String family) {
   switch (family) {
     case 'curry':

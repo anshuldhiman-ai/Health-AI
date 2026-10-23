@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,6 +13,7 @@ import 'package:app/domain/entities/meal.dart';
 import 'package:app/data/nutrition/dish_catalog.dart';
 import 'package:app/features/scan/application/food_recognizer.dart';
 import 'package:app/features/scan/application/scan_state.dart';
+import 'package:app/features/scan/presentation/quick_add_sheet.dart';
 import 'package:app/features/scan/presentation/scan_result_sheet.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/l10n/extensions.dart';
@@ -43,7 +45,7 @@ class ScanScreen extends ConsumerStatefulWidget {
 }
 
 class _ScanScreenState extends ConsumerState<ScanScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   final _picker = ImagePicker();
 
   CameraController? _controller;
@@ -55,11 +57,19 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   bool _torchOn = false;
   late MealKind _mealKind;
 
+  /// Drives the viewfinder's breathing pulse while a capture is being
+  /// analysed. Idle it sits at 0, so the brackets are still.
+  late final AnimationController _pulse;
+
   @override
   void initState() {
     super.initState();
     _mealKind = widget.mealKind;
     WidgetsBinding.instance.addObserver(this);
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
     _initializing = _initCamera();
     // Drop whatever the last visit left in the provider, and do it after
     // the first frame so we are not mutating provider state during
@@ -74,6 +84,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _pulse.dispose();
     final controller = _controller;
     _controller = null;
     unawaited(controller?.dispose());
@@ -173,6 +184,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
       _analyzing = true;
       _pendingPhoto = bytes;
     });
+    if (!MediaQuery.disableAnimationsOf(context)) {
+      _pulse.repeat(reverse: true);
+    }
 
     try {
       final output = await ref.read(foodRecognizerProvider).recognize(bytes);
@@ -222,6 +236,12 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
       if (mounted) _showError(l10n.scanPhotoFailed);
     } finally {
       if (mounted) {
+        // Stop the pulse and park it at rest so the brackets are still
+        // again. Leaving the controller running would keep a ticker alive
+        // for as long as the camera is open, burning frames for an
+        // animation nobody can see.
+        _pulse.stop();
+        _pulse.value = 0;
         setState(() {
           _analyzing = false;
           _pendingPhoto = null;
@@ -266,10 +286,36 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     if (controller == null || !controller.value.isInitialized) return;
     try {
       await controller.setFlashMode(_torchOn ? FlashMode.off : FlashMode.torch);
-      if (mounted) setState(() => _torchOn = !_torchOn);
+      if (mounted) {
+        setState(() => _torchOn = !_torchOn);
+        unawaited(HapticFeedback.selectionClick());
+      }
     } on CameraException {
       // Torch is optional; ignore unsupported devices.
     }
+  }
+
+  /// Quick add: pick a dish by name instead of by photo, then hand off to
+  /// the dish detail screen to log it.
+  Future<void> _quickAdd() async {
+    final dishId = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      clipBehavior: Clip.antiAlias,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const QuickAddSheet(),
+    );
+    if (dishId == null || !mounted) return;
+    // replace, not push: the camera has done its job and should not sit
+    // in the back stack behind the food the user is about to log.
+    context.pushReplacement(
+      '/dish/${Uri.encodeComponent(dishId)}'
+      '?meal=${_mealKind.name}&day=${widget.dayOffset}',
+    );
   }
 
   Future<void> _pickMeal() async {
@@ -398,7 +444,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
             ),
           ),
           // Golden Viewfinder Frame in the center per ui_design.jpg Screen 4 & ui_design2.jpg Screen 2
-          const Center(child: _GoldenViewfinder()),
+          Center(
+            child: _GoldenViewfinder(pulse: _pulse, active: _analyzing),
+          ),
           SafeArea(
             child: Column(
               children: [
@@ -453,12 +501,11 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                         ),
                       ),
                       const Spacer(),
-                      _RoundIconButton(
-                        icon: _torchOn
-                            ? Icons.flash_on_rounded
-                            : Icons.flash_off_rounded,
+                      _TorchButton(
+                        on: _torchOn,
                         onTap: controller == null ? null : _toggleTorch,
-                        semanticLabel: l10n.scanTorch,
+                        onLabel: l10n.scanTorchOn,
+                        offLabel: l10n.scanTorchOff,
                       ),
                     ],
                   ),
@@ -551,25 +598,25 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                             size: 48,
                           ),
                           _MetallicShutterButton(
-                            enabled: controller != null &&
+                            enabled:
+                                controller != null &&
                                 controller.value.isInitialized &&
                                 !_analyzing,
                             busy: _analyzing,
+                            label: l10n.scanCapture,
                             onTap: _capture,
                           ),
                           _RoundIconButton(
-                            icon: Icons.qr_code_scanner_rounded,
-                            onTap: () {
-                              _showError('Quick add feature coming soon: will scan barcodes to add packaged foods.');
-                            },
-                            semanticLabel: 'Quick Add (Barcode)',
+                            icon: Icons.search_rounded,
+                            onTap: _analyzing ? null : _quickAdd,
+                            semanticLabel: l10n.scanQuickAdd,
                             size: 48,
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Capture Your Meal',
+                        l10n.scanCaptureHeading,
                         style: AppTypography.itemS.copyWith(
                           color: Colors.white,
                           fontSize: 14,
@@ -578,7 +625,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '3D scanning animations identifying dish...',
+                        l10n.scanCaptureHint,
+                        textAlign: TextAlign.center,
                         style: AppTypography.caption.copyWith(
                           color: Colors.white60,
                           fontSize: 11.5,
@@ -647,31 +695,62 @@ class _DetectionPill extends StatelessWidget {
 }
 
 /// Golden Viewfinder Frame matching ui_design.jpg & ui_design2.jpg
+///
+/// The brackets breathe while [active]; at rest they are perfectly
+/// still, so motion means "something is happening" rather than being
+/// permanent decoration (Section 10.8).
 class _GoldenViewfinder extends StatelessWidget {
-  const _GoldenViewfinder();
+  const _GoldenViewfinder({required this.pulse, required this.active});
+
+  final Animation<double> pulse;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: 250,
       height: 250,
-      child: CustomPaint(painter: _GoldenBracketPainter()),
+      child: AnimatedBuilder(
+        animation: pulse,
+        builder: (context, _) {
+          final t = active ? pulse.value : 0.0;
+          return CustomPaint(
+            painter: _GoldenBracketPainter(
+              // 0.55 -> 1.0 opacity and a whisper of scale. Enough to
+              // read as alive at arm's length without competing with the
+              // camera preview.
+              opacity: 0.55 + 0.45 * t,
+              scale: 1.0 + 0.02 * t,
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
 class _GoldenBracketPainter extends CustomPainter {
-  const _GoldenBracketPainter();
+  const _GoldenBracketPainter({this.opacity = 1.0, this.scale = 1.0});
+
+  final double opacity;
+  final double scale;
 
   @override
   void paint(Canvas canvas, Size size) {
     const goldColor = Color(0xFFD4AF37);
     final paint = Paint()
-      ..color = goldColor
+      ..color = goldColor.withValues(alpha: opacity)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.5
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
+
+    if (scale != 1.0) {
+      canvas.save();
+      canvas.translate(size.width / 2, size.height / 2);
+      canvas.scale(scale);
+      canvas.translate(-size.width / 2, -size.height / 2);
+    }
 
     final w = size.width;
     final h = size.height;
@@ -709,76 +788,188 @@ class _GoldenBracketPainter extends CustomPainter {
       ..quadraticBezierTo(w, h, w, h - r)
       ..lineTo(w, h - arm);
     canvas.drawPath(br, paint);
+
+    if (scale != 1.0) canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_GoldenBracketPainter oldDelegate) => false;
+  bool shouldRepaint(_GoldenBracketPainter oldDelegate) =>
+      oldDelegate.opacity != opacity || oldDelegate.scale != scale;
+}
+
+/// Flash / light toggle.
+///
+/// Deliberately not a [_RoundIconButton]: "is my light on?" has to be
+/// answerable at a glance in a dark kitchen. When lit, the control fills
+/// gold, shows the solid bolt, and carries a glow; when off it is the
+/// same translucent chip as its neighbours. The state is carried by
+/// fill, icon and glow together, never by colour alone (R14).
+class _TorchButton extends StatelessWidget {
+  const _TorchButton({
+    required this.on,
+    required this.onTap,
+    required this.onLabel,
+    required this.offLabel,
+  });
+
+  final bool on;
+  final VoidCallback? onTap;
+  final String onLabel;
+  final String offLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+
+    return Semantics(
+      button: true,
+      toggled: on,
+      label: on ? offLabel : onLabel,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Material(
+          color: on
+              ? const Color(0xFFD4AF37)
+              : Colors.white.withValues(alpha: 0.16),
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: on
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
+                          blurRadius: 16,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                on ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+                size: 24,
+                color: on
+                    ? const Color(0xFF121614)
+                    : (enabled ? Colors.white : Colors.white38),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Metallic gradient glowing shutter button from ui_design2.jpg Screen 2
-class _MetallicShutterButton extends StatelessWidget {
+///
+/// Presses physically: the disc scales down and darkens while held, and
+/// a light haptic fires on tap, so the shutter confirms the press even
+/// when the camera preview has not visibly changed yet (Section 10.8).
+class _MetallicShutterButton extends StatefulWidget {
   const _MetallicShutterButton({
     required this.enabled,
     required this.busy,
+    required this.label,
     required this.onTap,
   });
 
   final bool enabled;
   final bool busy;
+  final String label;
   final VoidCallback onTap;
 
   @override
+  State<_MetallicShutterButton> createState() => _MetallicShutterButtonState();
+}
+
+class _MetallicShutterButtonState extends State<_MetallicShutterButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: Container(
-        width: 76,
-        height: 76,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const RadialGradient(
-            colors: [
-              Color(0xFF34D399),
-              Color(0xFF0D5C3A),
-              Color(0xFF083C25),
-            ],
-          ),
-          border: Border.all(color: const Color(0xFFD4AF37), width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF34D399).withValues(alpha: 0.4),
-              blurRadius: 18,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Center(
-          child: busy
-              ? const SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: Colors.white,
+    final interactive = widget.enabled || widget.busy;
+
+    return Semantics(
+      button: true,
+      enabled: widget.enabled,
+      label: widget.label,
+      child: GestureDetector(
+        onTapDown: interactive ? (_) => _setPressed(true) : null,
+        onTapUp: interactive ? (_) => _setPressed(false) : null,
+        onTapCancel: interactive ? () => _setPressed(false) : null,
+        onTap: widget.enabled
+            ? () {
+                unawaited(HapticFeedback.mediumImpact());
+                widget.onTap();
+              }
+            : null,
+        child: AnimatedScale(
+          scale: _pressed ? 0.92 : 1.0,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          child: Container(
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const RadialGradient(
+                colors: [
+                  Color(0xFF34D399),
+                  Color(0xFF0D5C3A),
+                  Color(0xFF083C25),
+                ],
+              ),
+              border: Border.all(color: const Color(0xFFD4AF37), width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF34D399).withValues(
+                    alpha: _pressed ? 0.15 : 0.4,
                   ),
-                )
-              : Container(
-                  width: 54,
-                  height: 54,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF047857)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
+                  blurRadius: _pressed ? 8 : 18,
+                  spreadRadius: _pressed ? 0 : 2,
                 ),
+              ],
+            ),
+            child: Center(
+              child: widget.busy
+                  ? const SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: _pressed
+                              ? const [Color(0xFF047857), Color(0xFF03543C)]
+                              : const [Color(0xFF10B981), Color(0xFF047857)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
+            ),
+          ),
         ),
       ),
     );

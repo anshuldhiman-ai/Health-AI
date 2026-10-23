@@ -604,6 +604,78 @@ abstract class AppLocalizations {
   /// **'Search manually'**
   String get scanSearchManually;
 
+  /// No description provided for @scanTorchOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn the light on'**
+  String get scanTorchOn;
+
+  /// No description provided for @scanTorchOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn the light off'**
+  String get scanTorchOff;
+
+  /// No description provided for @scanCaptureHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture your meal'**
+  String get scanCaptureHeading;
+
+  /// No description provided for @scanCaptureHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the frame at one dish and tap the shutter.'**
+  String get scanCaptureHint;
+
+  /// No description provided for @scanQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick add a food by name'**
+  String get scanQuickAdd;
+
+  /// No description provided for @quickAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick add'**
+  String get quickAddTitle;
+
+  /// No description provided for @quickAddSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the dishes bundled on your device. Nothing is sent anywhere.'**
+  String get quickAddSubtitle;
+
+  /// No description provided for @quickAddSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a dish'**
+  String get quickAddSearchHint;
+
+  /// No description provided for @quickAddPicks.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick picks'**
+  String get quickAddPicks;
+
+  /// No description provided for @quickAddNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No dish matches that. Try a shorter word, or check the spelling.'**
+  String get quickAddNoMatch;
+
+  /// No description provided for @quickAddNoNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'No nutrition data yet'**
+  String get quickAddNoNutrition;
+
+  /// No description provided for @quickAddUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The dish catalog didn\'t load, so quick add is unavailable. Try again in a moment.'**
+  String get quickAddUnavailable;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

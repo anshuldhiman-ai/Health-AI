@@ -1,3 +1,12 @@
+/// Pure queries over the bundled dish catalog.
+///
+/// Lives in `data/` rather than inside a feature because two features
+/// need the same search rules and R9 forbids features importing each
+/// other: the search screen and the scan screen's quick-add sheet. Both
+/// call [filterDishes], so "what counts as a match" cannot drift between
+/// the two ways of adding a food by hand.
+library;
+
 import 'package:app/domain/entities/dish_info.dart';
 
 /// Curated shortcuts for an empty search. These are catalog ids, not a

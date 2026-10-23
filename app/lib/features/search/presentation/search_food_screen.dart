@@ -11,8 +11,8 @@ import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/dish_info.dart';
 import 'package:app/domain/entities/food_portion.dart';
 import 'package:app/domain/entities/meal.dart';
-import 'package:app/features/search/application/food_search.dart';
-import 'package:app/features/search/presentation/dish_visuals.dart';
+import 'package:app/data/nutrition/dish_query.dart';
+import 'package:app/core/ui/family_icon.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/l10n/extensions.dart';
 
