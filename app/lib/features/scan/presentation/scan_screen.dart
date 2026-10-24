@@ -10,6 +10,8 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:app/design_system/components/app_toast.dart';
 import 'package:app/design_system/tokens/tokens.dart';
+import 'package:app/app/log_store.dart';
+import 'package:app/domain/entities/log_entry.dart';
 import 'package:app/domain/entities/meal.dart';
 import 'package:app/data/nutrition/dish_catalog.dart';
 import 'package:app/features/scan/application/food_recognizer.dart';
@@ -56,6 +58,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   Uint8List? _pendingPhoto;
   bool _analyzing = false;
   bool _torchOn = false;
+  bool _showSessionResults = false;
   late MealKind _mealKind;
 
   /// Drives the viewfinder's breathing pulse while a capture is being
@@ -208,6 +211,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
       );
       if (!mounted) return;
       ref.read(scanSessionProvider.notifier).state = session;
+      setState(() => _showSessionResults = true);
 
       final added = await showModalBottomSheet<bool>(
         context: context,
@@ -226,6 +230,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
       // prediction is finished with. Leaving it set is what made a stale
       // dish appear as a detection pill on the next visit.
       ref.read(scanSessionProvider.notifier).state = null;
+      _showSessionResults = false;
       if (added == true) {
         Navigator.of(context).pop();
       }
@@ -299,6 +304,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   /// Quick add: pick a dish by name instead of by photo, then hand off to
   /// the dish detail screen to log it.
   Future<void> _quickAdd() async {
+    var manuallyAdded = false;
     final dishId = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -308,8 +314,25 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => const QuickAddSheet(),
+      builder: (_) => QuickAddSheet(
+        onManualAdd: (name, kcal) {
+          ref.read(dayLogProvider.notifier).add(
+            LogEntry.estimated(
+              mealKind: _mealKind,
+              dish: name,
+              kcal: kcal,
+              timeLabel: _timeLabel(DateTime.now()),
+            ),
+            dayOffset: widget.dayOffset,
+          );
+          manuallyAdded = true;
+        },
+      ),
     );
+    if (manuallyAdded && mounted) {
+      Navigator.of(context).pop();
+      return;
+    }
     if (dishId == null || !mounted) return;
     // replace, not push: the camera has done its job and should not sit
     // in the back stack behind the food the user is about to log.
@@ -555,13 +578,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                 // from the scan that just finished in this visit — the
                 // session is cleared on entry and on sheet dismissal, so a
                 // dish from an earlier visit can never appear here.
-                if (_analyzing || session != null)
+                if (_analyzing || (_showSessionResults && session != null))
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (session != null && session.topMatches.isNotEmpty)
+                        if (_showSessionResults && session != null && session.topMatches.isNotEmpty)
                           for (
                             var i = 0;
                             i < session.topMatches.length && i < 3;

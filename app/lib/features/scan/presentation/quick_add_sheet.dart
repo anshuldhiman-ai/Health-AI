@@ -45,7 +45,9 @@ const List<String> quickPickIds = [
 /// pops the chosen dish id so the caller decides where to navigate; the
 /// sheet itself never routes.
 class QuickAddSheet extends ConsumerStatefulWidget {
-  const QuickAddSheet({super.key});
+  const QuickAddSheet({super.key, this.onManualAdd});
+
+  final void Function(String name, int kcal)? onManualAdd;
 
   @override
   ConsumerState<QuickAddSheet> createState() => _QuickAddSheetState();
@@ -166,10 +168,50 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                 ),
               ),
             ),
+            if (widget.onManualAdd != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                child: OutlinedButton.icon(
+                  onPressed: _addFoodManually,
+                  icon: const Icon(Icons.edit_note_rounded),
+                  label: const Text('Can’t find it? Add food manually'),
+                ),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _addFoodManually() async {
+    final name = TextEditingController();
+    final kcal = TextEditingController();
+    final result = await showDialog<(String, int)>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Add food'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: name, autofocus: true, decoration: const InputDecoration(labelText: 'Food name')),
+          TextField(controller: kcal, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Calories for this serving')),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              final calories = int.tryParse(kcal.text.trim());
+              if (name.text.trim().isEmpty || calories == null || calories <= 0) return;
+              Navigator.pop(dialogContext, (name.text.trim(), calories));
+            },
+            child: const Text('Add to meal'),
+          ),
+        ],
+      ),
+    );
+    name.dispose();
+    kcal.dispose();
+    if (result == null || !mounted) return;
+    widget.onManualAdd?.call(result.$1, result.$2);
+    if (mounted) Navigator.of(context).pop();
   }
 }
 
