@@ -352,6 +352,16 @@ abstract final class AppSpacing {
   static const screenPadding = 20.0;
 }
 
+/// Fixed chrome heights. These are load-bearing beyond their own widget:
+/// the shell's nav bar height is what tells the app how far up content
+/// must sit to clear it.
+abstract final class AppSizing {
+  AppSizing._();
+
+  /// Height of the bottom nav bar, above the system inset.
+  static const navBarHeight = 66.0;
+}
+
 /// Radii by hierarchy, not one radius for everything (Section 10.4).
 abstract final class AppRadii {
   AppRadii._();

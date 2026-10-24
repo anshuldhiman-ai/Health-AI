@@ -304,9 +304,13 @@ class _MealRowCard extends StatelessWidget {
     final colors = context.appColors;
 
     final hasEntries = entries.isNotEmpty;
-    final kcal = hasEntries
-        ? entries.fold<int>(0, (sum, e) => sum + e.calories)
-        : _defaultMealKcal(meal);
+    final kcal = entries.fold<int>(0, (sum, e) => sum + e.calories);
+    var protein = 0, carbs = 0, fat = 0;
+    for (final e in entries) {
+      protein += e.proteinGrams;
+      carbs += e.carbsGrams;
+      fat += e.fatGrams;
+    }
 
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -340,22 +344,40 @@ class _MealRowCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$kcal kcal',
+                  // An empty meal shows no number at all. A placeholder
+                  // count reads as food already logged, which is worse
+                  // than showing nothing (R7).
+                  hasEntries ? '$kcal kcal' : l10n.mealNotLoggedYet,
                   style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontSize: 12.5,
                   ),
                 ),
                 const SizedBox(height: 5),
-                Row(
-                  children: [
-                    _TagBadge(text: 'Protein', color: colors.macroProtein),
-                    const SizedBox(width: 5),
-                    _TagBadge(text: 'Carbs', color: colors.macroCarbs),
-                    const SizedBox(width: 5),
-                    _TagBadge(text: 'Fat', color: colors.macroFat),
-                  ],
-                ),
+                if (hasEntries)
+                  Row(
+                    children: [
+                      _TagBadge(
+                        text: '${l10n.macroProtein} ${protein}g',
+                        color: colors.macroProtein,
+                      ),
+                      const SizedBox(width: 5),
+                      _TagBadge(
+                        text: '${l10n.macroCarbs} ${carbs}g',
+                        color: colors.macroCarbs,
+                      ),
+                      const SizedBox(width: 5),
+                      _TagBadge(
+                        text: '${l10n.macroFat} ${fat}g',
+                        color: colors.macroFat,
+                      ),
+                    ],
+                  )
+                else
+                  _TagBadge(
+                    text: '+ ${l10n.addFood}',
+                    color: colors.primary,
+                  ),
               ],
             ),
           ),
@@ -369,21 +391,14 @@ class _MealRowCard extends StatelessWidget {
               }
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'add', child: Text('Add Food')),
-              const PopupMenuItem(value: 'scan', child: Text('Scan Photo')),
+              PopupMenuItem(value: 'add', child: Text(l10n.addFood)),
+              PopupMenuItem(value: 'scan', child: Text(l10n.scanScreenTitle)),
             ],
           ),
         ],
       ),
     );
   }
-
-  static int _defaultMealKcal(MealKind kind) => switch (kind) {
-    MealKind.breakfast => 1280,
-    MealKind.lunch => 550,
-    MealKind.dinner => 1500,
-    MealKind.snacks => 280,
-  };
 }
 
 class _TagBadge extends StatelessWidget {
@@ -412,7 +427,11 @@ class _TagBadge extends StatelessWidget {
   }
 }
 
-/// Snacks Card from ui_design.jpg Screen 6 with macro breakdown bars
+/// Snacks Card from ui_design.jpg Screen 6 with a macro breakdown bar.
+///
+/// Every number is computed from the snacks actually logged. It used to
+/// be fixed decoration - a hard-coded "280 kcal" and a 50/30/20 bar -
+/// which read as logged food on a day that had none.
 class _SnacksMacroCard extends StatelessWidget {
   const _SnacksMacroCard({required this.state});
 
@@ -424,6 +443,25 @@ class _SnacksMacroCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
 
+    var kcal = 0, protein = 0, carbs = 0, fat = 0;
+    for (final e in state.mealLog) {
+      if (e.mealKind != MealKind.snacks) continue;
+      kcal += e.calories;
+      protein += e.proteinGrams;
+      carbs += e.carbsGrams;
+      fat += e.fatGrams;
+    }
+
+    // Weight the bar by energy share, not grams: 1 g of fat is ~9 kcal
+    // against ~4 for protein and carbs, so a gram-based bar would
+    // understate fat.
+    final segments = <(int, Color)>[
+      (carbs * 4, colors.macroCarbs),
+      (protein * 4, colors.macroProtein),
+      (fat * 9, colors.macroFat),
+    ]..removeWhere((segment) => segment.$1 <= 0);
+    final energy = segments.fold<int>(0, (sum, s) => sum + s.$1);
+
     return AppCard(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       child: Column(
@@ -432,7 +470,7 @@ class _SnacksMacroCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Snacks',
+                l10n.mealSnacks,
                 style: AppTypography.itemTitle.copyWith(
                   color: scheme.onSurface,
                   fontSize: 15,
@@ -440,7 +478,9 @@ class _SnacksMacroCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '280 kcal',
+                energy == 0
+                    ? l10n.mealNotLoggedYet
+                    : '$kcal ${l10n.kcalUnit}',
                 style: AppTypography.caption.copyWith(
                   color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
@@ -448,34 +488,46 @@ class _SnacksMacroCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Macro horizontal multi-segment bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: SizedBox(
-              height: 8,
-              child: Row(
-                children: [
-                  Expanded(flex: 50, child: Container(color: colors.macroCarbs)),
-                  const SizedBox(width: 2),
-                  Expanded(flex: 30, child: Container(color: colors.macroProtein)),
-                  const SizedBox(width: 2),
-                  Expanded(flex: 20, child: Container(color: colors.macroFat)),
-                ],
+          if (energy > 0) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: SizedBox(
+                height: 8,
+                child: Row(
+                  children: [
+                    for (var i = 0; i < segments.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 2),
+                      Expanded(
+                        flex: (segments[i].$1 / energy * 1000).round(),
+                        child: ColoredBox(color: segments[i].$2),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _MacroLegendDot(label: 'Carbs', color: colors.macroCarbs),
-              const SizedBox(width: 14),
-              _MacroLegendDot(label: 'Protein', color: colors.macroProtein),
-              const SizedBox(width: 14),
-              _MacroLegendDot(label: 'Fat', color: colors.macroFat),
-            ],
-          ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _MacroLegendDot(
+                  label: '${l10n.macroCarbs} ${carbs}g',
+                  color: colors.macroCarbs,
+                ),
+                const SizedBox(width: 14),
+                _MacroLegendDot(
+                  label: '${l10n.macroProtein} ${protein}g',
+                  color: colors.macroProtein,
+                ),
+                const SizedBox(width: 14),
+                _MacroLegendDot(
+                  label: '${l10n.macroFat} ${fat}g',
+                  color: colors.macroFat,
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

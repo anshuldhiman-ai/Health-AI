@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app/data/preferences/sleep_controller.dart';
 import 'package:app/design_system/components/app_card.dart';
+import 'package:app/design_system/components/app_toast.dart';
 import 'package:app/design_system/components/group_header.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
@@ -60,11 +61,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     ref
         .read(sleepProvider.notifier)
         .save(bedMinutes: _bedMinutes, wakeMinutes: _wakeMinutes);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.savedLabel)),
-      );
+    AppToast.show(
+      ScaffoldMessenger.of(context),
+      message: AppLocalizations.of(context)!.savedLabel,
+    );
   }
 
   void _clear() {

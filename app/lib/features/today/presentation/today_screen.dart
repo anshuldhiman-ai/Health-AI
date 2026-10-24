@@ -599,7 +599,12 @@ class _MealCard extends StatelessWidget {
 
     final kcal = entries.fold<int>(0, (sum, e) => sum + e.kcal);
     final hasEntries = entries.isNotEmpty;
-    final displayKcal = hasEntries ? kcal : _defaultKcal(meal);
+    var protein = 0, carbs = 0, fat = 0;
+    for (final e in entries) {
+      protein += e.proteinGrams;
+      carbs += e.carbsGrams;
+      fat += e.fatGrams;
+    }
 
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -637,22 +642,39 @@ class _MealCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '$displayKcal kcal',
+                  // No number for an empty meal: a placeholder count
+                  // reads as food already logged (R7).
+                  hasEntries ? '$kcal kcal' : l10n.mealNotLoggedYet,
                   style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontSize: 12.5,
                   ),
                 ),
                 const SizedBox(height: 6),
-                Row(
-                  children: [
-                    _TagBadge(text: 'Protein', color: colors.macroProtein),
-                    const SizedBox(width: 5),
-                    _TagBadge(text: 'Carbs', color: colors.macroCarbs),
-                    const SizedBox(width: 5),
-                    _TagBadge(text: 'Fat', color: colors.macroFat),
-                  ],
-                ),
+                if (hasEntries)
+                  Row(
+                    children: [
+                      _TagBadge(
+                        text: '${l10n.macroProtein} ${protein}g',
+                        color: colors.macroProtein,
+                      ),
+                      const SizedBox(width: 5),
+                      _TagBadge(
+                        text: '${l10n.macroCarbs} ${carbs}g',
+                        color: colors.macroCarbs,
+                      ),
+                      const SizedBox(width: 5),
+                      _TagBadge(
+                        text: '${l10n.macroFat} ${fat}g',
+                        color: colors.macroFat,
+                      ),
+                    ],
+                  )
+                else
+                  _TagBadge(
+                    text: '+ ${l10n.addFood}',
+                    color: colors.primary,
+                  ),
               ],
             ),
           ),
@@ -666,21 +688,14 @@ class _MealCard extends StatelessWidget {
               }
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'add', child: Text('Add Food')),
-              const PopupMenuItem(value: 'scan', child: Text('Scan Meal')),
+              PopupMenuItem(value: 'add', child: Text(l10n.addFood)),
+              PopupMenuItem(value: 'scan', child: Text(l10n.scanScreenTitle)),
             ],
           ),
         ],
       ),
     );
   }
-
-  static int _defaultKcal(MealKind kind) => switch (kind) {
-    MealKind.breakfast => 1280,
-    MealKind.lunch => 550,
-    MealKind.dinner => 1500,
-    MealKind.snacks => 280,
-  };
 }
 
 class _TagBadge extends StatelessWidget {

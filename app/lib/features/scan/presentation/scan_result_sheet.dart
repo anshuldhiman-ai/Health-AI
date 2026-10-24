@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app/app/log_store.dart';
+import 'package:app/design_system/components/app_toast.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/log_entry.dart';
@@ -520,19 +521,11 @@ class ScanResultSheet extends ConsumerWidget {
     ref.read(scanSessionProvider.notifier).state = null;
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop(true);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 3),
-        content: Text(l10n.addedToast(l10n.mealLabel(mealKind))),
-        action: SnackBarAction(
-          label: l10n.undo,
-          onPressed: () {
-            messenger.hideCurrentSnackBar();
-            store.removeNewest(dayOffset);
-          },
-        ),
-      ),
+    AppToast.show(
+      messenger,
+      message: l10n.addedToast(l10n.mealLabel(mealKind)),
+      actionLabel: l10n.undo,
+      onAction: () => store.removeNewest(dayOffset),
     );
   }
 

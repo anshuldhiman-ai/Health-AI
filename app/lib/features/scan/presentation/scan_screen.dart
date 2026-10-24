@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:app/design_system/components/app_toast.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/meal.dart';
 import 'package:app/data/nutrition/dish_catalog.dart';
@@ -383,11 +384,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-      );
+    AppToast.show(ScaffoldMessenger.of(context), message: message);
   }
 
   @override

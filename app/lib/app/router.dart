@@ -112,8 +112,26 @@ class _NavShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A floating toast has to clear this bar, and the bar is drawn by
+    // THIS Scaffold while the toast is drawn by the nested Scaffold
+    // inside `navigationShell`. Flutter's extendBody handling raises
+    // the body's `padding.bottom` for the bar but leaves `viewPadding`
+    // alone - and floating SnackBars position against `viewPadding`, so
+    // without this they land behind the bar where their action cannot
+    // be tapped. Only `viewPadding` is overridden, so nothing else in
+    // the body shifts.
+    final media = MediaQuery.of(context);
+    final barHeight = AppSizing.navBarHeight + media.viewPadding.bottom;
+
     return Scaffold(
-      body: navigationShell,
+      body: MediaQuery(
+        data: media.copyWith(
+          viewPadding: media.viewPadding.copyWith(
+            bottom: math.max(media.viewPadding.bottom, barHeight),
+          ),
+        ),
+        child: navigationShell,
+      ),
       extendBody: true,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Transform.translate(
@@ -198,7 +216,7 @@ class _BottomBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 66,
+          height: AppSizing.navBarHeight,
           child: Row(
             children: [
               destination(

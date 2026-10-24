@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app/app/log_store.dart';
 import 'package:app/data/nutrition/dish_catalog.dart';
 import 'package:app/design_system/components/app_card.dart';
+import 'package:app/design_system/components/app_toast.dart';
 import 'package:app/design_system/components/empty_state.dart';
 import 'package:app/design_system/components/group_header.dart';
 import 'package:app/design_system/theme/app_theme.dart';
@@ -58,23 +59,15 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
       dayOffset: widget.dayOffset,
     );
     final messenger = ScaffoldMessenger.of(context);
+    // Pop first so the toast lands on the diary, not on this screen.
     Navigator.of(context).pop(true);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 3),
-        content: Text(l10n.addedToast(l10n.mealLabel(_meal))),
-        action: SnackBarAction(
-          label: l10n.undo,
-          onPressed: () {
-            messenger.hideCurrentSnackBar();
-            store.removeNewest(widget.dayOffset);
-          },
-        ),
-      ),
+    AppToast.show(
+      messenger,
+      message: l10n.addedToast(l10n.mealLabel(_meal)),
+      actionLabel: l10n.undo,
+      onAction: () => store.removeNewest(widget.dayOffset),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
