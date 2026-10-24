@@ -1,3 +1,5 @@
+import 'package:app/domain/entities/macro.dart';
+import 'package:app/features/today/presentation/macro_breakdown_screen.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -74,6 +76,18 @@ final appRouter = GoRouter(
         dayOffset: _dayFromQuery(state.uri.queryParameters['day']),
         initialMeal: _mealFromQuery(state.uri.queryParameters['meal']),
       ),
+    ),
+    GoRoute(
+      path: '/macro-breakdown',
+      builder: (_, state) {
+        final rawKind = state.uri.queryParameters['kind'];
+        final kind = switch (rawKind) {
+          'carbs' => MacroKind.carbs,
+          'fat' || 'fats' => MacroKind.fat,
+          _ => MacroKind.protein,
+        };
+        return MacroBreakdownScreen(initialKind: kind);
+      },
     ),
     GoRoute(
       path: '/scan',

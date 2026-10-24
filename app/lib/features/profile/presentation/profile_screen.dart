@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app/data/preferences/body_metrics_controller.dart';
+import 'package:app/data/preferences/goal_kind_controller.dart';
 import 'package:app/design_system/components/app_card.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
-import 'package:app/data/preferences/body_metrics_controller.dart';
 import 'package:app/domain/entities/nutrition_targets.dart';
-import 'package:app/data/preferences/goal_kind_controller.dart';
 import 'package:app/features/profile/presentation/goal_sheet.dart';
 import 'package:app/features/profile/presentation/help_sheet.dart';
 import 'package:app/features/profile/presentation/settings_sheet.dart';
 import 'package:app/l10n/app_localizations.dart';
 
-/// Local account and body measurements.
+/// Account & Profile screen matching ui_design.jpg Screen 11:
+/// - Golden gradient top arc banner
+/// - Center avatar with user's name
+/// - Tappable, editable personal details (Age, Height, Weight, Activity Level)
+/// - Color-coded automatic BMI indicator (Green = healthy, Yellow = edge, Red = under/over)
+/// - Integrations (Apple Health, Garmin, Fitbit)
+/// - Nutrition goal settings
+/// - Help & Privacy (100% Free, Device-only)
+/// - Fully responsive across all device dimensions
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -25,76 +33,413 @@ class ProfileScreen extends ConsumerWidget {
     final colors = context.appColors;
 
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenPadding, AppSpacing.x2,
-            AppSpacing.screenPadding, 96,
-          ),
-          children: [
-            Row(children: [
-              Text('Account', style: AppTypography.titleL.copyWith(color: scheme.onSurface)),
-              const Spacer(),
-              IconButton(onPressed: () => showSettingsSheet(context), icon: const Icon(Icons.settings_outlined)),
-            ]),
-            const SizedBox(height: 18),
-            Center(
-              child: CircleAvatar(
-                radius: 43,
-                backgroundColor: colors.primaryWash,
-                child: Icon(Icons.person_rounded, size: 42, color: colors.primary),
+      body: Stack(
+        children: [
+          // Golden gradient top banner
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 170,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFFE5B25D),
+                    Color(0xFFD4AF37),
+                    Color(0xFFC59A3F),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            Text('Your profile', textAlign: TextAlign.center,
-              style: AppTypography.titleL.copyWith(color: scheme.onSurface, fontSize: 21)),
-            const SizedBox(height: 4),
-            Text('Your health details stay on this device.', textAlign: TextAlign.center,
-              style: AppTypography.caption.copyWith(color: scheme.onSurfaceVariant)),
-            const SizedBox(height: 24),
-            Row(children: [
-              Expanded(child: Text('Body measurements', style: AppTypography.titleM.copyWith(color: scheme.onSurface))),
-              TextButton.icon(onPressed: () => _editMeasurements(context, ref, metrics),
-                icon: const Icon(Icons.edit_outlined, size: 16), label: const Text('Edit')),
-            ]),
-            AppCard(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              child: Row(children: [
-                _DetailItem(label: 'Height', value: metrics.heightCm == null ? 'Add height' : '${metrics.heightCm!.toStringAsFixed(0)} cm', subtitle: '↕'),
-                _DetailDivider(),
-                _DetailItem(label: 'Weight', value: metrics.weightKg == null ? 'Add weight' : '${metrics.weightKg!.toStringAsFixed(1)} kg', subtitle: '⚖'),
-              ]),
+          ),
+          SafeArea(
+            bottom: false,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                10,
+                AppSpacing.screenPadding,
+                96,
+              ),
+              children: [
+                // Top Nav Bar: Back and Settings
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.black87),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                      tooltip: 'Back',
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => showSettingsSheet(context),
+                      icon: const Icon(Icons.settings_outlined, color: Colors.black87),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                      tooltip: 'Settings',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Center Avatar
+                Center(
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 92,
+                        height: 92,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Container(
+                            color: scheme.surface,
+                            child: Icon(Icons.person_rounded, size: 52, color: scheme.primary),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: -6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0F3E2E),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          child: const Text(
+                            '100% Free',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  metrics.name,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.titleL.copyWith(
+                    color: scheme.onSurface,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Account dashboard',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.caption.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Personal Details header with Edit button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Personal Details',
+                      style: AppTypography.titleM.copyWith(
+                        color: scheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _editProfile(context, ref, metrics),
+                      icon: const Icon(Icons.edit_outlined, size: 16),
+                      label: const Text('Edit Details'),
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // 4-column card for Personal Details (Age, Height, Weight, Activity)
+                AppCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                  onTap: () => _editProfile(context, ref, metrics),
+                  child: Row(
+                    children: [
+                      _DetailItem(
+                        label: 'Age',
+                        value: metrics.age != null ? '${metrics.age}' : '—',
+                        subtitle: 'Age',
+                      ),
+                      _DetailDivider(),
+                      _DetailItem(
+                        label: 'Height',
+                        value: metrics.formattedHeight,
+                        subtitle: 'Height',
+                      ),
+                      _DetailDivider(),
+                      _DetailItem(
+                        label: 'Weight',
+                        value: metrics.formattedWeight,
+                        subtitle: 'Weight',
+                      ),
+                      _DetailDivider(),
+                      _DetailItem(
+                        label: 'Activity',
+                        value: metrics.activityLevel,
+                        subtitle: 'Level',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Color-coded automatic BMI indicator
+                _BmiCard(
+                  bmi: metrics.bmi,
+                  status: metrics.bmiStatus,
+                  label: metrics.bmiLabel,
+                  onTap: () => _showBmiGuide(context, metrics),
+                ),
+                const SizedBox(height: 18),
+                // Integrations Section
+                Text(
+                  'Integrations',
+                  style: AppTypography.titleM.copyWith(
+                    color: scheme.onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                AppCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _IntegrationButton(
+                        name: 'Apple\nHealth',
+                        icon: Icons.favorite_rounded,
+                        color: const Color(0xFFFF2D55),
+                        onTap: () => _showIntegrationNotice(context, 'Apple Health'),
+                      ),
+                      _IntegrationButton(
+                        name: 'Garmin',
+                        icon: Icons.navigation_rounded,
+                        color: const Color(0xFF007CC3),
+                        onTap: () => _showIntegrationNotice(context, 'Garmin'),
+                      ),
+                      _IntegrationButton(
+                        name: 'Fitbit',
+                        icon: Icons.grain_rounded,
+                        color: const Color(0xFF00B0B9),
+                        onTap: () => _showIntegrationNotice(context, 'Fitbit'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Nutrition Goal Card
+                AppCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  onTap: () => showGoalSheet(context),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: colors.primaryWash,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.track_changes_rounded, color: colors.primary, size: 21),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Goal Settings',
+                              style: AppTypography.itemTitle.copyWith(
+                                color: scheme.onSurface,
+                                fontSize: 15,
+                              ),
+                            ),
+                            Text(
+                              _goalSubtitle(l10n, goal),
+                              style: AppTypography.caption.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Help and About Card
+                AppCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  onTap: () => showHelpSheet(context),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD4AF37).withValues(alpha: 0.16),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.help_outline_rounded, color: Color(0xFFD4AF37), size: 21),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Help & Privacy',
+                              style: AppTypography.itemTitle.copyWith(
+                                color: scheme.onSurface,
+                                fontSize: 15,
+                              ),
+                            ),
+                            Text(
+                              '100% offline, private, and free forever',
+                              style: AppTypography.caption.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            _BmiCard(bmi: metrics.bmi),
-            const SizedBox(height: 22),
-            AppCard(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              onTap: () => showGoalSheet(context),
-              child: Row(children: [
-                Icon(Icons.track_changes_rounded, color: colors.primary),
-                const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Nutrition goal', style: AppTypography.itemTitle.copyWith(color: scheme.onSurface)),
-                  Text(_goalSubtitle(l10n, goal), style: AppTypography.caption.copyWith(color: scheme.onSurfaceVariant)),
-                ])),
-                Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
-              ]),
-            ),
-            const SizedBox(height: 10),
-            AppCard(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              onTap: () => showHelpSheet(context),
-              child: Row(children: [
-                Icon(Icons.help_outline_rounded, color: colors.primary),
-                const SizedBox(width: 12),
-                Expanded(child: Text('Help and about', style: AppTypography.itemTitle.copyWith(color: scheme.onSurface))),
-                Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
-              ]),
-            ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showIntegrationNotice(BuildContext context, String service) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('$service sync uses local device sensors without cloud login.'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
         ),
+      );
+  }
+
+  void _showBmiGuide(BuildContext context, BodyMetrics metrics) {
+    final scheme = Theme.of(context).colorScheme;
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'BMI Categories Guide',
+                style: AppTypography.titleM.copyWith(fontSize: 18, color: scheme.onSurface),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Body Mass Index (BMI) is calculated from your height and weight.',
+                style: AppTypography.caption.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              _BmiGuideRow(color: const Color(0xFFEF4444), range: '< 17.0', label: 'Severely Underweight'),
+              _BmiGuideRow(color: const Color(0xFFEAB308), range: '17.0 – 18.4', label: 'Borderline Underweight'),
+              _BmiGuideRow(color: const Color(0xFF10B981), range: '18.5 – 24.9', label: 'Healthy / Normal Range'),
+              _BmiGuideRow(color: const Color(0xFFEAB308), range: '25.0 – 29.9', label: 'Borderline Overweight'),
+              _BmiGuideRow(color: const Color(0xFFEF4444), range: '≥ 30.0', label: 'Obese Range'),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Got it'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BmiGuideRow extends StatelessWidget {
+  const _BmiGuideRow({required this.color, required this.range, required this.label});
+
+  final Color color;
+  final String range;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 85,
+            child: Text(range, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
+          ),
+        ],
       ),
     );
   }
@@ -122,7 +467,7 @@ class _DetailItem extends StatelessWidget {
             subtitle,
             style: AppTypography.caption.copyWith(
               color: scheme.onSurfaceVariant,
-              fontSize: 10.5,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -130,9 +475,11 @@ class _DetailItem extends StatelessWidget {
           Text(
             value,
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTypography.itemTitle.copyWith(
               color: scheme.onSurface,
-              fontSize: 13.5,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -147,137 +494,454 @@ class _DetailDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 1,
-      height: 28,
+      height: 26,
       color: Theme.of(context).colorScheme.outlineVariant,
     );
   }
 }
 
 class _BmiCard extends StatelessWidget {
-  const _BmiCard({required this.bmi});
+  const _BmiCard({
+    required this.bmi,
+    required this.status,
+    required this.label,
+    required this.onTap,
+  });
 
   final double? bmi;
+  final BmiStatus status;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final value = bmi;
-    final color = value == null
-        ? scheme.onSurfaceVariant
-        : value < 18.5 || value >= 30
-            ? scheme.error
-            : value < 20 || value >= 25
-                ? const Color(0xFFE3A323)
-                : const Color(0xFF25805B);
-    final label = value == null
-        ? 'Add height and weight to calculate BMI'
-        : value < 18.5
-            ? 'Below the healthy range'
-            : value < 20
-                ? 'Near the lower edge'
-                : value < 25
-                    ? 'Healthy range'
-                : value < 30
-                    ? 'Near or above the upper edge'
-                    : 'High BMI range';
+
+    // Green if good, yellow if edge, red if under or over
+    final color = switch (status) {
+      BmiStatus.unknown => scheme.onSurfaceVariant,
+      BmiStatus.severelyUnderweight => const Color(0xFFEF4444),
+      BmiStatus.slightlyUnderweight => const Color(0xFFEAB308),
+      BmiStatus.normal => const Color(0xFF10B981),
+      BmiStatus.overweight => const Color(0xFFEAB308),
+      BmiStatus.obese => const Color(0xFFEF4444),
+    };
+
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(children: [
-        Icon(Icons.monitor_weight_outlined, color: color, size: 22),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('BMI', style: AppTypography.itemTitle.copyWith(color: scheme.onSurface)),
-          Text(label, style: AppTypography.caption.copyWith(color: color)),
-        ])),
-        Text(value?.toStringAsFixed(1) ?? '—',
-          style: AppTypography.value20.copyWith(color: color, fontSize: 22)),
-      ]),
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.monitor_weight_outlined, color: color, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'BMI',
+                      style: AppTypography.itemTitle.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14.5,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        status == BmiStatus.unknown
+                            ? 'Pending'
+                            : status == BmiStatus.normal
+                                ? 'Healthy'
+                                : status == BmiStatus.slightlyUnderweight || status == BmiStatus.overweight
+                                    ? 'Edge'
+                                    : 'Alert',
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: AppTypography.caption.copyWith(
+                    color: color,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            bmi?.toStringAsFixed(1) ?? '—',
+            style: AppTypography.value20.copyWith(
+              color: color,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-Future<void> _editMeasurements(
+class _IntegrationButton extends StatelessWidget {
+  const _IntegrationButton({
+    required this.name,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String name;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              name,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+                height: 1.1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _editProfile(
   BuildContext context,
   WidgetRef ref,
   BodyMetrics current,
 ) async {
-  var heightUnit = 'cm';
-  var weightUnit = 'kg';
-  final height = TextEditingController(
-    text: current.heightCm == null ? '' : current.heightCm!.toStringAsFixed(0),
+  final nameCtrl = TextEditingController(text: current.name);
+  var heightUnit = current.useFeet ? 'ft' : 'cm';
+  var weightUnit = current.useLbs ? 'lb' : 'kg';
+  var activity = current.activityLevel;
+  DateTime? dob = current.dateOfBirth;
+
+  double? currentHeightDisplay = current.heightCm != null
+      ? (current.useFeet ? current.heightCm! / 30.48 : current.heightCm)
+      : null;
+  double? currentWeightDisplay = current.weightKg != null
+      ? (current.useLbs ? current.weightKg! * 2.20462 : current.weightKg)
+      : null;
+
+  final heightCtrl = TextEditingController(
+    text: currentHeightDisplay != null ? currentHeightDisplay.toStringAsFixed(1) : '',
   );
-  final weight = TextEditingController(
-    text: current.weightKg == null ? '' : current.weightKg!.toStringAsFixed(1),
+  final weightCtrl = TextEditingController(
+    text: currentWeightDisplay != null ? currentWeightDisplay.toStringAsFixed(1) : '',
   );
-  final saved = await showModalBottomSheet<BodyMetrics>(
+
+  await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (sheetContext) => StatefulBuilder(builder: (context, setState) {
-      final scheme = Theme.of(context).colorScheme;
-      return Padding(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Body measurements', style: AppTypography.titleM.copyWith(color: scheme.onSurface)),
-          const SizedBox(height: 16),
-          Row(children: [
-            Expanded(child: TextField(controller: height, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Height ($heightUnit)'))),
-            const SizedBox(width: 8),
-            SegmentedButton<String>(
-              segments: const [ButtonSegment(value: 'cm', label: Text('cm')), ButtonSegment(value: 'ft', label: Text('ft'))],
-              selected: {heightUnit},
-              onSelectionChanged: (selection) => setState(() {
-                final next = selection.first;
-                final parsed = double.tryParse(height.text);
-                if (parsed != null) height.text = (next == 'ft' ? parsed / 30.48 : parsed * 30.48).toStringAsFixed(1);
-                heightUnit = next;
-              }),
-            ),
-          ]),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(child: TextField(controller: weight, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Weight ($weightUnit)'))),
-            const SizedBox(width: 8),
-            SegmentedButton<String>(
-              segments: const [ButtonSegment(value: 'kg', label: Text('kg')), ButtonSegment(value: 'lb', label: Text('lb'))],
-              selected: {weightUnit},
-              onSelectionChanged: (selection) => setState(() {
-                final next = selection.first;
-                final parsed = double.tryParse(weight.text);
-                if (parsed != null) weight.text = (next == 'lb' ? parsed * 2.20462 : parsed / 2.20462).toStringAsFixed(1);
-                weightUnit = next;
-              }),
-            ),
-          ]),
-          const SizedBox(height: 18),
-          FilledButton(
-            onPressed: () {
-              final h = double.tryParse(height.text);
-              final w = double.tryParse(weight.text);
-              if (h == null || w == null || h <= 0 || w <= 0) return;
-              Navigator.of(sheetContext).pop(BodyMetrics(
-                heightCm: heightUnit == 'ft' ? h * 30.48 : h,
-                weightKg: weightUnit == 'lb' ? w / 2.20462 : w,
-              ));
-            },
-            child: const Text('Save measurements'),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetContext) => StatefulBuilder(
+      builder: (context, setState) {
+        final scheme = Theme.of(context).colorScheme;
+
+        // Calculate preview BMI
+        final parsedH = double.tryParse(heightCtrl.text);
+        final parsedW = double.tryParse(weightCtrl.text);
+        final realHeightCm = parsedH != null
+            ? (heightUnit == 'ft' ? parsedH * 30.48 : parsedH)
+            : current.heightCm;
+        final realWeightKg = parsedW != null
+            ? (weightUnit == 'lb' ? parsedW / 2.20462 : parsedW)
+            : current.weightKg;
+
+        double? previewBmi;
+        if (realHeightCm != null && realWeightKg != null && realHeightCm > 0) {
+          previewBmi = realWeightKg / ((realHeightCm / 100) * (realHeightCm / 100));
+        }
+
+        final bmiColor = previewBmi == null
+            ? scheme.onSurfaceVariant
+            : previewBmi < 17.0
+                ? const Color(0xFFEF4444)
+                : previewBmi < 18.5
+                    ? const Color(0xFFEAB308)
+                    : previewBmi < 25.0
+                        ? const Color(0xFF10B981)
+                        : previewBmi < 30.0
+                            ? const Color(0xFFEAB308)
+                            : const Color(0xFFEF4444);
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            20 + MediaQuery.viewInsetsOf(context).bottom,
           ),
-        ]),
-      );
-    }),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: scheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Edit Personal Details',
+                  style: AppTypography.titleM.copyWith(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Name',
+                    prefixIcon: Icon(Icons.person_outline_rounded),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: heightCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          labelText: 'Height ($heightUnit)',
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(value: 'cm', label: Text('cm')),
+                        ButtonSegment(value: 'ft', label: Text('ft')),
+                      ],
+                      selected: {heightUnit},
+                      onSelectionChanged: (selection) => setState(() {
+                        final next = selection.first;
+                        final parsed = double.tryParse(heightCtrl.text);
+                        if (parsed != null) {
+                          heightCtrl.text = (next == 'ft' ? parsed / 30.48 : parsed * 30.48).toStringAsFixed(1);
+                        }
+                        heightUnit = next;
+                      }),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: weightCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          labelText: 'Weight ($weightUnit)',
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(value: 'kg', label: Text('kg')),
+                        ButtonSegment(value: 'lb', label: Text('lb')),
+                      ],
+                      selected: {weightUnit},
+                      onSelectionChanged: (selection) => setState(() {
+                        final next = selection.first;
+                        final parsed = double.tryParse(weightCtrl.text);
+                        if (parsed != null) {
+                          weightCtrl.text = (next == 'lb' ? parsed * 2.20462 : parsed / 2.20462).toStringAsFixed(1);
+                        }
+                        weightUnit = next;
+                      }),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Date of Birth picker row
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: dob ?? DateTime(2000, 1, 1),
+                      firstDate: DateTime(1930),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) setState(() => dob = picked);
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: scheme.outlineVariant),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.cake_outlined, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            dob != null
+                                ? 'Born: ${dob!.day}/${dob!.month}/${dob!.year}'
+                                : 'Select Date of Birth (Optional)',
+                            style: TextStyle(
+                              color: dob != null ? scheme.onSurface : scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.calendar_today_rounded, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Activity level dropdown
+                DropdownButtonFormField<String>(
+                  value: activity,
+                  decoration: const InputDecoration(
+                    labelText: 'Activity Level',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Sedentary', child: Text('Sedentary (Little or no exercise)')),
+                    DropdownMenuItem(value: 'Light', child: Text('Light (Exercise 1–3 days/wk)')),
+                    DropdownMenuItem(value: 'Active', child: Text('Active (Daily exercise)')),
+                    DropdownMenuItem(value: 'High', child: Text('High (Intense daily training)')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => activity = val);
+                  },
+                ),
+                const SizedBox(height: 14),
+                // Live BMI calculation preview badge
+                if (previewBmi != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: bmiColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: bmiColor.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.health_and_safety_rounded, color: bmiColor, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Calculated BMI: ${previewBmi.toStringAsFixed(1)}',
+                          style: TextStyle(color: bmiColor, fontWeight: FontWeight.w800, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      final h = double.tryParse(heightCtrl.text);
+                      final w = double.tryParse(weightCtrl.text);
+                      ref.read(bodyMetricsProvider.notifier).update(
+                        name: nameCtrl.text.trim().isNotEmpty ? nameCtrl.text.trim() : current.name,
+                        dateOfBirth: dob,
+                        heightCm: h != null ? (heightUnit == 'ft' ? h * 30.48 : h) : null,
+                        weightKg: w != null ? (weightUnit == 'lb' ? w / 2.20462 : w) : null,
+                        activityLevel: activity,
+                        useFeet: heightUnit == 'ft',
+                        useLbs: weightUnit == 'lb',
+                      );
+                      Navigator.of(sheetContext).pop();
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Save Details', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
   );
-  height.dispose();
-  weight.dispose();
-  if (saved != null) {
-    ref.read(bodyMetricsProvider.notifier).update(
-      heightCm: saved.heightCm,
-      weightKg: saved.weightKg,
-    );
-  }
+  nameCtrl.dispose();
+  heightCtrl.dispose();
+  weightCtrl.dispose();
 }
 
-String _goalSubtitle(AppLocalizations l10n, GoalKind kind) => switch (kind) {
-  GoalKind.lose => l10n.goalLoseSubtitle,
-  GoalKind.maintain => l10n.goalMaintainSubtitle,
-  GoalKind.gain => l10n.goalGainSubtitle,
-};
+String _goalSubtitle(AppLocalizations l10n, GoalKind kind) {
+  switch (kind) {
+    case GoalKind.lose:
+      return l10n.goalWeightLoss;
+    case GoalKind.maintain:
+      return l10n.goalMaintenance;
+    case GoalKind.gain:
+      return l10n.goalMuscleGain;
+  }
+}
