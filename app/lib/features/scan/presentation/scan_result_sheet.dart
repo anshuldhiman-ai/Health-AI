@@ -68,9 +68,15 @@ class ScanResultSheet extends ConsumerWidget {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: Icon(Icons.arrow_back_rounded, color: scheme.onSurface),
+                    icon: Icon(
+                      Icons.arrow_back_rounded,
+                      color: scheme.onSurface,
+                    ),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -90,7 +96,10 @@ class ScanResultSheet extends ConsumerWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF0D5C3A),
                       borderRadius: BorderRadius.circular(12),
@@ -106,7 +115,10 @@ class ScanResultSheet extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE5B25D).withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
@@ -204,8 +216,9 @@ class ScanResultSheet extends ConsumerWidget {
                         _MatchRow(
                           prediction: session.topMatches[i],
                           selected: i == session.selectedMatch,
-                          onTap: () => ref.read(scanSessionProvider.notifier).state =
-                              session.selectMatch(i),
+                          onTap: () =>
+                              ref.read(scanSessionProvider.notifier).state =
+                                  session.selectMatch(i),
                         ),
                         if (i != session.topMatches.length - 1)
                           Divider(height: 1, color: scheme.outlineVariant),
@@ -232,18 +245,23 @@ class ScanResultSheet extends ConsumerWidget {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      for (var i = 0; i < session.servings.length && i < 3; i++) ...[
+                      for (
+                        var i = 0;
+                        i < session.servings.length && i < 3;
+                        i++
+                      ) ...[
                         Expanded(
                           child: _ServingCard(
                             label: session.servings[i].label,
                             icon: i == 0
                                 ? Icons.rice_bowl_outlined
                                 : i == 1
-                                    ? Icons.soup_kitchen_outlined
-                                    : Icons.dinner_dining_outlined,
+                                ? Icons.soup_kitchen_outlined
+                                : Icons.dinner_dining_outlined,
                             selected: i == session.selectedServing,
-                            onTap: () => ref.read(scanSessionProvider.notifier).state =
-                                session.selectServing(i),
+                            onTap: () =>
+                                ref.read(scanSessionProvider.notifier).state =
+                                    session.selectServing(i),
                           ),
                         ),
                         if (i < session.servings.length - 1 && i < 2)
@@ -258,13 +276,24 @@ class ScanResultSheet extends ConsumerWidget {
                     children: [
                       IconButton(
                         onPressed: session.selectedServing > 0
-                            ? () => ref.read(scanSessionProvider.notifier).state =
-                                session.selectServing(session.selectedServing - 1)
+                            ? () =>
+                                  ref
+                                      .read(scanSessionProvider.notifier)
+                                      .state = session.selectServing(
+                                    session.selectedServing - 1,
+                                  )
                             : null,
-                        icon: const Icon(Icons.remove_circle_outline_rounded, size: 22),
+                        icon: const Icon(
+                          Icons.remove_circle_outline_rounded,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      for (var i = 0; i < session.servings.length && i < 4; i++) ...[
+                      for (
+                        var i = 0;
+                        i < session.servings.length && i < 4;
+                        i++
+                      ) ...[
                         Container(
                           width: 8,
                           height: 8,
@@ -279,11 +308,20 @@ class ScanResultSheet extends ConsumerWidget {
                       ],
                       const SizedBox(width: 8),
                       IconButton(
-                        onPressed: session.selectedServing < session.servings.length - 1
-                            ? () => ref.read(scanSessionProvider.notifier).state =
-                                session.selectServing(session.selectedServing + 1)
+                        onPressed:
+                            session.selectedServing <
+                                session.servings.length - 1
+                            ? () =>
+                                  ref
+                                      .read(scanSessionProvider.notifier)
+                                      .state = session.selectServing(
+                                    session.selectedServing + 1,
+                                  )
                             : null,
-                        icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
+                        icon: const Icon(
+                          Icons.add_circle_outline_rounded,
+                          size: 22,
+                        ),
                       ),
                     ],
                   ),
@@ -295,11 +333,16 @@ class ScanResultSheet extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: colors.accentWash,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colors.accent.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: colors.accent.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -332,7 +375,10 @@ class ScanResultSheet extends ConsumerWidget {
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: scheme.surface,
                         borderRadius: BorderRadius.circular(12),
@@ -366,7 +412,11 @@ class ScanResultSheet extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.eco_rounded, size: 18, color: colors.primary),
+                        Icon(
+                          Icons.eco_rounded,
+                          size: 18,
+                          color: colors.primary,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Nutritionist insights',
@@ -392,64 +442,34 @@ class ScanResultSheet extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            // Substitute suggestions card from ui_design.jpg Screen 5
+            // Keep review guidance honest: this model has no substitute data.
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(13),
                 decoration: BoxDecoration(
-                  color: scheme.surface,
+                  color: colors.primaryWash.withValues(alpha: 0.58),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: scheme.outlineVariant),
+                  border: Border.all(
+                    color: colors.primary.withValues(alpha: 0.12),
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Icon(Icons.swap_horiz_rounded, size: 18, color: colors.accent),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Substitute suggestions',
-                          style: AppTypography.itemTitle.copyWith(
-                            color: scheme.onSurface,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 18,
+                      color: colors.primary,
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: colors.primaryWash,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Healthier swap: 420 kcal',
-                            style: TextStyle(
-                              color: colors.primary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Nutrition is an estimate. Check the serving size before saving.',
+                        style: AppTypography.caption.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 11.5,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Opt for whole-wheat roti or brown rice',
-                            style: AppTypography.caption.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              fontSize: 11.5,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -501,7 +521,11 @@ class ScanResultSheet extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirm(BuildContext context, WidgetRef ref, ScanSession session) async {
+  Future<void> _confirm(
+    BuildContext context,
+    WidgetRef ref,
+    ScanSession session,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final serving = session.chosenServing;
     final store = ref.read(dayLogProvider.notifier);
@@ -616,7 +640,9 @@ class _MatchRow extends StatelessWidget {
       selected: selected,
       button: true,
       child: Material(
-        color: selected ? colors.primaryWash.withValues(alpha: 0.3) : Colors.transparent,
+        color: selected
+            ? colors.primaryWash.withValues(alpha: 0.3)
+            : Colors.transparent,
         child: InkWell(
           onTap: onTap,
           child: Padding(
@@ -658,7 +684,10 @@ class _MatchRow extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.primaryWash,
                     borderRadius: BorderRadius.circular(12),

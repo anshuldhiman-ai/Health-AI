@@ -334,7 +334,10 @@ class _CategoryStrip extends StatelessWidget {
                   },
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: scheme.outlineVariant),
@@ -377,7 +380,9 @@ class _DishRow extends StatelessWidget {
     final colors = context.appColors;
     final portions = portionOptionsFor(dish);
     final first = portions.isEmpty ? null : portions.first;
-    final kcal = first == null ? '420 kcal' : '${first.midKcal} kcal';
+    final kcal = first == null
+        ? 'Nutrition unavailable'
+        : '${first.midKcal} kcal';
 
     return AppCard(
       onTap: onTap,
@@ -407,16 +412,19 @@ class _DishRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Amber Search Tags badge
+                // Label the data family already assigned to this result.
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2.5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFD4AF37).withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
-                    'Search Tags',
-                    style: TextStyle(
+                  child: Text(
+                    dish.family.toUpperCase(),
+                    style: const TextStyle(
                       color: Color(0xFF9E7B15),
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -460,7 +468,6 @@ class _DishRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          Icon(Icons.more_vert_rounded, size: 18, color: scheme.onSurfaceVariant),
         ],
       ),
     );
