@@ -91,6 +91,14 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
     });
   }
 
+  /// Add a row and wait for its local write before leaving the current
+  /// flow. Most callers can use [add]; confirmation screens should use
+  /// this so a fast app close cannot race the preference write.
+  Future<void> addAndSave(LogEntry entry, {int dayOffset = 0}) async {
+    add(entry, dayOffset: dayOffset);
+    await flush();
+  }
+
   /// Undo support: remove the newest entry of any day.
   bool removeNewest(int dayOffset) {
     final entries = entriesFor(dayOffset);

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:app/design_system/components/app_toast.dart';
 import 'package:app/design_system/tokens/tokens.dart';
@@ -17,6 +19,7 @@ import 'package:app/data/nutrition/dish_catalog.dart';
 import 'package:app/features/scan/application/food_recognizer.dart';
 import 'package:app/features/scan/application/scan_state.dart';
 import 'package:app/features/scan/presentation/quick_add_sheet.dart';
+import 'package:app/features/scan/presentation/code_scanner_sheet.dart';
 import 'package:app/features/scan/presentation/scan_result_sheet.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/l10n/extensions.dart';
@@ -59,6 +62,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   bool _analyzing = false;
   bool _torchOn = false;
   bool _showSessionResults = false;
+  int _cameraGeneration = 0;
   late MealKind _mealKind;
 
   /// Drives the viewfinder's breathing pulse while a capture is being
@@ -87,6 +91,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
 
   @override
   void dispose() {
+    ++_cameraGeneration;
     WidgetsBinding.instance.removeObserver(this);
     _pulse.dispose();
     final controller = _controller;
@@ -98,8 +103,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
     if (state == AppLifecycleState.inactive) {
+      ++_cameraGeneration;
+      if (controller == null || !controller.value.isInitialized) return;
       _controller = null;
       unawaited(controller.dispose());
       if (mounted) setState(() {});
@@ -109,6 +115,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   }
 
   Future<void> _initCamera() async {
+    final generation = ++_cameraGeneration;
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
@@ -125,32 +132,36 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
       await controller.initialize();
-      if (!mounted) {
+      if (!mounted || generation != _cameraGeneration) {
         await controller.dispose();
         return;
       }
       setState(() {
         _controller = controller;
         _cameraError = null;
+        _initializing = null;
       });
     } on CameraException catch (error) {
-      if (!mounted) return;
+      if (!mounted || generation != _cameraGeneration) return;
       setState(() {
         _cameraError = error.description ?? error.code;
         _controller = null;
+        _initializing = null;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || generation != _cameraGeneration) return;
       setState(() {
         _cameraError = error.toString();
         _controller = null;
+        _initializing = null;
       });
     }
   }
 
   Future<void> _capture() async {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized || _analyzing) {
+    if (controller == null || !controller.value.isInitialized ||
+        controller.value.isTakingPicture || _analyzing) {
       return;
     }
     try {
@@ -161,6 +172,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
       if (mounted) {
         _showError(AppLocalizations.of(context)!.scanPhotoFailed);
       }
+    } catch (_) {
+      if (mounted) _showError(AppLocalizations.of(context)!.scanPhotoFailed);
     }
   }
 
@@ -303,7 +316,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
 
   /// Quick add: pick a dish by name instead of by photo, then hand off to
   /// the dish detail screen to log it.
-  Future<void> _quickAdd() async {
+  Future<bool> _quickAdd({String? initialFoodName}) async {
     var manuallyAdded = false;
     final dishId = await showModalBottomSheet<String>(
       context: context,
@@ -315,8 +328,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => QuickAddSheet(
-        onManualAdd: (name, kcal) {
-          ref.read(dayLogProvider.notifier).add(
+        initialFoodName: initialFoodName,
+        onManualAdd: (name, kcal) async {
+          await ref.read(dayLogProvider.notifier).addAndSave(
             LogEntry.estimated(
               mealKind: _mealKind,
               dish: name,
@@ -331,15 +345,58 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     );
     if (manuallyAdded && mounted) {
       Navigator.of(context).pop();
-      return;
+      return true;
     }
-    if (dishId == null || !mounted) return;
+    if (dishId == null || !mounted) return false;
     // replace, not push: the camera has done its job and should not sit
     // in the back stack behind the food the user is about to log.
     context.pushReplacement(
       '/dish/${Uri.encodeComponent(dishId)}'
       '?meal=${_mealKind.name}&day=${widget.dayOffset}',
     );
+    return true;
+  }
+
+  Future<void> _scanCode() async {
+    final camera = _controller;
+    _controller = null;
+    ++_cameraGeneration;
+    if (camera != null) await camera.dispose();
+    if (!mounted) return;
+    setState(() {
+      _initializing = Future<void>.value();
+      _torchOn = false;
+    });
+    final code = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.black,
+      builder: (_) => const CodeScannerSheet(),
+    );
+    if (!mounted) return;
+    if (code != null) {
+      final navigated = await _quickAdd(initialFoodName: _foodNameFromCode(code));
+      if (!mounted || navigated) return;
+    }
+    _initializing = _initCamera();
+    setState(() {});
+  }
+
+  String _foodNameFromCode(String code) {
+    try {
+      final decoded = jsonDecode(code);
+      if (decoded is Map<String, dynamic>) {
+        for (final key in ['product_name', 'productName', 'name', 'food']) {
+          final value = decoded[key];
+          if (value is String && value.trim().isNotEmpty) return value.trim();
+        }
+      }
+    } catch (_) {
+      // Ordinary QR text and retail barcodes are handled below.
+    }
+    final displayCode = code.length > 30 ? '${code.substring(0, 30)}…' : code;
+    return 'Product $displayCode';
   }
 
   Future<void> _pickMeal() async {
@@ -479,7 +536,6 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                         onTap: () => Navigator.of(context).maybePop(),
                         semanticLabel: l10n.closeLabel,
                       ),
-                      const Spacer(),
                       // "Settings" pill button from ui_design2.jpg
                       Material(
                         color: Colors.white.withValues(alpha: 0.18),
@@ -520,7 +576,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                           ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
+                      _RoundIconButton(
+                        icon: Icons.qr_code_scanner_rounded,
+                        onTap: _analyzing ? null : _scanCode,
+                        semanticLabel: 'Scan QR code or food barcode',
+                        size: 44,
+                      ),
+                      const SizedBox(width: 8),
                       _TorchButton(
                         on: _torchOn,
                         onTap: controller == null ? null : _toggleTorch,

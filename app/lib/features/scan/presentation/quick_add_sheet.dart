@@ -45,9 +45,10 @@ const List<String> quickPickIds = [
 /// pops the chosen dish id so the caller decides where to navigate; the
 /// sheet itself never routes.
 class QuickAddSheet extends ConsumerStatefulWidget {
-  const QuickAddSheet({super.key, this.onManualAdd});
+  const QuickAddSheet({super.key, this.onManualAdd, this.initialFoodName});
 
-  final void Function(String name, int kcal)? onManualAdd;
+  final Future<void> Function(String name, int kcal)? onManualAdd;
+  final String? initialFoodName;
 
   @override
   ConsumerState<QuickAddSheet> createState() => _QuickAddSheetState();
@@ -184,7 +185,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   }
 
   Future<void> _addFoodManually() async {
-    final name = TextEditingController();
+    final name = TextEditingController(text: widget.initialFoodName ?? '');
     final kcal = TextEditingController();
     final result = await showDialog<(String, int)>(
       context: context,
@@ -210,7 +211,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     name.dispose();
     kcal.dispose();
     if (result == null || !mounted) return;
-    widget.onManualAdd?.call(result.$1, result.$2);
+    await widget.onManualAdd?.call(result.$1, result.$2);
     if (mounted) Navigator.of(context).pop();
   }
 }

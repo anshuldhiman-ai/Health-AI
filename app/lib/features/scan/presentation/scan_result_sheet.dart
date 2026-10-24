@@ -501,12 +501,12 @@ class ScanResultSheet extends ConsumerWidget {
     );
   }
 
-  void _confirm(BuildContext context, WidgetRef ref, ScanSession session) {
+  Future<void> _confirm(BuildContext context, WidgetRef ref, ScanSession session) async {
     final l10n = AppLocalizations.of(context)!;
     final serving = session.chosenServing;
     final store = ref.read(dayLogProvider.notifier);
 
-    store.add(
+    await store.addAndSave(
       LogEntry(
         mealKind: mealKind,
         dish: session.chosenPrediction.dish.name,

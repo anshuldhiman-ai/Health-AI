@@ -43,10 +43,10 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
   _DetailTab _tab = _DetailTab.nutrition;
   int _servingIndex = 0;
 
-  void _add(DishInfo dish, FoodPortion serving) {
+  Future<void> _add(DishInfo dish, FoodPortion serving) async {
     final l10n = AppLocalizations.of(context)!;
     final store = ref.read(dayLogProvider.notifier);
-    store.add(
+    await store.addAndSave(
       LogEntry(
         mealKind: _meal,
         dish: dish.name,
