@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:app/design_system/components/app_toast.dart';
 import 'package:app/design_system/tokens/tokens.dart';
@@ -160,8 +159,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
 
   Future<void> _capture() async {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized ||
-        controller.value.isTakingPicture || _analyzing) {
+    if (controller == null ||
+        !controller.value.isInitialized ||
+        controller.value.isTakingPicture ||
+        _analyzing) {
       return;
     }
     try {
@@ -330,15 +331,17 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
       builder: (_) => QuickAddSheet(
         initialFoodName: initialFoodName,
         onManualAdd: (name, kcal) async {
-          await ref.read(dayLogProvider.notifier).addAndSave(
-            LogEntry.estimated(
-              mealKind: _mealKind,
-              dish: name,
-              kcal: kcal,
-              timeLabel: _timeLabel(DateTime.now()),
-            ),
-            dayOffset: widget.dayOffset,
-          );
+          await ref
+              .read(dayLogProvider.notifier)
+              .addAndSave(
+                LogEntry.estimated(
+                  mealKind: _mealKind,
+                  dish: name,
+                  kcal: kcal,
+                  timeLabel: TimeOfDay.now().format(context),
+                ),
+                dayOffset: widget.dayOffset,
+              );
           manuallyAdded = true;
         },
       ),
@@ -376,7 +379,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     );
     if (!mounted) return;
     if (code != null) {
-      final navigated = await _quickAdd(initialFoodName: _foodNameFromCode(code));
+      final navigated = await _quickAdd(
+        initialFoodName: _foodNameFromCode(code),
+      );
       if (!mounted || navigated) return;
     }
     _initializing = _initCamera();
@@ -647,7 +652,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (_showSessionResults && session != null && session.topMatches.isNotEmpty)
+                        if (_showSessionResults &&
+                            session != null &&
+                            session.topMatches.isNotEmpty)
                           for (
                             var i = 0;
                             i < session.topMatches.length && i < 3;
@@ -1014,9 +1021,8 @@ class _MetallicShutterButtonState extends State<_MetallicShutterButton> {
               border: Border.all(color: const Color(0xFFD4AF37), width: 3),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF34D399).withValues(
-                    alpha: _pressed ? 0.15 : 0.4,
-                  ),
+                  color: const Color(0xFF34D399)
+                      .withValues(alpha: _pressed ? 0.15 : 0.4),
                   blurRadius: _pressed ? 8 : 18,
                   spreadRadius: _pressed ? 0 : 2,
                 ),
@@ -1173,7 +1179,6 @@ class _RoundIconButton extends StatelessWidget {
     );
   }
 }
-
 
 class _AnalyzingOverlay extends StatelessWidget {
   const _AnalyzingOverlay({
