@@ -2,6 +2,7 @@ import 'package:app/app/app.dart';
 import 'package:app/app/log_store.dart';
 import 'package:app/core/error/app_log.dart';
 import 'package:app/data/preferences/goal_kind_controller.dart';
+import 'package:app/data/preferences/body_metrics_controller.dart';
 import 'package:app/data/preferences/sleep_controller.dart';
 import 'package:app/data/preferences/theme_mode_controller.dart';
 import 'package:app/data/preferences/water_controller.dart';
@@ -50,6 +51,11 @@ Future<void> bootstrap() async {
       HydrationState.empty(DateTime.now()),
       'water',
     );
+    final initialBodyMetrics = await _guard(
+      loadSavedBodyMetrics,
+      const BodyMetrics(),
+      'bodyMetrics',
+    );
     final initialSleep = await _guard(
       loadSavedSleep,
       SleepState.empty(),
@@ -61,6 +67,7 @@ Future<void> bootstrap() async {
         initialThemeModeProvider.overrideWithValue(initialThemeMode),
         initialGoalKindProvider.overrideWithValue(initialGoalKind),
         initialWaterProvider.overrideWithValue(initialWater),
+        initialBodyMetricsProvider.overrideWithValue(initialBodyMetrics),
         initialSleepProvider.overrideWithValue(initialSleep),
         dayLogProvider.overrideWith((ref) => initialDayLog),
       ],
