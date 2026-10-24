@@ -34,8 +34,6 @@ class WaterScreen extends ConsumerWidget {
             _Header(title: 'Water Tracker'),
             const SizedBox(height: 14),
             _WaterWaveHeroCard(water: water),
-            const SizedBox(height: 14),
-            _WaterQuickCards(notifier: notifier),
             const SizedBox(height: 18),
             GroupHeader(title: l10n.waterIntake),
             const SizedBox(height: 10),
@@ -113,24 +111,44 @@ class _GlassGrid extends StatelessWidget {
         runSpacing: 12,
         children: [
           for (var i = 0; i < HydrationState.goalGlasses; i++)
-            Container(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 360),
+              curve: Curves.easeOutCubic,
               width: 38,
               height: 44,
               decoration: BoxDecoration(
                 color: i < glasses
-                    ? colors.accentWash
+                    ? colors.water.withValues(alpha: 0.14)
                     : context.appColors.canvas,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: i < glasses ? colors.accent : scheme.outlineVariant,
+                  color: i < glasses ? colors.water : scheme.outlineVariant,
                 ),
               ),
-              child: Icon(
-                i < glasses
-                    ? Icons.local_drink_rounded
-                    : Icons.local_drink_outlined,
-                size: 21,
-                color: i < glasses ? colors.accent : scheme.onSurfaceVariant,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(9),
+                child: Stack(alignment: Alignment.center, children: [
+                  Positioned.fill(
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(end: i < glasses ? 1 : 0),
+                      duration: const Duration(milliseconds: 520),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, fill, _) => Align(
+                        alignment: Alignment.bottomCenter,
+                        child: FractionallySizedBox(
+                          heightFactor: fill,
+                          widthFactor: 1,
+                          child: ColoredBox(color: colors.water.withValues(alpha: 0.45)),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    i < glasses ? Icons.local_drink_rounded : Icons.local_drink_outlined,
+                    size: 21,
+                    color: i < glasses ? colors.water : scheme.onSurfaceVariant,
+                  ),
+                ]),
               ),
             ),
         ],
@@ -249,7 +267,7 @@ class _NoteCard extends StatelessWidget {
   }
 }
 
-/// 13D-effect Wave Display Card from ui_design2.jpg Screen 10
+/// The water visual only fills in response to logged glasses.
 class _WaterWaveHeroCard extends StatelessWidget {
   const _WaterWaveHeroCard({required this.water});
 
@@ -268,10 +286,15 @@ class _WaterWaveHeroCard extends StatelessWidget {
           height: 168,
           child: Stack(
             children: [
-              // Blue Wave Gradient Graphic
+            if (water.glasses > 0)
               Positioned.fill(
-                child: CustomPaint(
-                  painter: _WaterWavePainter(),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(end: water.progress),
+                  duration: const Duration(milliseconds: 650),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, progress, _) => CustomPaint(
+                    painter: _WaterWavePainter(progress: progress),
+                  ),
                 ),
               ),
               Padding(
@@ -279,22 +302,8 @@ class _WaterWaveHeroCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: scheme.surface.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: scheme.outlineVariant),
-                      ),
-                      child: Text(
-                        '13D-effect',
-                        style: AppTypography.caption.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
+                    Text('Today', style: AppTypography.caption.copyWith(
+                      color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
                     const Spacer(),
                     Text(
                       displayAmount,
@@ -307,7 +316,7 @@ class _WaterWaveHeroCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Water',
+                      '${water.glasses} / ${HydrationState.goalGlasses} glasses · ${water.glasses * HydrationState.mlPerGlass} ml',
                       style: AppTypography.caption.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontSize: 13,
@@ -326,17 +335,22 @@ class _WaterWaveHeroCard extends StatelessWidget {
 }
 
 class _WaterWavePainter extends CustomPainter {
+  const _WaterWavePainter({required this.progress});
+
+  final double progress;
+
   @override
   void paint(Canvas canvas, Size size) {
+    final level = size.height * (1 - progress.clamp(0.0, 1.0));
     final path = Path();
-    path.moveTo(0, size.height * 0.7);
+    path.moveTo(0, level);
     path.cubicTo(
       size.width * 0.25,
-      size.height * 0.35,
+      level - size.height * 0.08,
       size.width * 0.65,
-      size.height * 0.85,
+      level + size.height * 0.08,
       size.width,
-      size.height * 0.45,
+      level,
     );
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
@@ -361,20 +375,20 @@ class _WaterWavePainter extends CustomPainter {
       ..strokeWidth = 2.5;
 
     final linePath = Path();
-    linePath.moveTo(0, size.height * 0.7);
+    linePath.moveTo(0, level);
     linePath.cubicTo(
       size.width * 0.25,
-      size.height * 0.35,
+      level - size.height * 0.08,
       size.width * 0.65,
-      size.height * 0.85,
+      level + size.height * 0.08,
       size.width,
-      size.height * 0.45,
+      level,
     );
     canvas.drawPath(linePath, linePaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _WaterWavePainter oldDelegate) => oldDelegate.progress != progress;
 }
 
 class _WaterQuickCards extends StatelessWidget {

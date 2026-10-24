@@ -39,6 +39,7 @@ final waterTodayProvider = Provider<HydrationState>((ref) {
 });
 
 class WaterController extends Notifier<HydrationState> {
+  Future<void> _saveQueue = Future<void>.value();
   @override
   HydrationState build() =>
       ref.watch(initialWaterProvider).rollTo(DateTime.now());
@@ -53,12 +54,17 @@ class WaterController extends Notifier<HydrationState> {
     unawaited(_persist());
   }
 
-  Future<void> _persist() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(waterPrefsKey, jsonEncode(state.toJson()));
-    } catch (_) {
-      // Keep the in-session value.
-    }
+  Future<void> _persist() {
+    // Capture each state before queuing the write so rapid taps cannot
+    // let an older asynchronous preference write land last.
+    final payload = jsonEncode(state.toJson());
+    return _saveQueue = _saveQueue.then((_) async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(waterPrefsKey, payload);
+      } catch (_) {
+        // Keep the in-session value.
+      }
+    });
   }
 }
