@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:app/core/format/count_format.dart';
 import 'package:app/design_system/components/app_card.dart';
+import 'package:app/design_system/components/empty_state.dart';
 import 'package:app/design_system/components/progress_ring.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
@@ -270,9 +271,8 @@ class _TrendCard extends StatelessWidget {
           const SizedBox(height: 12),
           SizedBox(
             height: 168,
-            // The chart itself is a graphic; the numbers above are the
-            // accessible summary of the same data.
-            child: LineChart(
+            child: state.hasData
+                ? LineChart(
               LineChartData(
                 gridData: FlGridData(
                   drawVerticalLine: false,
@@ -323,44 +323,10 @@ class _TrendCard extends StatelessWidget {
                 borderData: FlBorderData(show: false),
                 lineTouchData: const LineTouchData(enabled: false),
                 lineBarsData: [
-                  // Gold curve (upper trend)
                   LineChartBarData(
                     spots: [
                       for (var i = 0; i < state.trend.length; i++)
-                        FlSpot(
-                          i.toDouble(),
-                          state.trend[i].kcal > 0
-                              ? state.trend[i].kcal * 1.05
-                              : (1600.0 + (i % 3) * 200.0),
-                        ),
-                    ],
-                    isCurved: true,
-                    curveSmoothness: 0.35,
-                    barWidth: 2.8,
-                    color: colors.gold,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          colors.gold.withValues(alpha: 0.25),
-                          colors.gold.withValues(alpha: 0.0),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Emerald curve
-                  LineChartBarData(
-                    spots: [
-                      for (var i = 0; i < state.trend.length; i++)
-                        FlSpot(
-                          i.toDouble(),
-                          state.trend[i].kcal > 0
-                              ? state.trend[i].kcal.toDouble()
-                              : (1300.0 + (i % 2) * 250.0),
-                        ),
+                        FlSpot(i.toDouble(), state.trend[i].kcal.toDouble()),
                     ],
                     isCurved: true,
                     curveSmoothness: 0.35,
@@ -385,7 +351,12 @@ class _TrendCard extends StatelessWidget {
                 minY: 0,
                 maxY: _ceil(state.trend),
               ),
-            ),
+            )
+                : EmptyState(
+                    icon: Icons.insights_outlined,
+                    title: l10n.calorieTrend,
+                    message: l10n.emptyDayHint,
+                  ),
           ),
         ],
       ),
