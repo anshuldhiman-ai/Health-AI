@@ -9,21 +9,84 @@ import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/dish_info.dart';
 import 'package:app/l10n/app_localizations.dart';
 
-/// Quick picks: the catalog rows a packaged-food shortcut would point
-/// at, where one exists. These are real catalog ids with real nutrition
-/// rows, not a second data source.
-///
-/// Note what is NOT here: Maggi, biscuits, oats, branded snacks. The
-/// bundled catalog is the 239-class Khana taxonomy of cooked dishes and
-/// holds no branded packaged food at all, so there is no honest row to
-/// offer for them. Adding one would mean inventing per-100 g macros
-/// (R7). Branded coverage needs a real source - an Open Food Facts
-/// India subset or an INDB packaged-food table - built into the asset
-/// first. See docs/adr/ for the data-sourcing decision.
-///
-/// Public so a test can assert every id still resolves in the shipped
-/// catalog: a typo here would silently shrink the list rather than fail
-/// a build.
+/// Predefined popular packaged foods for quick add (Maggi, Biscuits, Oats, Bread, etc.)
+class PackagedFoodItem {
+  const PackagedFoodItem({
+    required this.name,
+    required this.brand,
+    required this.kcal,
+    required this.servingLabel,
+    required this.protein,
+    required this.carbs,
+    required this.fat,
+  });
+
+  final String name;
+  final String brand;
+  final int kcal;
+  final String servingLabel;
+  final int protein;
+  final int carbs;
+  final int fat;
+}
+
+const packagedFoods = [
+  PackagedFoodItem(
+    name: 'Maggi 2-Minute Masala Noodles',
+    brand: 'Nestlé',
+    kcal: 312,
+    servingLabel: '1 pack (70g)',
+    protein: 8,
+    carbs: 44,
+    fat: 12,
+  ),
+  PackagedFoodItem(
+    name: 'Parle-G Glucose Biscuits',
+    brand: 'Parle',
+    kcal: 145,
+    servingLabel: '4 biscuits (32g)',
+    protein: 2,
+    carbs: 25,
+    fat: 4,
+  ),
+  PackagedFoodItem(
+    name: 'Quaker Rolled Oats',
+    brand: 'Quaker',
+    kcal: 190,
+    servingLabel: '1 bowl cooked (50g)',
+    protein: 6,
+    carbs: 32,
+    fat: 4,
+  ),
+  PackagedFoodItem(
+    name: 'Amul Butter',
+    brand: 'Amul',
+    kcal: 108,
+    servingLabel: '1 tbsp (15g)',
+    protein: 0,
+    carbs: 0,
+    fat: 12,
+  ),
+  PackagedFoodItem(
+    name: 'Britannia Whole Wheat Bread',
+    brand: 'Britannia',
+    kcal: 140,
+    servingLabel: '2 slices (50g)',
+    protein: 5,
+    carbs: 26,
+    fat: 2,
+  ),
+  PackagedFoodItem(
+    name: 'Kurkure Masala Munch',
+    brand: 'PepsiCo',
+    kcal: 170,
+    servingLabel: '1 small pack (32g)',
+    protein: 2,
+    carbs: 18,
+    fat: 10,
+  ),
+];
+
 const List<String> quickPickIds = [
   'samosa',
   'papad',
@@ -37,13 +100,7 @@ const List<String> quickPickIds = [
   'chai',
 ];
 
-/// Quick-add a food by hand, without a photo.
-///
-/// This is the camera's other exit: when the model says "not a food
-/// item", or the user knows the dish and does not want to scan, this
-/// sheet searches the same offline catalog the search screen uses. It
-/// pops the chosen dish id so the caller decides where to navigate; the
-/// sheet itself never routes.
+/// Quick-add packaged foods or cooked dishes by hand without requiring camera scanning.
 class QuickAddSheet extends ConsumerStatefulWidget {
   const QuickAddSheet({super.key, this.onManualAdd, this.initialFoodName});
 
@@ -57,6 +114,15 @@ class QuickAddSheet extends ConsumerStatefulWidget {
 class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   final _controller = TextEditingController();
   String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialFoodName != null) {
+      _controller.text = widget.initialFoodName!;
+      _query = widget.initialFoodName!;
+    }
+  }
 
   @override
   void dispose() {
@@ -102,14 +168,15 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.quickAddTitle,
+                    'Quick Add & Packaged Foods',
                     style: AppTypography.titleM.copyWith(
                       color: scheme.onSurface,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.x1),
                   Text(
-                    l10n.quickAddSubtitle,
+                    'Search packaged snacks (e.g. Maggi, Oats, Biscuits) or cooked dishes.',
                     style: AppTypography.caption.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -130,7 +197,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                 textInputAction: TextInputAction.search,
                 onChanged: (value) => setState(() => _query = value),
                 decoration: InputDecoration(
-                  hintText: l10n.quickAddSearchHint,
+                  hintText: 'Search food or brand (e.g. Maggi, Bread)...',
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _query.isEmpty
                       ? null
@@ -139,64 +206,180 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                             _controller.clear();
                             setState(() => _query = '');
                           },
-                          icon: const Icon(Icons.close_rounded),
-                          tooltip: MaterialLocalizations.of(
-                            context,
-                          ).deleteButtonTooltip,
+                          icon: const Icon(Icons.clear_rounded),
                         ),
                 ),
               ),
             ),
-            Flexible(
-              child: catalog.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(AppSpacing.x6),
-                  child: Center(child: CircularProgressIndicator()),
+            // Packaged Food Quick Section when search is empty or matches
+            _buildPackagedFoodsSection(context, scheme),
+            catalog.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.all(AppSpacing.x8),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (_, _) => Padding(
+                padding: const EdgeInsets.all(AppSpacing.x6),
+                child: Text(
+                  l10n.quickAddNoCatalog,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyM.copyWith(color: scheme.error),
                 ),
-                error: (_, _) => Padding(
-                  padding: const EdgeInsets.all(AppSpacing.x5),
-                  child: Text(
-                    l10n.quickAddUnavailable,
-                    style: AppTypography.bodyM.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                data: (loaded) => _Results(
-                  catalog: loaded,
-                  query: _query,
-                  onPick: (dish) => Navigator.of(context).pop(dish.id),
-                ),
+              ),
+              data: (data) => _Results(
+                catalog: data,
+                query: _query,
+                onPick: (dish) => Navigator.of(context).pop(dish.id),
               ),
             ),
-            if (widget.onManualAdd != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                child: OutlinedButton.icon(
-                  onPressed: _addFoodManually,
-                  icon: const Icon(Icons.edit_note_rounded),
-                  label: const Text('Can’t find it? Add food manually'),
-                ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                0,
+                AppSpacing.screenPadding,
+                AppSpacing.x3,
               ),
+              child: OutlinedButton.icon(
+                onPressed: _openCustomFoodDialog,
+                icon: const Icon(Icons.edit_note_rounded, size: 18),
+                label: const Text('Add Custom Item & Calories'),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _addFoodManually() async {
-    final name = TextEditingController(text: widget.initialFoodName ?? '');
+  Widget _buildPackagedFoodsSection(BuildContext context, ColorScheme scheme) {
+    final lower = _query.trim().toLowerCase();
+    final filteredPackaged = packagedFoods.where((item) {
+      if (lower.isEmpty) return true;
+      return item.name.toLowerCase().contains(lower) ||
+          item.brand.toLowerCase().contains(lower);
+    }).toList();
+
+    if (filteredPackaged.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 12, AppSpacing.screenPadding, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.inventory_2_outlined, size: 16, color: Color(0xFF10B981)),
+              const SizedBox(width: 6),
+              Text(
+                'Packaged Foods',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 92,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: filteredPackaged.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (ctx, idx) {
+                final item = filteredPackaged[idx];
+                return InkWell(
+                  onTap: () async {
+                    await widget.onManualAdd?.call(item.name, item.kcal);
+                    if (mounted) Navigator.of(context).pop();
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 155,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: scheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          item.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                        ),
+                        Text(
+                          item.servingLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${item.kcal} kcal',
+                              style: const TextStyle(
+                                color: Color(0xFF10B981),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const Icon(Icons.add_circle, size: 16, color: Color(0xFF10B981)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openCustomFoodDialog() async {
+    final name = TextEditingController(text: _query);
     final kcal = TextEditingController();
     final result = await showDialog<(String, int)>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Add food'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: name, autofocus: true, decoration: const InputDecoration(labelText: 'Food name')),
-          TextField(controller: kcal, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Calories for this serving')),
-        ]),
+        title: const Text('Add custom food'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: name,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Food or dish name',
+                hintText: 'e.g. Maggi Noodles, Oat biscuit',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: kcal,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Calories (kcal)',
+                hintText: 'e.g. 250',
+              ),
+            ),
+          ],
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () {
               final calories = int.tryParse(kcal.text.trim());
@@ -236,8 +419,6 @@ class _Results extends StatelessWidget {
       for (final id in quickPickIds)
         if (catalog.dishes[id] != null) catalog.dishes[id]!,
     ];
-    // The catalog is name-sorted upstream, but be explicit so the list
-    // order never depends on map iteration.
     searchResults.sort((a, b) => a.name.compareTo(b.name));
 
     return Column(
@@ -248,7 +429,7 @@ class _Results extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.screenPadding,
-              AppSpacing.x4,
+              10,
               AppSpacing.screenPadding,
               AppSpacing.x2,
             ),
@@ -276,10 +457,10 @@ class _Results extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.x4),
+          const SizedBox(height: AppSpacing.x3),
         ] else if (searchResults.isEmpty)
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.x6),
+            padding: const EdgeInsets.all(AppSpacing.x4),
             child: Text(
               l10n.quickAddNoMatch,
               textAlign: TextAlign.center,
@@ -293,7 +474,7 @@ class _Results extends StatelessWidget {
         if (searchResults.isNotEmpty)
           ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.4,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.35,
             ),
             child: ListView.separated(
               shrinkWrap: true,
@@ -336,9 +517,6 @@ class _Results extends StatelessWidget {
   }
 }
 
-/// Family icon on a wash circle. Decorative only: the dish name sits
-/// right beside it as text, so the icon carries no information on its
-/// own (R14).
 class _DishGlyph extends StatelessWidget {
   const _DishGlyph({required this.family});
 

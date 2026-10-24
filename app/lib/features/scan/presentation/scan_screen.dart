@@ -681,11 +681,18 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _RoundIconButton(
-                            icon: Icons.photo_library_outlined,
-                            onTap: _analyzing ? null : _pickFromGallery,
-                            semanticLabel: l10n.scanPickFromGallery,
-                            size: 48,
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _RoundIconButton(
+                                icon: Icons.photo_library_outlined,
+                                onTap: _analyzing ? null : _pickFromGallery,
+                                semanticLabel: l10n.scanPickFromGallery,
+                                size: 52,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text('Gallery', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+                            ],
                           ),
                           _MetallicShutterButton(
                             enabled:
@@ -696,11 +703,18 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                             label: l10n.scanCapture,
                             onTap: _capture,
                           ),
-                          _RoundIconButton(
-                            icon: Icons.search_rounded,
-                            onTap: _analyzing ? null : _quickAdd,
-                            semanticLabel: l10n.scanQuickAdd,
-                            size: 48,
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _RoundIconButton(
+                                icon: Icons.qr_code_scanner_rounded,
+                                onTap: _analyzing ? null : _scanCode,
+                                semanticLabel: 'Quick Add / Barcode',
+                                size: 52,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text('Packaged', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+                            ],
                           ),
                         ],
                       ),
