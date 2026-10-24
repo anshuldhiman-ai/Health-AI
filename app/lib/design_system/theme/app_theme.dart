@@ -83,6 +83,9 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: c.primary,
           foregroundColor: onPrimary,
+          elevation: 3,
+          shadowColor: c.primary.withValues(alpha: isDark ? 0.22 : 0.18),
+          side: BorderSide(color: onPrimary.withValues(alpha: 0.22)),
           textStyle: AppTypography.label,
           minimumSize: const Size.fromHeight(52), // 52dp touch target (R14)
           shape: const RoundedRectangleBorder(

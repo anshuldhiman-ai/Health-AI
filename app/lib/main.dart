@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/app/app.dart';
 import 'package:app/app/log_store.dart';
 import 'package:app/core/error/app_log.dart';
@@ -27,7 +29,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   installErrorWidgetBuilder();
   await runAppGuarded(() async {
-    await bootstrap();
+    runApp(const StartupSplashApp());
+    unawaited(bootstrap());
   });
 }
 
@@ -36,40 +39,22 @@ Future<void> main() async {
 /// be async and gated on a minimal splash once the data layer exists.
 Future<void> bootstrap() async {
   try {
-    final initialThemeMode = await _guard(
-      loadSavedThemeMode,
-      ThemeMode.system,
-      'theme',
-    );
-    final initialGoalKind = await _guard(
-      loadSavedGoalKind,
-      GoalKind.lose,
-      'goal',
-    );
-    final initialWater = await _guard(
-      loadSavedWater,
-      HydrationState.empty(DateTime.now()),
-      'water',
-    );
-    final initialBodyMetrics = await _guard(
-      loadSavedBodyMetrics,
-      const BodyMetrics(),
-      'bodyMetrics',
-    );
-    final initialSleep = await _guard(
-      loadSavedSleep,
-      SleepState.empty(),
-      'sleep',
-    );
-    final initialDayLog = await _guard(loadSavedDayLog, DayLog(), 'dayLog');
+    final loaded = await Future.wait<Object>([
+      _guard(loadSavedThemeMode, ThemeMode.system, 'theme'),
+      _guard(loadSavedGoalKind, GoalKind.lose, 'goal'),
+      _guard(loadSavedWater, HydrationState.empty(DateTime.now()), 'water'),
+      _guard(loadSavedBodyMetrics, const BodyMetrics(), 'bodyMetrics'),
+      _guard(loadSavedSleep, SleepState.empty(), 'sleep'),
+      _guard(loadSavedDayLog, DayLog(), 'dayLog'),
+    ]);
     _runApp(
       overrides: [
-        initialThemeModeProvider.overrideWithValue(initialThemeMode),
-        initialGoalKindProvider.overrideWithValue(initialGoalKind),
-        initialWaterProvider.overrideWithValue(initialWater),
-        initialBodyMetricsProvider.overrideWithValue(initialBodyMetrics),
-        initialSleepProvider.overrideWithValue(initialSleep),
-        dayLogProvider.overrideWith((ref) => initialDayLog),
+        initialThemeModeProvider.overrideWithValue(loaded[0] as ThemeMode),
+        initialGoalKindProvider.overrideWithValue(loaded[1] as GoalKind),
+        initialWaterProvider.overrideWithValue(loaded[2] as HydrationState),
+        initialBodyMetricsProvider.overrideWithValue(loaded[3] as BodyMetrics),
+        initialSleepProvider.overrideWithValue(loaded[4] as SleepState),
+        dayLogProvider.overrideWith((ref) => loaded[5] as DayLog),
       ],
     );
   } catch (error, stack) {

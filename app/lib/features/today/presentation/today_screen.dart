@@ -22,43 +22,18 @@ import 'package:app/l10n/extensions.dart';
 
 /// Dashboard matching ui_design.jpg & ui_design2.jpg:
 /// - Top Bar: Menu hamburger, "Health AI" centered logo, user avatar
-/// - Greeting: "Good morning! Personalized your morning!"
+/// - A warm returning-user greeting with real daily totals
 /// - Hero Calorie Card with rainbow gradient ProgressRing & Macro pills
 /// - "Daily Activity" card with 4 circular badges (Steps, Water, Sleep, Active Cal)
 /// - "Today's Meals" list with dish thumbnails, kcal, and macro tags
-class TodayScreen extends ConsumerStatefulWidget {
+class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
   @override
-  ConsumerState<TodayScreen> createState() => _TodayScreenState();
-}
-
-class _TodayScreenState extends ConsumerState<TodayScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final req = await requestStepPermission();
-      if (req && mounted) {
-        ref.invalidate(stepTrackerProvider);
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ref = this.ref;
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(todayStateProvider);
-    final l10n = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-
-    final hour = DateTime.now().hour;
-    final greeting = switch (hour) {
-      < 12 => l10n.greetingMorning,
-      < 17 => l10n.greetingAfternoon,
-      _ => l10n.greetingEvening,
-    };
 
     return Scaffold(
       body: SafeArea(
@@ -73,10 +48,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           children: [
             const _Header(),
             const SizedBox(height: 16),
-            Text(greeting, style: text.displayLarge),
+            Text('Welcome back', style: text.displayLarge),
             const SizedBox(height: 4),
             Text(
-              'Personalized your morning!',
+              'Your daily wellness, beautifully in sync.',
               style: text.bodyMedium?.copyWith(
                 color: scheme.onSurfaceVariant,
                 fontSize: 14,
@@ -137,13 +112,17 @@ class _Header extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: scheme.primary.withValues(alpha: 0.3), width: 1.5),
+              border: Border.all(
+                color: scheme.primary.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
             ),
             child: ClipOval(
               child: Image.asset(
                 'assets/brand/avatar.png',
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Icon(Icons.person_rounded, size: 22, color: scheme.primary),
+                errorBuilder: (_, _, _) =>
+                    Icon(Icons.person_rounded, size: 22, color: scheme.primary),
               ),
             ),
           ),
@@ -177,9 +156,15 @@ class _Header extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: Icon(Icons.restaurant_menu_rounded, color: colors.primary),
+                leading: Icon(
+                  Icons.restaurant_menu_rounded,
+                  color: colors.primary,
+                ),
                 title: const Text('Meal Planner', style: AppTypography.itemS),
-                subtitle: const Text('Daily agenda & AI recommendations', style: AppTypography.caption),
+                subtitle: const Text(
+                  'Daily agenda & AI recommendations',
+                  style: AppTypography.caption,
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
@@ -187,9 +172,15 @@ class _Header extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.track_changes_rounded, color: colors.accent),
+                leading: Icon(
+                  Icons.track_changes_rounded,
+                  color: colors.accent,
+                ),
                 title: const Text('Target Goals', style: AppTypography.itemS),
-                subtitle: const Text('Calorie, macro & water targets', style: AppTypography.caption),
+                subtitle: const Text(
+                  'Calorie, macro & water targets',
+                  style: AppTypography.caption,
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
@@ -199,7 +190,10 @@ class _Header extends StatelessWidget {
               ListTile(
                 leading: Icon(Icons.bedtime_rounded, color: colors.sleep),
                 title: const Text('Sleep Tracker', style: AppTypography.itemS),
-                subtitle: const Text('Bedtime, wake dial & smart alarm', style: AppTypography.caption),
+                subtitle: const Text(
+                  'Bedtime, wake dial & smart alarm',
+                  style: AppTypography.caption,
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
@@ -209,7 +203,10 @@ class _Header extends StatelessWidget {
               ListTile(
                 leading: Icon(Icons.water_drop_rounded, color: colors.water),
                 title: const Text('Water Tracker', style: AppTypography.itemS),
-                subtitle: const Text('Daily hydration & glass tracker', style: AppTypography.caption),
+                subtitle: const Text(
+                  'Daily hydration & glass tracker',
+                  style: AppTypography.caption,
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
@@ -346,10 +343,7 @@ class _MacroPill extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
           Text(
@@ -388,8 +382,12 @@ class _DailyActivityCard extends ConsumerWidget {
     final sleep = ref.watch(sleepTodayProvider);
 
     final stepCount = steps.valueOrNull?.steps ?? 0;
-    final sleepMin = sleep?.durationMinutes ?? 450;
-    final sleepHours = (sleepMin / 60).toStringAsFixed(1);
+    final sleepHours = sleep == null
+        ? '—'
+        : '${(sleep.durationMinutes / 60).toStringAsFixed(1)}h';
+    final activeCalories = steps.valueOrNull?.isLive == true
+        ? '${(stepCount * 0.04).round()} kcal'
+        : '—';
 
     return AppCard(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -425,14 +423,17 @@ class _DailyActivityCard extends ConsumerWidget {
                 icon: Icons.directions_walk_rounded,
                 ringColor: const Color(0xFFE59C39),
                 title: 'Steps',
-                value: steps.valueOrNull?.status == StepStatus.permissionDenied ? 'Enable' : formatCount(stepCount),
+                value: steps.valueOrNull?.status == StepStatus.permissionDenied
+                    ? 'Enable'
+                    : stepTileLabel(steps),
                 onTap: () async {
-                  if (steps.valueOrNull?.status == StepStatus.permissionDenied) {
+                  if (steps.valueOrNull?.status ==
+                      StepStatus.permissionDenied) {
                     await requestStepPermission();
                     ref.invalidate(stepTrackerProvider);
                   }
                   if (context.mounted) {
-                    context.push('/activity');
+                    await context.push('/activity');
                   }
                 },
               ),
@@ -447,14 +448,14 @@ class _DailyActivityCard extends ConsumerWidget {
                 icon: Icons.bedtime_rounded,
                 ringColor: colors.sleep,
                 title: 'Sleep',
-                value: '${sleepHours}h',
+                value: sleepHours,
                 onTap: () => context.push('/sleep'),
               ),
               _ActivityCircleButton(
                 icon: Icons.local_fire_department_rounded,
                 ringColor: colors.primary,
                 title: 'Active Cal',
-                value: '420 kcal',
+                value: activeCalories,
                 onTap: () => context.push('/activity'),
               ),
             ],
@@ -494,8 +495,26 @@ class _ActivityCircleButton extends StatelessWidget {
             height: 52,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: ringColor.withValues(alpha: 0.08),
-              border: Border.all(color: ringColor.withValues(alpha: 0.5), width: 2),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white,
+                  ringColor.withValues(alpha: 0.16),
+                  ringColor.withValues(alpha: 0.07),
+                ],
+              ),
+              border: Border.all(
+                color: ringColor.withValues(alpha: 0.42),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: ringColor.withValues(alpha: 0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Icon(icon, color: ringColor, size: 24),
           ),
@@ -568,16 +587,16 @@ class _TodaysMeals extends ConsumerWidget {
                 minimumSize: Size.zero,
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               ),
-              child: Text('View Diary', style: AppTypography.caption.copyWith(color: colors.primary)),
+              child: Text(
+                'View Diary',
+                style: AppTypography.caption.copyWith(color: colors.primary),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 10),
         for (final meal in order) ...[
-          _MealCard(
-            meal: meal,
-            entries: byMeal[meal] ?? const [],
-          ),
+          _MealCard(meal: meal, entries: byMeal[meal] ?? const []),
           const SizedBox(height: 10),
         ],
       ],
@@ -671,15 +690,16 @@ class _MealCard extends StatelessWidget {
                     ],
                   )
                 else
-                  _TagBadge(
-                    text: '+ ${l10n.addFood}',
-                    color: colors.primary,
-                  ),
+                  _TagBadge(text: '+ ${l10n.addFood}', color: colors.primary),
               ],
             ),
           ),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded, size: 20, color: scheme.onSurfaceVariant),
+            icon: Icon(
+              Icons.more_vert_rounded,
+              size: 20,
+              color: scheme.onSurfaceVariant,
+            ),
             onSelected: (val) {
               if (val == 'add') {
                 context.push('/search?day=0&meal=${meal.name}');

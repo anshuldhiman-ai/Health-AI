@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:app/design_system/components/brand_mark.dart';
 import 'package:app/design_system/theme/app_theme.dart';
@@ -8,12 +10,64 @@ import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
-/// Welcome/onboarding per ref_ui.png page 1: leaf mark, wordmark,
+/// Welcome/onboarding aligned to ui_design.jpg and ui_design2.jpg:
+/// leaf mark, wordmark,
 /// tagline, soft organic background, Get Started. There is NO cloud
 /// account in this app (R1/R3) — the "Sign in" affordance explains the
 /// device-only model instead of asking for a login.
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen>
+    with SingleTickerProviderStateMixin {
+  static const _seenKey = 'welcome.seen.v1';
+  late final AnimationController _entrance = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 650),
+  );
+  Timer? _launchTimer;
+  bool _returning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveReturningSession();
+  }
+
+  Future<void> _resolveReturningSession() async {
+    var seen = false;
+    try {
+      seen = (await SharedPreferences.getInstance()).getBool(_seenKey) ?? false;
+    } catch (_) {
+      // Keep onboarding available if local preferences cannot be read.
+    }
+    if (!mounted || !seen) return;
+    setState(() => _returning = true);
+    _entrance.forward();
+    _launchTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) context.go('/today');
+    });
+  }
+
+  @override
+  void dispose() {
+    _launchTimer?.cancel();
+    _entrance.dispose();
+    super.dispose();
+  }
+
+  Future<void> _start() async {
+    try {
+      await (await SharedPreferences.getInstance()).setBool(_seenKey, true);
+    } catch (_) {
+      // Opening the app should still work when persistence is unavailable.
+    }
+    if (mounted) context.go('/today');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,18 +93,40 @@ class WelcomeScreen extends StatelessWidget {
               child: Column(
                 children: [
                   const Spacer(flex: 2),
-                  const BrandMark(size: 108),
+                  FadeTransition(
+                    opacity: _returning
+                        ? _entrance
+                        : const AlwaysStoppedAnimation(1),
+                    child: const BrandMark(size: 108),
+                  ),
                   const SizedBox(height: 14),
-                  Text(
-                    l10n.appTitle,
-                    style: AppTypography.hero.copyWith(
-                      color: scheme.onSurface,
-                      fontSize: 32,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 420),
+                    switchInCurve: Curves.easeOutCubic,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, .08),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: Text(
+                      _returning ? 'Welcome back' : l10n.appTitle,
+                      key: ValueKey(_returning),
+                      style: AppTypography.hero.copyWith(
+                        color: scheme.onSurface,
+                        fontSize: 32,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    l10n.welcomeTagline,
+                    _returning
+                        ? 'Your daily wellness, beautifully in sync.'
+                        : l10n.welcomeTagline,
                     style: AppTypography.bodyM.copyWith(
                       color: scheme.onSurfaceVariant,
                       fontSize: 15,
@@ -58,23 +134,36 @@ class WelcomeScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   const Spacer(flex: 3),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => context.go('/today'),
-                      child: Text(l10n.getStarted),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  TextButton(
-                    onPressed: () => _deviceOnlyNote(context),
-                    child: Text(
-                      l10n.signIn,
-                      style: AppTypography.label.copyWith(
-                        color: scheme.onSurface,
+                  if (!_returning)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _start,
+                        child: Text(l10n.getStarted),
                       ),
                     ),
-                  ),
+                  if (!_returning) ...[
+                    const SizedBox(height: 4),
+                    TextButton(
+                      onPressed: () => _deviceOnlyNote(context),
+                      child: Text(
+                        l10n.signIn,
+                        style: AppTypography.label.copyWith(
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 22),
+                    SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                 ],
               ),

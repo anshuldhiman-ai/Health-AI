@@ -1,10 +1,73 @@
 import 'package:app/app/router.dart';
 import 'package:app/core/error/app_log.dart';
 import 'package:app/design_system/theme/app_theme.dart';
+import 'package:app/design_system/components/brand_mark.dart';
 import 'package:app/data/preferences/theme_mode_controller.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Painted immediately while local stores are read in parallel.
+class StartupSplashApp extends StatelessWidget {
+  const StartupSplashApp({super.key});
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.light(),
+    home: const _StartupSplash(),
+  );
+}
+
+class _StartupSplash extends StatefulWidget {
+  const _StartupSplash();
+
+  @override
+  State<_StartupSplash> createState() => _StartupSplashState();
+}
+
+class _StartupSplashState extends State<_StartupSplash>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..forward();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      backgroundColor: scheme.surface,
+      body: Center(
+        child: FadeTransition(
+          opacity: CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: .92, end: 1).animate(
+              CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const BrandMark(size: 82),
+                const SizedBox(height: 14),
+                Text(
+                  'Health AI',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// The app's MaterialApp shell (Section 4: app/app.dart).
 ///
