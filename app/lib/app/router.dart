@@ -1,6 +1,7 @@
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/features/today/presentation/macro_breakdown_screen.dart';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -22,10 +23,30 @@ import 'package:app/features/sleep/presentation/sleep_screen.dart';
 import 'package:app/features/today/presentation/today_screen.dart';
 import 'package:app/features/water/presentation/water_screen.dart';
 
+/// Whether onboarding has already been completed on this device.
+///
+/// Set by [markWelcomeSeen] during bootstrap — i.e. BEFORE the router is
+/// first built — so a returning user opens straight on Today instead of
+/// flashing the welcome screen on every launch.
+bool hasSeenWelcome = false;
+final welcomeSeenNotifier = ValueNotifier<bool>(false);
+
+void markWelcomeSeen() {
+  hasSeenWelcome = true;
+  welcomeSeenNotifier.value = true;
+}
+
 /// App routes (Section 10, navigation map). Welcome gates the shell;
 /// five destinations: four tabs + the full-screen scan flow.
 final appRouter = GoRouter(
-  initialLocation: '/welcome',
+  initialLocation: hasSeenWelcome ? '/today' : '/welcome',
+  refreshListenable: welcomeSeenNotifier,
+  redirect: (context, state) {
+    if (hasSeenWelcome && state.matchedLocation == '/welcome') {
+      return '/today';
+    }
+    return null;
+  },
   routes: [
     GoRoute(path: '/welcome', builder: (_, _) => const WelcomeScreen()),
     StatefulShellRoute.indexedStack(
@@ -171,7 +192,6 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
 
     Widget destination({
@@ -181,7 +201,9 @@ class _BottomBar extends StatelessWidget {
       required int branchIndex,
     }) {
       final selected = navigationShell.currentIndex == branchIndex;
-      final color = selected ? scheme.primary : scheme.onSurfaceVariant;
+      final emerald = const Color(0xFF0F5A3C);
+      final vibrantEmerald = const Color(0xFF1E885F);
+      final color = selected ? (scheme.brightness == Brightness.dark ? scheme.primary : emerald) : scheme.onSurfaceVariant;
       return Expanded(
         child: Material(
           color: Colors.transparent,
@@ -199,14 +221,27 @@ class _BottomBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(selected ? selectedIcon : icon, size: 23, color: color),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   label,
                   style: AppTypography.navLabel.copyWith(
                     color: color,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 10.5,
                   ),
                 ),
+                const SizedBox(height: 2),
+                if (selected)
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: scheme.brightness == Brightness.dark ? scheme.primary : vibrantEmerald,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                else
+                  const SizedBox(height: 4),
               ],
             ),
           ),
@@ -214,52 +249,78 @@ class _BottomBar extends StatelessWidget {
       );
     }
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        // A hairline edge: the drop shadow is invisible on the dark
-        // canvas, so without this the bar merges into the background.
-        border: Border(
-          top: BorderSide(color: scheme.outlineVariant),
-          left: BorderSide(color: scheme.outlineVariant),
-          right: BorderSide(color: scheme.outlineVariant),
-        ),
-        boxShadow: AppShadows.nav,
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: AppSizing.navBarHeight,
-          child: Row(
-            children: [
-              destination(
-                icon: Icons.home_outlined,
-                selectedIcon: Icons.home_rounded,
-                label: l10n.todayTab,
-                branchIndex: 0,
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: scheme.surface.withValues(alpha: 0.92),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(
+              top: BorderSide(
+                color: scheme.brightness == Brightness.dark
+                    ? scheme.outlineVariant
+                    : Colors.white.withValues(alpha: 0.8),
+                width: 1.2,
               ),
-              destination(
-                icon: Icons.menu_book_outlined,
-                selectedIcon: Icons.menu_book_rounded,
-                label: l10n.diaryTab,
-                branchIndex: 1,
+              left: BorderSide(
+                color: scheme.brightness == Brightness.dark
+                    ? scheme.outlineVariant
+                    : Colors.white.withValues(alpha: 0.8),
+                width: 1.2,
               ),
-              // The scan button is docked over this span.
-              const SizedBox(width: 72),
-              destination(
-                icon: Icons.bar_chart_rounded,
-                selectedIcon: Icons.bar_chart_rounded,
-                label: l10n.insightsTab,
-                branchIndex: 2,
+              right: BorderSide(
+                color: scheme.brightness == Brightness.dark
+                    ? scheme.outlineVariant
+                    : Colors.white.withValues(alpha: 0.8),
+                width: 1.2,
               ),
-              destination(
-                icon: Icons.person_outline_rounded,
-                selectedIcon: Icons.person_rounded,
-                label: l10n.profileTab,
-                branchIndex: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F5A3C).withValues(alpha: 0.06),
+                blurRadius: 24,
+                spreadRadius: 2,
+                offset: const Offset(0, -4),
               ),
             ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: AppSizing.navBarHeight,
+              child: Row(
+                children: [
+                  destination(
+                    icon: Icons.home_outlined,
+                    selectedIcon: Icons.home_rounded,
+                    label: 'Home',
+                    branchIndex: 0,
+                  ),
+                  destination(
+                    icon: Icons.calendar_today_outlined,
+                    selectedIcon: Icons.calendar_today_rounded,
+                    label: 'Diary',
+                    branchIndex: 1,
+                  ),
+                  // The scan button is docked over this span.
+                  const SizedBox(width: 72),
+                  destination(
+                    icon: Icons.bar_chart_outlined,
+                    selectedIcon: Icons.bar_chart_rounded,
+                    label: 'Insights',
+                    branchIndex: 2,
+                  ),
+                  destination(
+                    icon: Icons.person_outline_rounded,
+                    selectedIcon: Icons.person_rounded,
+                    label: 'Profile',
+                    branchIndex: 3,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -267,8 +328,7 @@ class _BottomBar extends StatelessWidget {
   }
 }
 
-/// The raised scan action: forest-green disc with a white halo and a
-/// viewfinder + leaf glyph.
+/// The raised scan action: deep emerald to vibrant emerald disc with a halo and leaf glyph.
 class _ScanButton extends StatelessWidget {
   const _ScanButton({required this.onPressed});
 
@@ -279,14 +339,25 @@ class _ScanButton extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return SizedBox(
-      width: 56,
-      height: 56,
+      width: 60,
+      height: 60,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: scheme.primary,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1E885F), Color(0xFF0F5A3C)],
+          ),
           shape: BoxShape.circle,
-          border: Border.all(color: scheme.surface, width: 3),
-          boxShadow: AppShadows.scanButton,
+          border: Border.all(color: scheme.surface, width: 3.5),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F5A3C).withValues(alpha: 0.40),
+              blurRadius: 18,
+              spreadRadius: 1,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Material(
           color: Colors.transparent,
