@@ -29,17 +29,152 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
   bool _streakMeterEnabled = true;
   bool _smartAlarmsEnabled = true;
 
+  Future<void> _showSetGoalSheet(BuildContext context, HydrationState water, WaterController notifier) async {
+    final current = water.targetGlasses;
+    var selected = current;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final scheme = Theme.of(ctx).colorScheme;
+            final liters = selected * HydrationState.mlPerGlass / 1000;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: scheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Set Daily Hydration Goal',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Recommended intake is 2.0L to 3.5L per day.',
+                    style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 22),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton.filledTonal(
+                        onPressed: selected > 4 ? () => setSheetState(() => selected--) : null,
+                        icon: const Icon(Icons.remove_rounded),
+                      ),
+                      const SizedBox(width: 24),
+                      Column(
+                        children: [
+                          Text(
+                            '${liters.toStringAsFixed(1)} L',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0284C7),
+                            ),
+                          ),
+                          Text(
+                            '$selected glasses (250ml each)',
+                            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 24),
+                      IconButton.filledTonal(
+                        onPressed: selected < 32 ? () => setSheetState(() => selected++) : null,
+                        icon: const Icon(Icons.add_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Wrap(
+                    spacing: 8,
+                    children: [8, 10, 12, 14, 16].map((g) {
+                      final isSel = selected == g;
+                      final l = (g * 0.25).toStringAsFixed(1);
+                      return ChoiceChip(
+                        label: Text('${l}L'),
+                        selected: isSel,
+                        onSelected: (_) => setSheetState(() => selected = g),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 22),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      backgroundColor: const Color(0xFF0F5A3C),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onPressed: () async {
+                      await notifier.setGoal(selected);
+                      if (ctx.mounted) Navigator.of(ctx).pop();
+                    },
+                    child: const Text('Save Goal', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmResetWater(BuildContext context, WaterController notifier) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Reset Today's Water?"),
+        content: const Text('Are you sure you want to clear all logged water intake for today?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await notifier.resetToday();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Today's water intake reset to 0L"), duration: Duration(seconds: 2)),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final water = ref.watch(waterTodayProvider);
     final notifier = ref.read(waterProvider.notifier);
+    final scheme = Theme.of(context).colorScheme;
 
-    // Dummy values showcasing rich UI matching ref_ui_updated.png if empty
-    final displayLiters = water.glasses > 0 ? water.liters : 2.1;
-    final goalLiters = 3.0;
+    final displayLiters = water.liters;
+    final goalLiters = water.goalLiters;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(
@@ -56,59 +191,124 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                   onPressed: () => Navigator.of(context).maybePop(),
                   icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
                   tooltip: 'Back',
-                  color: const Color(0xFF1A1C1E),
+                  color: scheme.onSurface,
                 ),
-                const Expanded(
+                Expanded(
                   child: Center(
                     child: Text(
                       'Water Tracker',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF1A1C1E),
+                        color: scheme.onSurface,
                         letterSpacing: -0.3,
                       ),
                     ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Hydration reminders active every 90 minutes'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert_rounded, color: scheme.onSurface),
+                  onSelected: (val) {
+                    if (val == 'goal') {
+                      _showSetGoalSheet(context, water, notifier);
+                    } else if (val == 'undo') {
+                      notifier.removeGlass();
+                    } else if (val == 'reset') {
+                      _confirmResetWater(context, notifier);
+                    }
                   },
-                  icon: const Icon(Icons.notifications_none_rounded, size: 22),
-                  color: const Color(0xFF1A1C1E),
+                  itemBuilder: (ctx) => [
+                    const PopupMenuItem(
+                      value: 'goal',
+                      child: Row(
+                        children: [
+                          Icon(Icons.tune_rounded, size: 18),
+                          SizedBox(width: 10),
+                          Text('Set Daily Goal'),
+                        ],
+                      ),
+                    ),
+                    if (water.glasses > 0) ...[
+                      const PopupMenuItem(
+                        value: 'undo',
+                        child: Row(
+                          children: [
+                            Icon(Icons.remove_circle_outline_rounded, size: 18),
+                            SizedBox(width: 10),
+                            Text('Remove Last Glass (-250ml)'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'reset',
+                        child: Row(
+                          children: [
+                            Icon(Icons.refresh_rounded, size: 18, color: Colors.redAccent),
+                            SizedBox(width: 10),
+                            Text('Reset Today', style: TextStyle(color: Colors.redAccent)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
 
             // Giant Luminous Water Droplet
-            _LuminousWaterDroplet(
-              liters: displayLiters,
-              goalLiters: goalLiters,
+            GestureDetector(
+              onTap: () => _showSetGoalSheet(context, water, notifier),
+              child: _LuminousWaterDroplet(
+                liters: displayLiters,
+                goalLiters: goalLiters,
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+
+            // Goal & Action Quick Strip
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ActionChip(
+                  avatar: const Icon(Icons.flag_outlined, size: 16),
+                  label: Text('Goal: ${goalLiters.toStringAsFixed(1)}L'),
+                  onPressed: () => _showSetGoalSheet(context, water, notifier),
+                ),
+                if (water.glasses > 0) ...[
+                  const SizedBox(width: 10),
+                  ActionChip(
+                    avatar: const Icon(Icons.undo_rounded, size: 16),
+                    label: const Text('-1 Glass'),
+                    onPressed: () async {
+                      await notifier.removeGlass();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Removed 1 glass (250ml)'), duration: Duration(seconds: 1)),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 18),
 
             // Customizable drink Quick-log Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Customizable drink Quick-log',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1C1E),
+                    color: scheme.onSurface,
                   ),
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: const Color(0xFF6C7278),
+                  color: scheme.onSurfaceVariant,
                   size: 20,
                 ),
               ],
@@ -207,21 +407,21 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'Streak Meter',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1C1E),
+                            color: scheme.onSurface,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          '5-day hydration goal reached',
+                          'Hydration goal tracking active',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF6C7278),
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -260,21 +460,21 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'Smart Water Alarms',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1C1E),
+                            color: scheme.onSurface,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           'Remind me every 90 mins',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF6C7278),
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -539,6 +739,7 @@ class _DrinkQuickCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AppCard(
       radius: 18,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -557,18 +758,18 @@ class _DrinkQuickCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1C1E),
+              color: scheme.onSurface,
             ),
           ),
           Text(
             sublabel,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF6C7278),
+              color: scheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -585,6 +786,7 @@ class _HydrationIntakeChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AppCard(
       radius: 24,
       padding: const EdgeInsets.all(18),
@@ -594,12 +796,12 @@ class _HydrationIntakeChartCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 '24hour Hydration Intake',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1C1E),
+                  color: scheme.onSurface,
                 ),
               ),
               // Circular Target Badge

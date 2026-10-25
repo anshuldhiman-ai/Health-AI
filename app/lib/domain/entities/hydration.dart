@@ -15,6 +15,7 @@ class HydrationState {
     required this.date,
     required this.glasses,
     required this.history,
+    this.customGoalGlasses,
   });
 
   factory HydrationState.empty(DateTime now) => HydrationState(
@@ -36,10 +37,12 @@ class HydrationState {
     }
     final storedDate = json['date'];
     final key = storedDate is String ? storedDate : localDateKey(now);
+    final customGoal = (json['goalGlasses'] as num?)?.toInt();
     final state = HydrationState(
       date: key,
       glasses: (json['glasses'] as num?)?.toInt() ?? 0,
       history: history,
+      customGoalGlasses: customGoal,
     );
     return state.rollTo(now);
   }
@@ -51,14 +54,26 @@ class HydrationState {
   final String date;
   final int glasses;
   final Map<String, int> history;
+  final int? customGoalGlasses;
+
+  int get targetGlasses => customGoalGlasses ?? goalGlasses;
 
   double get liters => glasses * mlPerGlass / 1000;
 
-  double get goalLiters => goalGlasses * mlPerGlass / 1000;
+  double get goalLiters => targetGlasses * mlPerGlass / 1000;
 
-  double get progress => (glasses / goalGlasses).clamp(0.0, 1.0);
+  double get progress => (glasses / targetGlasses).clamp(0.0, 1.0);
 
-  bool get goalReached => glasses >= goalGlasses;
+  bool get goalReached => glasses >= targetGlasses;
+
+  HydrationState setGoalGlasses(int nextGoal) {
+    return HydrationState(
+      date: date,
+      glasses: glasses,
+      history: history,
+      customGoalGlasses: nextGoal.clamp(1, 40),
+    );
+  }
 
   HydrationState rollTo(DateTime now) {
     final key = localDateKey(now);
@@ -67,6 +82,7 @@ class HydrationState {
       date: key,
       glasses: history[key] ?? 0,
       history: _pruned(history, now),
+      customGoalGlasses: customGoalGlasses,
     );
   }
 
@@ -76,6 +92,7 @@ class HydrationState {
       date: date,
       glasses: next,
       history: {...history, date: next},
+      customGoalGlasses: customGoalGlasses,
     );
   }
 
@@ -86,6 +103,7 @@ class HydrationState {
       date: date,
       glasses: next,
       history: {...history, date: next},
+      customGoalGlasses: customGoalGlasses,
     );
   }
 
@@ -94,6 +112,7 @@ class HydrationState {
       date: date,
       glasses: 0,
       history: {...history, date: 0},
+      customGoalGlasses: customGoalGlasses,
     );
   }
 
@@ -116,6 +135,7 @@ class HydrationState {
     'date': date,
     'glasses': glasses,
     'history': history,
+    'goalGlasses': targetGlasses,
   };
 
   static Map<String, int> _pruned(Map<String, int> source, DateTime now) {

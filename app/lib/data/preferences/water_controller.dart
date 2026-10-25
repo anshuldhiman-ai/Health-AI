@@ -59,6 +59,11 @@ class WaterController extends Notifier<HydrationState> {
     await _persist();
   }
 
+  Future<void> setGoal(int goalGlasses) async {
+    state = state.rollTo(DateTime.now()).setGoalGlasses(goalGlasses);
+    await _persist();
+  }
+
   Future<void> resetToday() async {
     state = state.rollTo(DateTime.now()).resetToday();
     await _persist();
