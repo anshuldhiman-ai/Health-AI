@@ -1,21 +1,27 @@
-import 'dart:async';
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:app/core/error/app_log.dart';
+import 'package:app/data/local_storage.dart';
+import 'package:app/app/router.dart';
 import 'package:app/data/preferences/body_metrics_controller.dart';
+import 'package:app/app/log_store.dart';
+import 'package:app/data/preferences/water_controller.dart';
+import 'package:app/data/preferences/sleep_controller.dart';
 import 'package:app/design_system/components/brand_mark.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/l10n/app_localizations.dart';
 
-/// Welcome/onboarding aligned to ui_design.jpg & ui_design2.jpg:
-/// - Step 0: Splash & Brand Mark with "Eat Smart. Live Healthier." tagline + "Get Started"
-/// - Step 1: First-time Profile Setup: Name, optional Date of Birth, Height & Weight with
-///   unit toggles (cm/ft, kg/lb), live color-coded BMI, and "Not sure? Add later" skip option.
+/// Onboarding, first run only:
+/// - Step 0: brand lockup, the offline/private promise, and "Get Started".
+/// - Step 1: profile setup — name, optional date of birth, height and
+///   weight with unit toggles, a live BMI preview, and a skip option.
+///
+/// The returning-user path is not a screen state: the router decides
+/// once, from the state bootstrap already read, so a user who finished
+/// onboarding never lands here again (see `router.dart`).
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -23,18 +29,11 @@ class WelcomeScreen extends ConsumerStatefulWidget {
   ConsumerState<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
-    with SingleTickerProviderStateMixin {
+class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   static const _seenKey = 'welcome.seen.v1';
-  late final AnimationController _entrance = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 650),
-  );
-  Timer? _launchTimer;
-  bool _returning = false;
-  int _currentStep = 0; // 0: Splash/Welcome, 1: Profile Setup
+  int _currentStep = 0; // 0: Welcome, 1: Profile setup
 
-  // Profile Form Controllers
+  // Profile form controllers.
   final _nameController = TextEditingController(text: '');
   final _heightController = TextEditingController(text: '');
   final _weightController = TextEditingController(text: '');
@@ -48,25 +47,33 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
     _resolveReturningSession();
   }
 
+  /// Belt and braces for a build where bootstrap could not read the
+  /// seen-flag: if onboarding was already completed, leave immediately
+  /// rather than showing the welcome page again.
   Future<void> _resolveReturningSession() async {
     var seen = false;
     try {
-      seen = (await SharedPreferences.getInstance()).getBool(_seenKey) ?? false;
-    } catch (_) {
+      seen = await AppLocalStorage.readBool(_seenKey) ?? false;
+      final metrics = ref.read(bodyMetricsProvider);
+      if (metrics.onboardingCompleted ||
+          metrics.heightCm != null ||
+          metrics.weightKg != null ||
+          ref.read(dayLogProvider).values.any((l) => l.isNotEmpty) ||
+          ref.read(waterProvider).glasses > 0 ||
+          ref.read(sleepProvider).records.isNotEmpty) {
+        seen = true;
+      }
+    } catch (e, s) {
+      AppLog.record(e, s);
       // Keep onboarding available if local preferences cannot be read.
     }
     if (!mounted || !seen) return;
-    setState(() => _returning = true);
-    _entrance.forward();
-    _launchTimer = Timer(const Duration(milliseconds: 1400), () {
-      if (mounted) context.go('/today');
-    });
+    markWelcomeSeen();
+    if (mounted) context.go('/today');
   }
 
   @override
   void dispose() {
-    _launchTimer?.cancel();
-    _entrance.dispose();
     _nameController.dispose();
     _heightController.dispose();
     _weightController.dispose();
@@ -79,23 +86,30 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
       final h = double.tryParse(_heightController.text);
       final w = double.tryParse(_weightController.text);
 
-      ref.read(bodyMetricsProvider.notifier).update(
-        name: name.isNotEmpty ? name : 'Alex',
-        dateOfBirth: _dob,
-        heightCm: skipMeasurements || h == null
-            ? null
-            : (_heightUnit == 'ft' ? h * 30.48 : h),
-        weightKg: skipMeasurements || w == null
-            ? null
-            : (_weightUnit == 'lb' ? w / 2.20462 : w),
-        useFeet: _heightUnit == 'ft',
-        useLbs: _weightUnit == 'lb',
-      );
+      final current = ref.read(bodyMetricsProvider);
+      await ref
+          .read(bodyMetricsProvider.notifier)
+          .update(
+            // An empty field stays empty and BodyMetrics keeps its own
+            // default, so no name is invented here.
+            name: name.isEmpty ? current.name : name,
+            dateOfBirth: _dob ?? current.dateOfBirth,
+            heightCm: skipMeasurements || h == null
+                ? current.heightCm
+                : (_heightUnit == 'ft' ? h * 30.48 : h),
+            weightKg: skipMeasurements || w == null
+                ? current.weightKg
+                : (_weightUnit == 'lb' ? w / 2.20462 : w),
+            useFeet: _heightUnit == 'ft',
+            useLbs: _weightUnit == 'lb',
+            onboardingCompleted: true,
+          );
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_seenKey, true);
-    } catch (_) {
-      // Keep navigation working even if preferences fail
+      await AppLocalStorage.writeBool(_seenKey, true);
+      markWelcomeSeen();
+    } catch (e, s) {
+      AppLog.record(e, s);
+      // Keep navigation working even if preferences fail.
     }
 
     if (mounted) context.go('/today');
@@ -135,92 +149,150 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   Widget _buildWelcomeStep(
     BuildContext context,
     ColorScheme scheme,
-    AppColorsExtension colors,
+    AppColorScheme colors,
     AppLocalizations l10n,
   ) {
-    return Padding(
+    return LayoutBuilder(
       key: const ValueKey(0),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          const Spacer(flex: 2),
-          FadeTransition(
-            opacity: _returning ? _entrance : const AlwaysStoppedAnimation(1),
-            child: const BrandMark(size: 110),
-          ),
-          const SizedBox(height: 16),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 420),
-            child: Text(
-              _returning ? 'Welcome back' : l10n.appTitle,
-              key: ValueKey(_returning),
-              style: AppTypography.hero.copyWith(
-                color: scheme.onSurface,
-                fontSize: 34,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _returning
-                ? 'Your daily wellness, beautifully in sync.'
-                : 'Eat Smart. Live Healthier.\nOn-device AI nutrition tracking & wellness',
-            style: AppTypography.bodyM.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontSize: 15,
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const Spacer(flex: 3),
-          if (!_returning) ...[
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () => setState(() => _currentStep = 1),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F3E2E),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: IntrinsicHeight(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
+                children: [
+                  const Spacer(flex: 2),
+
+                  // Brand Hero Disc with Neon Aura
+                  Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colors.primary.withValues(alpha: 0.45),
+                        width: 2.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.primary.withValues(alpha: 0.30),
+                          blurRadius: 36,
+                          spreadRadius: 4,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: const Center(child: BrandMark(size: 82)),
                   ),
-                ),
-                child: Text(
-                  l10n.getStarted,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                  const SizedBox(height: 24),
+
+                  Text(
+                    l10n.appTitle,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.hero.copyWith(
+                      color: scheme.onSurface,
+                      fontSize: 34,
+                      letterSpacing: -0.8,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Eat Smart. Live Healthier.',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.titleM.copyWith(
+                      color: colors.primary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'On-device AI nutrition tracking & wellness',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyM.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 13.5,
+                      height: 1.4,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // 3 Feature highlight pills
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _FeaturePill(icon: Icons.camera_alt_outlined, label: 'AI Food Scan', colors: colors, scheme: scheme),
+                      _FeaturePill(icon: Icons.water_drop_outlined, label: 'Smart Hydration', colors: colors, scheme: scheme),
+                      _FeaturePill(icon: Icons.shield_outlined, label: '100% Offline', colors: colors, scheme: scheme),
+                    ],
+                  ),
+
+                  const Spacer(flex: 3),
+
+                  _PrivacyPill(colors: colors, onTap: () => _deviceOnlyNote(context)),
+                  const SizedBox(height: 16),
+
+                  // Shiny Neon 'Get Started' Button
+                  Container(
+                    width: double.infinity,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          colors.primary,
+                          Color.lerp(colors.primary, colors.success, 0.45)!,
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.primary.withValues(alpha: 0.42),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () => setState(() => _currentStep = 1),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                l10n.getStarted,
+                                style: AppTypography.label.copyWith(
+                                  color: scheme.onPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 19,
+                                color: scheme.onPrimary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 6),
-            TextButton(
-              onPressed: () => _deviceOnlyNote(context),
-              child: Text(
-                '100% Free • Private & Offline',
-                style: AppTypography.label.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-          ] else ...[
-            const SizedBox(height: 22),
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: colors.primary,
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -228,10 +300,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   Widget _buildProfileSetupStep(
     BuildContext context,
     ColorScheme scheme,
-    AppColorsExtension colors,
+    AppColorScheme colors,
     AppLocalizations l10n,
   ) {
-    // Real-time BMI Calculation
+    // Live BMI preview while the fields are being typed.
     final parsedH = double.tryParse(_heightController.text);
     final parsedW = double.tryParse(_weightController.text);
     final realHeightCm = parsedH != null
@@ -246,31 +318,31 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
       previewBmi = realWeightKg / ((realHeightCm / 100) * (realHeightCm / 100));
     }
 
-    final bmiColor = previewBmi == null
-        ? scheme.onSurfaceVariant
-        : previewBmi < 17.0
-            ? const Color(0xFFEF4444) // Red: Underweight severe
-            : previewBmi < 18.5
-                ? const Color(0xFFEAB308) // Yellow: Underweight edge
-                : previewBmi < 25.0
-                    ? const Color(0xFF10B981) // Green: Healthy normal
-                    : previewBmi < 30.0
-                        ? const Color(0xFFEAB308) // Yellow: Overweight edge
-                        : const Color(0xFFEF4444); // Red: Obese
+    final (bmiColor, bmiLabel) = previewBmi == null
+        ? (scheme.onSurfaceVariant, '')
+        : _bmiBand(previewBmi, colors);
 
     return SingleChildScrollView(
       key: const ValueKey(1),
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      // Keep the fields reachable with the keyboard open.
+      padding: EdgeInsets.fromLTRB(
+        24,
+        16,
+        24,
+        24 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IconButton(
             onPressed: () => setState(() => _currentStep = 0),
             icon: const Icon(Icons.arrow_back_rounded),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            style: IconButton.styleFrom(
+              minimumSize: const Size(48, 48), // R14
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             'Personalize Your Profile',
             style: AppTypography.hero.copyWith(
@@ -289,21 +361,22 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
             ),
           ),
           const SizedBox(height: 22),
-          // Name Field
+
+          // Name
           TextField(
             controller: _nameController,
             textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
               labelText: 'What should we call you?',
               hintText: 'Enter your name (e.g., Alex)',
-              prefixIcon: const Icon(Icons.person_outline_rounded),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-              filled: true,
-              fillColor: scheme.surface,
+              prefixIcon: Icon(Icons.person_outline_rounded),
             ),
           ),
           const SizedBox(height: 14),
-          // Optional Date of Birth
+
+          // Optional date of birth. The height below it is what the BMI and
+          // calorie maths need; age only refines the estimate.
           InkWell(
             onTap: () async {
               final picked = await showDatePicker(
@@ -316,7 +389,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
             },
             borderRadius: BorderRadius.circular(14),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              constraints: const BoxConstraints(minHeight: 52),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: scheme.surface,
                 borderRadius: BorderRadius.circular(14),
@@ -333,7 +407,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                           : 'Date of Birth (Optional)',
                       style: TextStyle(
                         fontSize: 14,
-                        color: _dob != null ? scheme.onSurface : scheme.onSurfaceVariant,
+                        color: _dob != null
+                            ? scheme.onSurface
+                            : scheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -341,8 +417,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                     IconButton(
                       icon: const Icon(Icons.clear, size: 18),
                       onPressed: () => setState(() => _dob = null),
+                      tooltip: 'Clear date of birth',
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
                     )
                   else
                     const Icon(Icons.calendar_today_rounded, size: 18),
@@ -351,20 +427,22 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
             ),
           ),
           const SizedBox(height: 14),
-          // Height with Unit Selector
+
+          // Height with unit selector
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: TextField(
                   controller: _heightController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  textInputAction: TextInputAction.next,
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
                     labelText: 'Height ($_heightUnit)',
                     hintText: _heightUnit == 'cm' ? '175' : '5.9',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                    filled: true,
-                    fillColor: scheme.surface,
                   ),
                 ),
               ),
@@ -379,8 +457,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                   final next = val.first;
                   final parsed = double.tryParse(_heightController.text);
                   if (parsed != null) {
-                    _heightController.text = (next == 'ft' ? parsed / 30.48 : parsed * 30.48)
-                        .toStringAsFixed(1);
+                    _heightController.text =
+                        (next == 'ft' ? parsed / 30.48 : parsed * 30.48)
+                            .toStringAsFixed(1);
                   }
                   _heightUnit = next;
                 }),
@@ -388,20 +467,22 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
             ],
           ),
           const SizedBox(height: 14),
-          // Weight with Unit Selector
+
+          // Weight with unit selector
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: TextField(
                   controller: _weightController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  textInputAction: TextInputAction.done,
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
                     labelText: 'Weight ($_weightUnit)',
                     hintText: _weightUnit == 'kg' ? '70' : '154',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                    filled: true,
-                    fillColor: scheme.surface,
                   ),
                 ),
               ),
@@ -416,27 +497,32 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                   final next = val.first;
                   final parsed = double.tryParse(_weightController.text);
                   if (parsed != null) {
-                    _weightController.text = (next == 'lb' ? parsed * 2.20462 : parsed / 2.20462)
-                        .toStringAsFixed(1);
+                    _weightController.text =
+                        (next == 'lb' ? parsed * 2.20462 : parsed / 2.20462)
+                            .toStringAsFixed(1);
                   }
                   _weightUnit = next;
                 }),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Live calculated BMI Preview
-          if (previewBmi != null)
+
+          if (previewBmi != null) ...[
+            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: bmiColor.withValues(alpha: 0.12),
+                color: colors.washOf(bmiColor, strength: 0.9),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: bmiColor.withValues(alpha: 0.4)),
+                border: Border.all(color: bmiColor.withValues(alpha: 0.35)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.monitor_weight_outlined, color: bmiColor, size: 24),
+                  Icon(
+                    Icons.monitor_weight_outlined,
+                    color: bmiColor,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -445,21 +531,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                         Text(
                           'Estimated BMI: ${previewBmi.toStringAsFixed(1)}',
                           style: TextStyle(
-                            color: bmiColor,
+                            color: scheme.onSurface,
                             fontWeight: FontWeight.w800,
                             fontSize: 14,
                           ),
                         ),
                         Text(
-                          previewBmi < 17.0
-                              ? 'Severely Underweight'
-                              : previewBmi < 18.5
-                                  ? 'Borderline Underweight'
-                                  : previewBmi < 25.0
-                                      ? 'Healthy / Normal Range'
-                                      : previewBmi < 30.0
-                                          ? 'Borderline Overweight'
-                                          : 'Obese Range',
+                          bmiLabel,
                           style: TextStyle(
                             color: bmiColor,
                             fontWeight: FontWeight.w600,
@@ -472,31 +550,25 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                 ],
               ),
             ),
+          ],
+
           const SizedBox(height: 24),
-          // Continue Button
           SizedBox(
             width: double.infinity,
             child: FilledButton(
               onPressed: () => _finishOnboarding(skipMeasurements: false),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF0F3E2E),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                backgroundColor: colors.primary,
+                foregroundColor: scheme.onPrimary,
+                minimumSize: const Size.fromHeight(54),
               ),
-              child: const Text(
+              child: Text(
                 'Continue to Dashboard',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+                style: AppTypography.label.copyWith(fontSize: 16),
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          // Skip Option
+          const SizedBox(height: 6),
           Center(
             child: TextButton(
               onPressed: () => _finishOnboarding(skipMeasurements: true),
@@ -515,6 +587,16 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
     );
   }
 
+  /// BMI is a coarse screening band, not a diagnosis (R5), so the bands
+  /// are described rather than named clinically — and a body measurement
+  /// is never shown in an alarm colour (Section 9.4). The outer bands
+  /// share the caution tone for the same reason.
+  (Color, String) _bmiBand(double bmi, AppColorScheme colors) {
+    if (bmi < 18.5) return (colors.warning, 'Below the healthy range');
+    if (bmi < 25.0) return (colors.success, 'Healthy range');
+    return (colors.warning, 'Above the healthy range');
+  }
+
   void _deviceOnlyNote(BuildContext context) {
     showDialog<void>(
       context: context,
@@ -530,6 +612,90 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
             child: const Text('OK'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FeaturePill extends StatelessWidget {
+  const _FeaturePill({
+    required this.icon,
+    required this.label,
+    required this.colors,
+    required this.scheme,
+  });
+
+  final IconData icon;
+  final String label;
+  final AppColorScheme colors;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.washOf(colors.primary, strength: 0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: colors.primary.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: colors.primary),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The offline/private promise, tappable for the details.
+class _PrivacyPill extends StatelessWidget {
+  const _PrivacyPill({required this.colors, required this.onTap});
+
+  final AppColorScheme colors;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: colors.washOf(colors.primary, strength: 1.3),
+      borderRadius: const BorderRadius.all(AppRadii.pill),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: const BorderRadius.all(AppRadii.pill),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48), // R14
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lock_outline_rounded, size: 16, color: colors.primary),
+              const SizedBox(width: 8),
+              Text(
+                '100% Free • Private & Offline',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

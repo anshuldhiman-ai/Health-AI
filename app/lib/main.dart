@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app/app/app.dart';
 import 'package:app/app/log_store.dart';
 import 'package:app/core/error/app_log.dart';
+import 'package:app/data/local_storage.dart';
 import 'package:app/data/preferences/goal_kind_controller.dart';
 import 'package:app/data/preferences/body_metrics_controller.dart';
 import 'package:app/data/preferences/sleep_controller.dart';
@@ -10,8 +11,10 @@ import 'package:app/data/preferences/theme_mode_controller.dart';
 import 'package:app/data/preferences/water_controller.dart';
 import 'package:app/domain/entities/hydration.dart';
 import 'package:app/domain/entities/nutrition_targets.dart';
+import 'package:app/app/router.dart';
 import 'package:app/domain/entities/sleep_record.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Entry point. Init order per Section 4:
@@ -47,6 +50,22 @@ Future<void> bootstrap() async {
       _guard(loadSavedSleep, SleepState.empty(), 'sleep'),
       _guard(loadSavedDayLog, DayLog(), 'dayLog'),
     ]);
+    final water = loaded[2] as HydrationState;
+    final metrics = loaded[3] as BodyMetrics;
+    final sleep = loaded[4] as SleepState;
+    final dayLog = loaded[5] as DayLog;
+    try {
+      final welcomeSeen = await AppLocalStorage.readBool('welcome.seen.v1') ?? false;
+      if (metrics.onboardingCompleted ||
+          welcomeSeen ||
+          metrics.heightCm != null ||
+          metrics.weightKg != null ||
+          dayLog.state.isNotEmpty ||
+          water.glasses > 0 ||
+          sleep.records.isNotEmpty) {
+        markWelcomeSeen();
+      }
+    } catch (_) {}
     _runApp(
       overrides: [
         initialThemeModeProvider.overrideWithValue(loaded[0] as ThemeMode),
@@ -79,7 +98,7 @@ void _runApp({required List<Override> overrides}) {
 /// hang the bootstrap just as effectively as a throw.
 Future<T> _guard<T>(Future<T> Function() load, T fallback, String label) async {
   try {
-    return await load().timeout(const Duration(seconds: 5));
+    return await load().timeout(const Duration(seconds: 15));
   } catch (error, stack) {
     AppLog.record(error, stack);
     debugPrint('[bootstrap] "$label" failed, using fallback');
