@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:app/data/local_storage.dart';
 
 /// Storage key for the saved appearance choice.
@@ -11,7 +9,9 @@ const themeModePrefsKey = 'theme_mode';
 /// flash the light theme.
 Future<ThemeMode> loadSavedThemeMode() async {
   try {
-    return themeModeFromName(await AppLocalStorage.readString(themeModePrefsKey));
+    return themeModeFromName(
+      await AppLocalStorage.readString(themeModePrefsKey),
+    );
   } catch (_) {
     // Storage unavailable (tests/desktop): fall back to the system.
     return ThemeMode.system;

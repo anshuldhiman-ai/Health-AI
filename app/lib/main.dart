@@ -14,7 +14,6 @@ import 'package:app/domain/entities/nutrition_targets.dart';
 import 'package:app/app/router.dart';
 import 'package:app/domain/entities/sleep_record.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Entry point. Init order per Section 4:
@@ -55,12 +54,13 @@ Future<void> bootstrap() async {
     final sleep = loaded[4] as SleepState;
     final dayLog = loaded[5] as DayLog;
     try {
-      final welcomeSeen = await AppLocalStorage.readBool('welcome.seen.v1') ?? false;
+      final welcomeSeen =
+          await AppLocalStorage.readBool('welcome.seen.v1') ?? false;
       if (metrics.onboardingCompleted ||
           welcomeSeen ||
           metrics.heightCm != null ||
           metrics.weightKg != null ||
-          dayLog.state.isNotEmpty ||
+          dayLog.hasEntries ||
           water.glasses > 0 ||
           sleep.records.isNotEmpty) {
         markWelcomeSeen();

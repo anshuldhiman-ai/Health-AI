@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:app/data/local_storage.dart';
 import 'package:app/domain/entities/nutrition_targets.dart';
 

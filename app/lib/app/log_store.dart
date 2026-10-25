@@ -60,6 +60,8 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
 
   List<LogEntry> entriesFor(int dayOffset) => state[dayOffset] ?? const [];
 
+  bool get hasEntries => state.values.any((entries) => entries.isNotEmpty);
+
   DayTotals totalsFor(int dayOffset) {
     var protein = 0, carbs = 0, fat = 0;
     final entries = entriesFor(dayOffset);
@@ -165,29 +167,21 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
 /// Never throws: a storage failure returns an empty log so the app can
 /// still paint its first frame.
 Future<DayLog> loadSavedDayLog() async {
-  SharedPreferences? prefs;
   try {
-    prefs = await SharedPreferences.getInstance();
-  } catch (_) {
-    // Storage unavailable: start with an empty, in-memory-only log.
-    return DayLog();
-  }
-  try {
-    return await _loadSavedDayLog(prefs);
+    // AppLocalStorage reads preferences when available, then its durable
+    // local copy. Do not gate recovery on SharedPreferences initializing.
+    return await _loadSavedDayLog();
   } catch (e) {
     debugPrint('[DayLog] Error in loadSavedDayLog: $e');
-    return DayLog(prefs: prefs);
+    return DayLog();
   }
 }
 
-Future<DayLog> _loadSavedDayLog(SharedPreferences? prefs) async {
+Future<DayLog> _loadSavedDayLog() async {
   // Sanitised by [AppLocalStorage]: a value that is not real data is
-  // reported as absent, so the deletion below can only ever be reached
-  // by a genuinely unparseable payload and never by a storage error.
-  String? raw = await AppLocalStorage.readString(DayLog.storageKey);
-  if (raw == null && prefs != null) {
-    raw = AppLocalStorage.sanitize(prefs.getString(DayLog.storageKey));
-  }
+  // reported as absent, so deletion only follows a genuinely malformed
+  // payload and never a temporary SharedPreferences failure.
+  final raw = await AppLocalStorage.readString(DayLog.storageKey);
   final entries = <int, List<LogEntry>>{};
   DateTime? base;
   if (raw != null && raw.isNotEmpty) {
@@ -217,7 +211,6 @@ Future<DayLog> _loadSavedDayLog(SharedPreferences? prefs) async {
       }
     } on FormatException catch (e) {
       debugPrint('[DayLog] Dropping corrupt payload: $e');
-      if (prefs != null) await prefs.remove(DayLog.storageKey);
       await AppLocalStorage.remove(DayLog.storageKey);
     } catch (e) {
       debugPrint('[DayLog] Load error (data preserved): $e');
@@ -241,16 +234,16 @@ Future<DayLog> _loadSavedDayLog(SharedPreferences? prefs) async {
     }
   }
 
-  return DayLog(prefs: prefs, initial: entries);
+  return DayLog(initial: entries);
 }
 
 DateTime _dateOnly(DateTime value) =>
     DateTime(value.year, value.month, value.day);
 
-final dayLogProvider = StateNotifierProvider<DayLog, Map<int, List<LogEntry>>>(
-  (ref) {
-    // This should always be overridden in bootstrap with loaded data.
-    // If accessed without override, return empty log as fallback.
-    return DayLog();
-  },
-);
+final dayLogProvider = StateNotifierProvider<DayLog, Map<int, List<LogEntry>>>((
+  ref,
+) {
+  // This should always be overridden in bootstrap with loaded data.
+  // If accessed without override, return empty log as fallback.
+  return DayLog();
+});

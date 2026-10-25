@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:app/domain/entities/hydration.dart';
 
 import 'package:app/data/local_storage.dart';
@@ -12,7 +10,6 @@ const waterPrefsKey = 'water.v1';
 
 Future<HydrationState> loadSavedWater() async {
   try {
-    final prefs = await SharedPreferences.getInstance();
     final raw = await AppLocalStorage.readString(waterPrefsKey);
     if (raw != null && raw.isNotEmpty) {
       final decoded = jsonDecode(raw);
@@ -77,7 +74,6 @@ class WaterController extends Notifier<HydrationState> {
     final payload = jsonEncode(state.toJson());
     return _saveQueue = _saveQueue.then((_) async {
       try {
-        final prefs = await SharedPreferences.getInstance();
         await AppLocalStorage.writeString(waterPrefsKey, payload);
       } catch (_) {
         // Keep the in-session value.

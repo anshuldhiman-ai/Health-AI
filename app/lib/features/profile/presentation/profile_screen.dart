@@ -814,19 +814,27 @@ Future<void> _editProfile(
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: () {
+                    onPressed: () async {
                       final h = double.tryParse(heightCtrl.text);
                       final w = double.tryParse(weightCtrl.text);
-                      ref.read(bodyMetricsProvider.notifier).update(
-                        name: nameCtrl.text.trim().isNotEmpty ? nameCtrl.text.trim() : current.name,
+                      await ref.read(bodyMetricsProvider.notifier).update(
+                        name: nameCtrl.text.trim().isNotEmpty
+                            ? nameCtrl.text.trim()
+                            : current.name,
                         dateOfBirth: dob,
-                        heightCm: h != null ? (heightUnit == 'ft' ? h * 30.48 : h) : null,
-                        weightKg: w != null ? (weightUnit == 'lb' ? w / 2.20462 : w) : null,
+                        heightCm: h != null
+                            ? (heightUnit == 'ft' ? h * 30.48 : h)
+                            : null,
+                        weightKg: w != null
+                            ? (weightUnit == 'lb' ? w / 2.20462 : w)
+                            : null,
                         activityLevel: activity,
                         useFeet: heightUnit == 'ft',
                         useLbs: weightUnit == 'lb',
                       );
-                      Navigator.of(sheetContext).pop();
+                      if (sheetContext.mounted) {
+                        Navigator.of(sheetContext).pop();
+                      }
                     },
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),

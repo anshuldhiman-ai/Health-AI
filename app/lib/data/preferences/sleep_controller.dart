@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:app/domain/entities/sleep_record.dart';
 
 import 'package:app/data/local_storage.dart';
@@ -12,7 +10,6 @@ const sleepPrefsKey = 'sleep.v1';
 
 Future<SleepState> loadSavedSleep() async {
   try {
-    final prefs = await SharedPreferences.getInstance();
     final raw = await AppLocalStorage.readString(sleepPrefsKey);
     if (raw != null) {
       final decoded = jsonDecode(raw);
@@ -64,7 +61,10 @@ class SleepController extends Notifier<SleepState> {
 
   Future<void> _persist() async {
     try {
-      await AppLocalStorage.writeString(sleepPrefsKey, jsonEncode(state.toJson()));
+      await AppLocalStorage.writeString(
+        sleepPrefsKey,
+        jsonEncode(state.toJson()),
+      );
     } catch (_) {
       // Keep the in-session value.
     }

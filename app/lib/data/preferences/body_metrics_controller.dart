@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:app/data/local_storage.dart';
 
 const bodyMetricsPrefsKey = 'profile.body_metrics.v1';
@@ -12,9 +10,9 @@ enum BmiStatus {
   unknown,
   severelyUnderweight, // < 17.0 (Red)
   slightlyUnderweight, // 17.0 - 18.4 (Yellow)
-  normal,              // 18.5 - 24.9 (Green)
-  overweight,          // 25.0 - 29.9 (Yellow)
-  obese,               // >= 30.0 (Red)
+  normal, // 18.5 - 24.9 (Green)
+  overweight, // 25.0 - 29.9 (Yellow)
+  obese, // >= 30.0 (Red)
 }
 
 class BodyMetrics {
@@ -43,7 +41,8 @@ class BodyMetrics {
     if (dob == null) return null;
     final now = DateTime.now();
     var a = now.year - dob.year;
-    if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+    if (now.month < dob.month ||
+        (now.month == dob.month && now.day < dob.day)) {
       a--;
     }
     return a >= 0 ? a : null;
@@ -144,7 +143,6 @@ class BodyMetrics {
 
 Future<BodyMetrics> loadSavedBodyMetrics() async {
   try {
-    final prefs = await SharedPreferences.getInstance();
     final raw = await AppLocalStorage.readString(bodyMetricsPrefsKey);
     if (raw == null || raw.isEmpty) return const BodyMetrics();
     final decoded = jsonDecode(raw);
@@ -159,11 +157,14 @@ final initialBodyMetricsProvider = Provider<BodyMetrics>(
   (ref) => const BodyMetrics(),
 );
 
-final bodyMetricsProvider = NotifierProvider<BodyMetricsController, BodyMetrics>(
-  BodyMetricsController.new,
-);
+final bodyMetricsProvider =
+    NotifierProvider<BodyMetricsController, BodyMetrics>(
+      BodyMetricsController.new,
+    );
 
 class BodyMetricsController extends Notifier<BodyMetrics> {
+  Future<void> _saveQueue = Future<void>.value();
+
   @override
   BodyMetrics build() => ref.watch(initialBodyMetricsProvider);
 
@@ -177,7 +178,7 @@ class BodyMetricsController extends Notifier<BodyMetrics> {
     bool? useLbs,
     bool? onboardingCompleted,
   }) async {
-    state = state.copyWith(
+    final next = state.copyWith(
       name: name,
       dateOfBirth: dateOfBirth,
       heightCm: heightCm,
@@ -187,16 +188,16 @@ class BodyMetricsController extends Notifier<BodyMetrics> {
       useLbs: useLbs,
       onboardingCompleted: onboardingCompleted,
     );
-    await _persist();
+    state = next;
+    await _persist(next);
   }
-  Future<void> flush() => _persist();
 
-  Future<void> _persist() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await AppLocalStorage.writeString(bodyMetricsPrefsKey, jsonEncode(state.toJson()));
-    } catch (_) {
-      // Keep current in-memory values if local storage is unavailable.
-    }
+  Future<void> flush() => _persist(state);
+
+  Future<void> _persist(BodyMetrics snapshot) {
+    final payload = jsonEncode(snapshot.toJson());
+    return _saveQueue = _saveQueue.then((_) async {
+      await AppLocalStorage.writeString(bodyMetricsPrefsKey, payload);
+    });
   }
 }
