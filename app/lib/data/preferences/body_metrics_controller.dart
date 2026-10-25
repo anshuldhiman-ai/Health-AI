@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:app/data/local_storage.dart';
+
 const bodyMetricsPrefsKey = 'profile.body_metrics.v1';
 
 enum BmiStatus {
@@ -24,6 +26,7 @@ class BodyMetrics {
     this.activityLevel = 'Active',
     this.useFeet = false,
     this.useLbs = false,
+    this.onboardingCompleted = false,
   });
 
   final String name;
@@ -33,6 +36,7 @@ class BodyMetrics {
   final String activityLevel;
   final bool useFeet;
   final bool useLbs;
+  final bool onboardingCompleted;
 
   int? get age {
     final dob = dateOfBirth;
@@ -99,6 +103,7 @@ class BodyMetrics {
     String? activityLevel,
     bool? useFeet,
     bool? useLbs,
+    bool? onboardingCompleted,
   }) => BodyMetrics(
     name: name ?? this.name,
     dateOfBirth: dateOfBirth ?? this.dateOfBirth,
@@ -107,6 +112,7 @@ class BodyMetrics {
     activityLevel: activityLevel ?? this.activityLevel,
     useFeet: useFeet ?? this.useFeet,
     useLbs: useLbs ?? this.useLbs,
+    onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
   );
 
   Map<String, dynamic> toJson() => {
@@ -117,6 +123,7 @@ class BodyMetrics {
     'activityLevel': activityLevel,
     'useFeet': useFeet,
     'useLbs': useLbs,
+    'onboardingCompleted': onboardingCompleted,
   };
 
   factory BodyMetrics.fromJson(Map<String, dynamic> json) => BodyMetrics(
@@ -124,23 +131,26 @@ class BodyMetrics {
         ? json['name'] as String
         : 'Alex',
     dateOfBirth: json['dateOfBirth'] != null
-        ? DateTime.tryParse(json['dateOfBirth'] as String)
+        ? DateTime.tryParse(json['dateOfBirth'].toString())
         : null,
     heightCm: (json['heightCm'] as num?)?.toDouble(),
     weightKg: (json['weightKg'] as num?)?.toDouble(),
     activityLevel: (json['activityLevel'] as String?) ?? 'Active',
     useFeet: (json['useFeet'] as bool?) ?? false,
     useLbs: (json['useLbs'] as bool?) ?? false,
+    onboardingCompleted: (json['onboardingCompleted'] as bool?) ?? false,
   );
 }
 
 Future<BodyMetrics> loadSavedBodyMetrics() async {
   try {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(bodyMetricsPrefsKey);
-    if (raw == null) return const BodyMetrics();
-    return BodyMetrics.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-  } catch (_) {
+    final raw = await AppLocalStorage.readString(bodyMetricsPrefsKey);
+    if (raw == null || raw.isEmpty) return const BodyMetrics();
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) return const BodyMetrics();
+    return BodyMetrics.fromJson(Map<String, dynamic>.from(decoded));
+  } catch (e) {
     return const BodyMetrics();
   }
 }
@@ -157,7 +167,7 @@ class BodyMetricsController extends Notifier<BodyMetrics> {
   @override
   BodyMetrics build() => ref.watch(initialBodyMetricsProvider);
 
-  void update({
+  Future<void> update({
     String? name,
     DateTime? dateOfBirth,
     double? heightCm,
@@ -165,7 +175,8 @@ class BodyMetricsController extends Notifier<BodyMetrics> {
     String? activityLevel,
     bool? useFeet,
     bool? useLbs,
-  }) {
+    bool? onboardingCompleted,
+  }) async {
     state = state.copyWith(
       name: name,
       dateOfBirth: dateOfBirth,
@@ -174,14 +185,16 @@ class BodyMetricsController extends Notifier<BodyMetrics> {
       activityLevel: activityLevel,
       useFeet: useFeet,
       useLbs: useLbs,
+      onboardingCompleted: onboardingCompleted,
     );
-    unawaited(_persist());
+    await _persist();
   }
+  Future<void> flush() => _persist();
 
   Future<void> _persist() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(bodyMetricsPrefsKey, jsonEncode(state.toJson()));
+      await AppLocalStorage.writeString(bodyMetricsPrefsKey, jsonEncode(state.toJson()));
     } catch (_) {
       // Keep current in-memory values if local storage is unavailable.
     }

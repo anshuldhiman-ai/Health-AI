@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:app/data/local_storage.dart';
 import 'package:app/domain/entities/nutrition_targets.dart';
 
 /// Storage key for the selected daily plan.
@@ -8,8 +9,7 @@ const goalKindPrefsKey = 'goal_kind';
 
 Future<GoalKind> loadSavedGoalKind() async {
   try {
-    final prefs = await SharedPreferences.getInstance();
-    return goalKindFromName(prefs.getString(goalKindPrefsKey));
+    return goalKindFromName(await AppLocalStorage.readString(goalKindPrefsKey));
   } catch (_) {
     return GoalKind.lose;
   }
@@ -35,8 +35,7 @@ class GoalKindController extends Notifier<GoalKind> {
     if (kind == state) return;
     state = kind;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(goalKindPrefsKey, kind.name);
+      await AppLocalStorage.writeString(goalKindPrefsKey, kind.name);
     } catch (_) {
       // Persistence is best-effort; the current session still updates.
     }

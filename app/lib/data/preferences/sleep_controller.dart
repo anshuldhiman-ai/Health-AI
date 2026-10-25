@@ -6,16 +6,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:app/domain/entities/sleep_record.dart';
 
+import 'package:app/data/local_storage.dart';
+
 const sleepPrefsKey = 'sleep.v1';
 
 Future<SleepState> loadSavedSleep() async {
   try {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(sleepPrefsKey);
+    final raw = await AppLocalStorage.readString(sleepPrefsKey);
     if (raw != null) {
       final decoded = jsonDecode(raw);
-      if (decoded is Map<String, dynamic>) {
-        return SleepState.fromJson(decoded);
+      if (decoded is Map) {
+        return SleepState.fromJson(Map<String, dynamic>.from(decoded));
       }
     }
   } catch (_) {
@@ -39,24 +41,25 @@ class SleepController extends Notifier<SleepState> {
   @override
   SleepState build() => ref.watch(initialSleepProvider);
 
-  void save({required int bedMinutes, required int wakeMinutes}) {
+  Future<void> save({required int bedMinutes, required int wakeMinutes}) async {
     state = state.save(
       DateTime.now(),
       bedMinutes: bedMinutes,
       wakeMinutes: wakeMinutes,
     );
-    unawaited(_persist());
+    await _persist();
   }
 
-  void removeToday() {
+  Future<void> removeToday() async {
     state = state.remove(DateTime.now());
-    unawaited(_persist());
+    await _persist();
   }
+
+  Future<void> flush() => _persist();
 
   Future<void> _persist() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(sleepPrefsKey, jsonEncode(state.toJson()));
+      await AppLocalStorage.writeString(sleepPrefsKey, jsonEncode(state.toJson()));
     } catch (_) {
       // Keep the in-session value.
     }

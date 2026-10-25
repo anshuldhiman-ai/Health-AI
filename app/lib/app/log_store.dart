@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:app/data/local_storage.dart';
 import 'package:app/domain/entities/log_entry.dart';
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/domain/entities/meal.dart';
@@ -107,6 +108,14 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
     return true;
   }
 
+  /// Clear all entries for the given day offset.
+  void clearDay(int dayOffset) {
+    if (dayOffset < 0 || dayOffset >= maxDays) return;
+    final next = Map<int, List<LogEntry>>.from(state);
+    next.remove(dayOffset);
+    _commit(next);
+  }
+
   /// Remove a specific entry from a day (meal detail sheet).
   bool removeAt(int dayOffset, int index) {
     final entries = entriesFor(dayOffset);
@@ -121,8 +130,6 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
 
   void _commit(Map<int, List<LogEntry>> next) {
     state = next;
-    final prefs = this.prefs;
-    if (prefs == null) return;
     final payload = jsonEncode({
       'baseDate': _dateOnly(DateTime.now()).toIso8601String(),
       'days': {
@@ -131,15 +138,14 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
       },
     });
     // Serialize writes so a fast undo cannot land before its add.
+    // [AppLocalStorage] owns the storage strategy (authoritative
+    // preferences copy plus keystore mirror); writing preferences again
+    // from here just gives the log two places to disagree with itself.
     _saveQueue = _saveQueue.then((_) async {
       try {
-        final success = await prefs.setString(storageKey, payload);
-        if (!success) {
-          debugPrint('[DayLog] Failed to save to SharedPreferences');
-        }
+        await AppLocalStorage.writeString(storageKey, payload);
       } catch (e) {
         debugPrint('[DayLog] Save error: $e');
-        // Keep the in-session value if save fails.
       }
     });
   }
@@ -150,8 +156,7 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
 /// the app opens on a later day.
 ///
 /// Never throws: a storage failure returns an empty log so the app can
-/// still paint its first frame (an uncaught throw here means no
-/// `runApp`, which the user sees as a black screen).
+/// still paint its first frame.
 Future<DayLog> loadSavedDayLog() async {
   SharedPreferences? prefs;
   try {
@@ -162,44 +167,51 @@ Future<DayLog> loadSavedDayLog() async {
   }
   try {
     return await _loadSavedDayLog(prefs);
-  } catch (_) {
-    // Corrupt payload of any other shape: drop it and start clean.
-    await prefs.remove(DayLog.storageKey).catchError((_) => false);
+  } catch (e) {
+    debugPrint('[DayLog] Error in loadSavedDayLog: $e');
     return DayLog(prefs: prefs);
   }
 }
 
-Future<DayLog> _loadSavedDayLog(SharedPreferences prefs) async {
-  final raw = prefs.getString(DayLog.storageKey);
+Future<DayLog> _loadSavedDayLog(SharedPreferences? prefs) async {
+  // Sanitised by [AppLocalStorage]: a value that is not real data is
+  // reported as absent, so the deletion below can only ever be reached
+  // by a genuinely unparseable payload and never by a storage error.
+  String? raw = await AppLocalStorage.readString(DayLog.storageKey);
+  if (raw == null && prefs != null) {
+    raw = AppLocalStorage.sanitize(prefs.getString(DayLog.storageKey));
+  }
   final entries = <int, List<LogEntry>>{};
   DateTime? base;
-  if (raw != null) {
+  if (raw != null && raw.isNotEmpty) {
     try {
       final decoded = jsonDecode(raw);
-      if (decoded is Map<String, dynamic>) {
+      if (decoded is Map) {
         final baseRaw = decoded['baseDate'];
         base = baseRaw is String ? DateTime.tryParse(baseRaw) : null;
         final days = decoded['days'];
-        if (days is Map<String, dynamic>) {
+        if (days is Map) {
           for (final day in days.entries) {
-            final offset = int.tryParse(day.key);
+            final offset = int.tryParse(day.key.toString());
             final rows = day.value;
             if (offset == null || rows is! List) continue;
             final parsed = <LogEntry>[];
             for (final row in rows) {
-              if (row is! Map<String, dynamic>) continue;
+              if (row is! Map) continue;
               try {
-                parsed.add(LogEntry.fromJson(row));
-              } on FormatException {
-                // Skip a malformed row, keep the rest of the day.
+                parsed.add(LogEntry.fromJson(Map<String, dynamic>.from(row)));
+              } catch (e) {
+                debugPrint('[DayLog] Skipped bad row: $e');
               }
             }
             if (parsed.isNotEmpty) entries[offset] = parsed;
           }
         }
       }
-    } on FormatException {
-      await prefs.remove(DayLog.storageKey);
+    } on FormatException catch (e) {
+      debugPrint('[DayLog] Malformed JSON syntax (data preserved): $e');
+    } catch (e) {
+      debugPrint('[DayLog] Load error (data preserved): $e');
     }
   }
 

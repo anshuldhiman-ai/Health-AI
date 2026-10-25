@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:app/data/local_storage.dart';
+
 /// Storage key for the saved appearance choice.
 const themeModePrefsKey = 'theme_mode';
 
@@ -9,8 +11,7 @@ const themeModePrefsKey = 'theme_mode';
 /// flash the light theme.
 Future<ThemeMode> loadSavedThemeMode() async {
   try {
-    final prefs = await SharedPreferences.getInstance();
-    return themeModeFromName(prefs.getString(themeModePrefsKey));
+    return themeModeFromName(await AppLocalStorage.readString(themeModePrefsKey));
   } catch (_) {
     // Storage unavailable (tests/desktop): fall back to the system.
     return ThemeMode.system;
@@ -39,8 +40,7 @@ class ThemeModeController extends Notifier<ThemeMode> {
     if (mode == state) return;
     state = mode;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(themeModePrefsKey, mode.name);
+      await AppLocalStorage.writeString(themeModePrefsKey, mode.name);
     } catch (_) {
       // Persistence is best-effort; the current session still animates.
     }
