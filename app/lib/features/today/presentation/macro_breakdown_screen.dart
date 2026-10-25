@@ -10,20 +10,17 @@ import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/log_entry.dart';
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/domain/entities/meal.dart';
-import 'package:app/l10n/app_localizations.dart';
 
 /// Screen showing exact macro contributions per dish eaten today.
 /// Has 3 options on top (Protein, Carbs, Fats) to easily switch between them.
 class MacroBreakdownScreen extends ConsumerStatefulWidget {
-  const MacroBreakdownScreen({
-    super.key,
-    this.initialKind = MacroKind.protein,
-  });
+  const MacroBreakdownScreen({super.key, this.initialKind = MacroKind.protein});
 
   final MacroKind initialKind;
 
   @override
-  ConsumerState<MacroBreakdownScreen> createState() => _MacroBreakdownScreenState();
+  ConsumerState<MacroBreakdownScreen> createState() =>
+      _MacroBreakdownScreenState();
 }
 
 class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
@@ -45,32 +42,28 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
 
     final (targetGrams, macroColor, macroName, unit) = switch (_selectedKind) {
       MacroKind.protein => (
-          targets.protein,
-          const Color(0xFF10B981),
-          'Protein',
-          'g',
-        ),
+        targets.protein,
+        colors.macroProtein,
+        'Protein',
+        'g',
+      ),
       MacroKind.carbs => (
-          targets.carbs,
-          const Color(0xFFD4AF37),
-          'Carbohydrates',
-          'g',
-        ),
-      MacroKind.fat => (
-          targets.fat,
-          const Color(0xFFD97706),
-          'Fats',
-          'g',
-        ),
+        targets.carbs,
+        colors.macroCarbs,
+        'Carbohydrates',
+        'g',
+      ),
+      MacroKind.fat => (targets.fat, colors.macroFat, 'Fats', 'g'),
     };
 
     // Calculate total consumed for selected macro
     final totalConsumed = entries.fold<int>(0, (sum, e) {
-      return sum + switch (_selectedKind) {
-        MacroKind.protein => e.proteinGrams,
-        MacroKind.carbs => e.carbsGrams,
-        MacroKind.fat => e.fatGrams,
-      };
+      return sum +
+          switch (_selectedKind) {
+            MacroKind.protein => e.proteinGrams,
+            MacroKind.carbs => e.carbsGrams,
+            MacroKind.fat => e.fatGrams,
+          };
     });
 
     final percentOfTarget = targetGrams > 0
@@ -85,8 +78,7 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
         MacroKind.fat => e.fatGrams,
       };
       return (entry: e, grams: grams);
-    }).toList()
-      ..sort((a, b) => b.grams.compareTo(a.grams));
+    }).toList()..sort((a, b) => b.grams.compareTo(a.grams));
 
     return Scaffold(
       appBar: AppBar(
@@ -116,19 +108,21 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
                   _MacroTabButton(
                     label: 'Protein',
                     selected: _selectedKind == MacroKind.protein,
-                    color: const Color(0xFF10B981),
-                    onTap: () => setState(() => _selectedKind = MacroKind.protein),
+                    color: colors.macroProtein,
+                    onTap: () =>
+                        setState(() => _selectedKind = MacroKind.protein),
                   ),
                   _MacroTabButton(
                     label: 'Carbs',
                     selected: _selectedKind == MacroKind.carbs,
-                    color: const Color(0xFFD4AF37),
-                    onTap: () => setState(() => _selectedKind = MacroKind.carbs),
+                    color: colors.macroCarbs,
+                    onTap: () =>
+                        setState(() => _selectedKind = MacroKind.carbs),
                   ),
                   _MacroTabButton(
                     label: 'Fats',
                     selected: _selectedKind == MacroKind.fat,
-                    color: const Color(0xFFD97706),
+                    color: colors.macroFat,
                     onTap: () => setState(() => _selectedKind = MacroKind.fat),
                   ),
                 ],
@@ -153,9 +147,12 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: macroColor.withValues(alpha: 0.15),
+                          color: colors.washOf(macroColor),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -206,9 +203,13 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: LinearProgressIndicator(
-                      value: targetGrams > 0 ? (totalConsumed / targetGrams).clamp(0.0, 1.0) : 0,
+                      value: targetGrams > 0
+                          ? (totalConsumed / targetGrams).clamp(0.0, 1.0)
+                          : 0,
                       minHeight: 8,
-                      backgroundColor: scheme.outlineVariant.withValues(alpha: 0.4),
+                      backgroundColor: scheme.outlineVariant.withValues(
+                        alpha: 0.4,
+                      ),
                       valueColor: AlwaysStoppedAnimation<Color>(macroColor),
                     ),
                   ),
@@ -230,7 +231,9 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
                 ),
                 Text(
                   '${contributingEntries.length} items',
-                  style: AppTypography.caption.copyWith(color: scheme.onSurfaceVariant),
+                  style: AppTypography.caption.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -238,7 +241,10 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
 
             if (contributingEntries.isEmpty)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 36),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 36,
+                ),
                 decoration: BoxDecoration(
                   color: scheme.surface,
                   borderRadius: BorderRadius.circular(18),
@@ -250,19 +256,26 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: macroColor.withValues(alpha: 0.12),
+                        color: colors.washOf(macroColor),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.restaurant_rounded, color: macroColor, size: 28),
+                      child: Icon(
+                        Icons.restaurant_rounded,
+                        color: macroColor,
+                        size: 28,
+                      ),
                     ),
                     const SizedBox(height: 14),
                     Text(
                       'No $macroName logged today',
-                      style: AppTypography.itemTitle.copyWith(color: scheme.onSurface),
+                      style: AppTypography.itemTitle.copyWith(
+                        color: scheme.onSurface,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Scan a meal photo or search dishes from the diary to see your breakdown.',
+                      'Scan a meal photo or search dishes from the diary '
+                      'to see your breakdown.',
                       textAlign: TextAlign.center,
                       style: AppTypography.caption.copyWith(
                         color: scheme.onSurfaceVariant,
@@ -278,8 +291,11 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
                           icon: const Icon(Icons.camera_alt_rounded, size: 18),
                           label: const Text('Scan Meal'),
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F3E2E),
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                            backgroundColor: scheme.primary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -288,7 +304,10 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
                           icon: const Icon(Icons.search_rounded, size: 18),
                           label: const Text('Search Food'),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -300,19 +319,24 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
               ...contributingEntries.map((item) {
                 final e = item.entry;
                 final grams = item.grams;
-                final share = totalConsumed > 0 ? ((grams / totalConsumed) * 100).round() : 0;
+                final share = totalConsumed > 0
+                    ? ((grams / totalConsumed) * 100).round()
+                    : 0;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: AppCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     child: Row(
                       children: [
                         Container(
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: macroColor.withValues(alpha: 0.12),
+                            color: colors.washOf(macroColor),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(
@@ -348,7 +372,13 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  Text('•', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11)),
+                                  Text(
+                                    '•',
+                                    style: TextStyle(
+                                      color: scheme.onSurfaceVariant,
+                                      fontSize: 11,
+                                    ),
+                                  ),
                                   const SizedBox(width: 6),
                                   Text(
                                     '${e.kcal} kcal',
@@ -357,12 +387,19 @@ class _MacroBreakdownScreenState extends ConsumerState<MacroBreakdownScreen> {
                                       fontSize: 11.5,
                                     ),
                                   ),
-                                  if (e.timeLabel.isNotEmpty) ...[
-                                    const SizedBox(width: 6),
-                                    Text('•', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11)),
+                                  if (e.timeLabel != null &&
+                                      e.timeLabel!.isNotEmpty) ...[
                                     const SizedBox(width: 6),
                                     Text(
-                                      e.timeLabel,
+                                      '•',
+                                      style: TextStyle(
+                                        color: scheme.onSurfaceVariant,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      e.timeLabel!,
                                       style: AppTypography.caption.copyWith(
                                         color: scheme.onSurfaceVariant,
                                         fontSize: 11.5,
@@ -447,13 +484,7 @@ class _MacroTabButton extends StatelessWidget {
             color: selected ? scheme.surface : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
+                ? context.appColors.shadow(blur: 4, y: 2, alpha: 0.06)
                 : null,
           ),
           child: Row(
@@ -462,10 +493,7 @@ class _MacroTabButton extends StatelessWidget {
               Container(
                 width: 8,
                 height: 8,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 6),
               Text(

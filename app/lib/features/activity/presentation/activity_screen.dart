@@ -84,11 +84,10 @@ class _LiveActivity extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-          _HeroCard(snapshot: snapshot),
+        _HeroCard(snapshot: snapshot),
         const SizedBox(height: 14),
         _MetricsGrid(snapshot: snapshot),
-        const SizedBox(height: 14),
-        _CaloriesBurnedCard(steps: snapshot.steps),
+
         const SizedBox(height: 20),
         GroupHeader(title: l10n.todayByHour),
         const SizedBox(height: 12),
@@ -104,65 +103,6 @@ class _LiveActivity extends StatelessWidget {
   }
 }
 
-class _CaloriesBurnedCard extends StatelessWidget {
-  const _CaloriesBurnedCard({required this.steps});
-  final int steps;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: colors.primaryWash,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.local_fire_department_rounded,
-              color: colors.primary,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Calories Burned',
-                style: AppTypography.itemS.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${(steps * 0.04).round()} kcal',
-                style: AppTypography.itemTitle.copyWith(
-                  color: scheme.onSurface,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Icon(
-            Icons.chevron_right_rounded,
-            color: scheme.onSurfaceVariant,
-            size: 22,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _Header extends StatelessWidget {
   const _Header({required this.title});
@@ -204,6 +144,7 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
     final displaySteps = snapshot.steps;
     final progress = (displaySteps / kDailyStepGoal).clamp(0.0, 1.0);
 
@@ -215,11 +156,13 @@ class _HeroCard extends StatelessWidget {
             progress: progress,
             size: 190,
             strokeWidth: 15,
-            gradientColors: const [
-              Color(0xFF0D5C3A),
-              Color(0xFF28B781),
-              Color(0xFF48ABD9),
-              Color(0xFFE5B25D),
+            // Theme tokens, so the ring keeps its progression in dark
+            // mode instead of going muddy against the dark surface.
+            gradientColors: [
+              colors.primary,
+              colors.success,
+              colors.water,
+              colors.accent,
             ],
             semanticLabel:
                 '${formatCount(displaySteps)} ${l10n.stepsLabel}, '
@@ -272,7 +215,7 @@ class _MetricsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final distance = snapshot.distanceKm;
-    final activeMinutes = (snapshot.activeSeconds ~/ 60);
+    final activeMinutes = snapshot.activeSeconds ~/ 60;
 
     return Row(
       children: [

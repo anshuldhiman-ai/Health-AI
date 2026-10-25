@@ -4,11 +4,11 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:app/core/format/count_format.dart';
+import 'package:app/data/local_storage.dart';
 import 'package:app/domain/entities/activity_snapshot.dart';
 import 'package:app/domain/services/activity_ledger.dart';
 import 'package:app/domain/services/local_date.dart';
@@ -26,30 +26,28 @@ const _kLegacyDateKey = 'steps.baseline.date';
 const _kLegacyBaseKey = 'steps.baseline.value';
 
 class ActivityStore {
-  const ActivityStore({this.storage = const FlutterSecureStorage()});
-
-  final FlutterSecureStorage storage;
+  const ActivityStore();
 
   Future<ActivityLedger> load(DateTime now) async {
     ActivityLedger? ledger;
     try {
-      final raw = await storage.read(key: _kActivityKey);
+      final raw = await AppLocalStorage.readString(_kActivityKey);
       if (raw != null) {
         final decoded = jsonDecode(raw);
-        if (decoded is Map<String, dynamic>) {
-          ledger = ActivityLedger.fromJson(decoded);
+        if (decoded is Map) {
+          ledger = ActivityLedger.fromJson(Map<String, dynamic>.from(decoded));
         }
       }
     } catch (_) {
-      // Keep the session usable if the keystore is temporarily locked.
+      // Keep the session usable if the store is temporarily locked.
     }
 
     ledger ??= ActivityLedger.empty(now);
     if (ledger.lastSensor == null) {
       try {
-        final oldDate = await storage.read(key: _kLegacyDateKey);
+        final oldDate = await AppLocalStorage.readString(_kLegacyDateKey);
         final oldBase = int.tryParse(
-          await storage.read(key: _kLegacyBaseKey) ?? '',
+          await AppLocalStorage.readString(_kLegacyBaseKey) ?? '',
         );
         if (oldDate == localDateKey(now) && oldBase != null) {
           ledger.legacyAnchor = oldBase;
@@ -64,9 +62,9 @@ class ActivityStore {
 
   Future<void> save(ActivityLedger ledger) async {
     try {
-      await storage.write(
-        key: _kActivityKey,
-        value: jsonEncode(ledger.toJson()),
+      await AppLocalStorage.writeString(
+        _kActivityKey,
+        jsonEncode(ledger.toJson()),
       );
     } catch (_) {
       // The in-memory ledger continues; the next event retries.
@@ -79,8 +77,12 @@ final activityStoreProvider = Provider<ActivityStore>(
 );
 
 final stepTrackerProvider = StreamProvider<StepSnapshot>((ref) async* {
+  final store = ref.watch(activityStoreProvider);
+  final ledger = await store.load(DateTime.now());
+  yield ledger.snapshot(StepStatus.live, DateTime.now());
+
   if (!Platform.isAndroid && !Platform.isIOS) {
-    yield const StepSnapshot(status: StepStatus.unsupported);
+    yield ledger.snapshot(StepStatus.unsupported, DateTime.now());
     return;
   }
 
@@ -90,19 +92,15 @@ final stepTrackerProvider = StreamProvider<StepSnapshot>((ref) async* {
       if (!status.isGranted) {
         final requestStatus = await Permission.activityRecognition.request();
         if (!requestStatus.isGranted) {
-          yield const StepSnapshot(status: StepStatus.permissionDenied);
+          yield ledger.snapshot(StepStatus.permissionDenied, DateTime.now());
           return;
         }
       }
     } catch (_) {
-      yield const StepSnapshot(status: StepStatus.unavailable);
+      yield ledger.snapshot(StepStatus.unavailable, DateTime.now());
       return;
     }
   }
-
-  final store = ref.watch(activityStoreProvider);
-  final ledger = await store.load(DateTime.now());
-  yield ledger.snapshot(StepStatus.live, DateTime.now());
 
   var saving = false;
   var saveAgain = false;
@@ -177,9 +175,6 @@ String formatStepCount(int steps) => formatCount(steps);
 /// or permission is unavailable (never a fake number).
 String stepTileLabel(AsyncValue<StepSnapshot> value) {
   final snapshot = value.valueOrNull;
-  if (snapshot == null) return '—';
-  if (snapshot.isLive || snapshot.steps > 0) {
-    return formatStepCount(snapshot.steps);
-  }
-  return '—';
+  if (snapshot == null) return '0';
+  return formatStepCount(snapshot.steps);
 }
