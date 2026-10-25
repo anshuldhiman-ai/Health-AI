@@ -33,111 +33,114 @@ class ProfileScreen extends ConsumerWidget {
     final colors = context.appColors;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Golden gradient top banner
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 170,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFE5B25D),
-                    Color(0xFFD4AF37),
-                    Color(0xFFC59A3F),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 96),
+        child: Column(
+          children: [
+            // Brand header banner (seamlessly integrated, never jitters or
+            // moves awkwardly). Emerald rather than a fixed gold: whatever
+            // sits on it draws in onPrimary, so it holds on either theme.
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: colors.emeraldGradient,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(32),
                 ),
               ),
-            ),
-          ),
-          SafeArea(
-            bottom: false,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenPadding,
-                10,
-                AppSpacing.screenPadding,
-                96,
-              ),
-              children: [
-                // Top Nav Bar: Back and Settings
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.black87),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                      tooltip: 'Back',
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => showSettingsSheet(context),
-                      icon: const Icon(Icons.settings_outlined, color: Colors.black87),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                      tooltip: 'Settings',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                // Center Avatar
-                Center(
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    clipBehavior: Clip.none,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.screenPadding,
+                    10,
+                    AppSpacing.screenPadding,
+                    24,
+                  ),
+                  child: Column(
                     children: [
-                      Container(
-                        width: 92,
-                        height: 92,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Container(
-                            color: scheme.surface,
-                            child: Icon(Icons.person_rounded, size: 52, color: scheme.primary),
+                      // Top Nav Bar: Back and Settings
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => Navigator.of(context).maybePop(),
+                            icon: Icon(Icons.arrow_back_rounded, color: scheme.onPrimary),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                            tooltip: 'Back',
                           ),
-                        ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () => showSettingsSheet(context),
+                            icon: Icon(Icons.settings_outlined, color: scheme.onPrimary),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                            tooltip: 'Settings',
+                          ),
+                        ],
                       ),
-                      Positioned(
-                        bottom: -6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0F3E2E),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white, width: 1.5),
-                          ),
-                          child: const Text(
-                            '100% Free',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.2,
+                      const SizedBox(height: 6),
+                      // Center Avatar
+                      Stack(
+                        alignment: Alignment.bottomCenter,
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 92,
+                            height: 92,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: scheme.onPrimary, width: 3.5),
+                              // No shadow in dark mode: a black shadow is
+                              // invisible there, so shadow() drops it.
+                              boxShadow: colors.shadow(alpha: 0.15, blur: 10),
+                            ),
+                            child: ClipOval(
+                              child: Container(
+                                color: scheme.surface,
+                                child: Icon(Icons.person_rounded, size: 52, color: scheme.primary),
+                              ),
                             ),
                           ),
-                        ),
+                          Positioned(
+                            bottom: -6,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: colors.primary,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: scheme.onPrimary, width: 1.5),
+                              ),
+                              child: Text(
+                                '100% Free',
+                                style: TextStyle(
+                                  color: scheme.onPrimary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
+              ),
+            ),
+            // Profile details & cards
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                16,
+                AppSpacing.screenPadding,
+                0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
                   metrics.name,
                   textAlign: TextAlign.center,
                   style: AppTypography.titleL.copyWith(
@@ -220,43 +223,6 @@ class ProfileScreen extends ConsumerWidget {
                   label: metrics.bmiLabel,
                   onTap: () => _showBmiGuide(context, metrics),
                 ),
-                const SizedBox(height: 18),
-                // Integrations Section
-                Text(
-                  'Integrations',
-                  style: AppTypography.titleM.copyWith(
-                    color: scheme.onSurface,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                AppCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _IntegrationButton(
-                        name: 'Apple\nHealth',
-                        icon: Icons.favorite_rounded,
-                        color: const Color(0xFFFF2D55),
-                        onTap: () => _showIntegrationNotice(context, 'Apple Health'),
-                      ),
-                      _IntegrationButton(
-                        name: 'Garmin',
-                        icon: Icons.navigation_rounded,
-                        color: const Color(0xFF007CC3),
-                        onTap: () => _showIntegrationNotice(context, 'Garmin'),
-                      ),
-                      _IntegrationButton(
-                        name: 'Fitbit',
-                        icon: Icons.grain_rounded,
-                        color: const Color(0xFF00B0B9),
-                        onTap: () => _showIntegrationNotice(context, 'Fitbit'),
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 16),
                 // Nutrition Goal Card
                 AppCard(
@@ -310,10 +276,10 @@ class ProfileScreen extends ConsumerWidget {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD4AF37).withValues(alpha: 0.16),
+                          color: colors.washOf(colors.gold),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.help_outline_rounded, color: Color(0xFFD4AF37), size: 21),
+                        child: Icon(Icons.help_outline_rounded, color: colors.gold, size: 21),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -346,25 +312,16 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  void _showIntegrationNotice(BuildContext context, String service) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('$service sync uses local device sensors without cloud login.'),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-  }
+    ),
+  );
+}
 
   void _showBmiGuide(BuildContext context, BodyMetrics metrics) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -396,11 +353,11 @@ class ProfileScreen extends ConsumerWidget {
                 style: AppTypography.caption.copyWith(color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
-              _BmiGuideRow(color: const Color(0xFFEF4444), range: '< 17.0', label: 'Severely Underweight'),
-              _BmiGuideRow(color: const Color(0xFFEAB308), range: '17.0 – 18.4', label: 'Borderline Underweight'),
-              _BmiGuideRow(color: const Color(0xFF10B981), range: '18.5 – 24.9', label: 'Healthy / Normal Range'),
-              _BmiGuideRow(color: const Color(0xFFEAB308), range: '25.0 – 29.9', label: 'Borderline Overweight'),
-              _BmiGuideRow(color: const Color(0xFFEF4444), range: '≥ 30.0', label: 'Obese Range'),
+              _BmiGuideRow(color: colors.danger, range: '< 17.0', label: 'Severely Underweight'),
+              _BmiGuideRow(color: colors.warning, range: '17.0 – 18.4', label: 'Borderline Underweight'),
+              _BmiGuideRow(color: colors.success, range: '18.5 – 24.9', label: 'Healthy / Normal Range'),
+              _BmiGuideRow(color: colors.warning, range: '25.0 – 29.9', label: 'Borderline Overweight'),
+              _BmiGuideRow(color: colors.danger, range: '≥ 30.0', label: 'Obese Range'),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
@@ -434,7 +391,7 @@ class _BmiGuideRow extends StatelessWidget {
           const SizedBox(width: 10),
           SizedBox(
             width: 85,
-            child: Text(range, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+            child: Text(range, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w700, fontSize: 13)),
           ),
           Expanded(
             child: Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
@@ -516,15 +473,17 @@ class _BmiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
-    // Green if good, yellow if edge, red if under or over
+    // Success if healthy, warning at the edges, danger when under or
+    // over. Same token mapping as the guide rows and the live preview.
     final color = switch (status) {
       BmiStatus.unknown => scheme.onSurfaceVariant,
-      BmiStatus.severelyUnderweight => const Color(0xFFEF4444),
-      BmiStatus.slightlyUnderweight => const Color(0xFFEAB308),
-      BmiStatus.normal => const Color(0xFF10B981),
-      BmiStatus.overweight => const Color(0xFFEAB308),
-      BmiStatus.obese => const Color(0xFFEF4444),
+      BmiStatus.severelyUnderweight => colors.danger,
+      BmiStatus.slightlyUnderweight => colors.warning,
+      BmiStatus.normal => colors.success,
+      BmiStatus.overweight => colors.warning,
+      BmiStatus.obese => colors.danger,
     };
 
     return AppCard(
@@ -536,7 +495,7 @@ class _BmiCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.14),
+              color: colors.washOf(color),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.monitor_weight_outlined, color: color, size: 22),
@@ -560,7 +519,7 @@ class _BmiCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
+                        color: colors.washOf(color),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -606,55 +565,6 @@ class _BmiCard extends StatelessWidget {
   }
 }
 
-class _IntegrationButton extends StatelessWidget {
-  const _IntegrationButton({
-    required this.name,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  final String name;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Column(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-                height: 1.1,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 Future<void> _editProfile(
   BuildContext context,
   WidgetRef ref,
@@ -682,6 +592,7 @@ Future<void> _editProfile(
 
   await showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     shape: const RoundedRectangleBorder(
@@ -690,6 +601,7 @@ Future<void> _editProfile(
     builder: (sheetContext) => StatefulBuilder(
       builder: (context, setState) {
         final scheme = Theme.of(context).colorScheme;
+        final colors = context.appColors;
 
         // Calculate preview BMI
         final parsedH = double.tryParse(heightCtrl.text);
@@ -709,14 +621,14 @@ Future<void> _editProfile(
         final bmiColor = previewBmi == null
             ? scheme.onSurfaceVariant
             : previewBmi < 17.0
-                ? const Color(0xFFEF4444)
+                ? colors.danger
                 : previewBmi < 18.5
-                    ? const Color(0xFFEAB308)
+                    ? colors.warning
                     : previewBmi < 25.0
-                        ? const Color(0xFF10B981)
+                        ? colors.success
                         : previewBmi < 30.0
-                            ? const Color(0xFFEAB308)
-                            : const Color(0xFFEF4444);
+                            ? colors.warning
+                            : colors.danger;
 
         return Padding(
           padding: EdgeInsets.fromLTRB(
@@ -883,7 +795,7 @@ Future<void> _editProfile(
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: bmiColor.withValues(alpha: 0.12),
+                      color: colors.washOf(bmiColor),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: bmiColor.withValues(alpha: 0.4)),
                     ),
@@ -938,10 +850,10 @@ Future<void> _editProfile(
 String _goalSubtitle(AppLocalizations l10n, GoalKind kind) {
   switch (kind) {
     case GoalKind.lose:
-      return l10n.goalWeightLoss;
+      return l10n.goalLoseSubtitle;
     case GoalKind.maintain:
-      return l10n.goalMaintenance;
+      return l10n.goalMaintainSubtitle;
     case GoalKind.gain:
-      return l10n.goalMuscleGain;
+      return l10n.goalGainSubtitle;
   }
 }

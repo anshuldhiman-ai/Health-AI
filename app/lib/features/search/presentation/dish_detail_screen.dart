@@ -98,6 +98,7 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
             ],
           ),
           data: (catalog) {
+            final colors = context.appColors;
             final dish = catalog.dishes[widget.dishId];
             if (dish == null) {
               return Column(
@@ -183,18 +184,18 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF0D5C3A).withValues(alpha: 0.12),
+                                      color: colors.washOf(colors.primary),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
-                                      children: const [
-                                        Icon(Icons.auto_awesome_rounded, size: 15, color: Color(0xFF0D5C3A)),
-                                        SizedBox(width: 6),
+                                      children: [
+                                        Icon(Icons.auto_awesome_rounded, size: 15, color: colors.primary),
+                                        const SizedBox(width: 6),
                                         Text(
                                           'Great for muscle recovery',
                                           style: TextStyle(
-                                            color: Color(0xFF0D5C3A),
+                                            color: colors.primary,
                                             fontWeight: FontWeight.w700,
                                             fontSize: 12,
                                           ),
@@ -365,13 +366,9 @@ class _FoodImageBanner extends StatelessWidget {
             decoration: BoxDecoration(
               color: scheme.surface,
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              // Theme-aware depth: a black shadow is invisible on the dark
+              // canvas, so dark mode leans on the surface tone instead.
+              boxShadow: colors.shadow(blur: 14, alpha: 0.12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1010,7 +1007,6 @@ class _AddBar extends StatelessWidget {
                 onPressed: onAdd,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
-                  backgroundColor: const Color(0xFF0D5C3A),
                 ),
                 child: Text(
                   '${l10n.addToDiary} · ${serving.midKcal} ${l10n.kcalUnit}',

@@ -14,6 +14,7 @@ import 'package:app/data/preferences/goal_kind_controller.dart';
 Future<void> showGoalSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => const GoalSettingsScreen(isModal: true),
@@ -71,7 +72,17 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
             width: 130,
             height: 130,
             child: CustomPaint(
-              painter: _ArcheryTargetPainter(),
+              // Colours are injected rather than painted from literals:
+              // the graphic has to re-tone when the theme flips.
+              painter: _ArcheryTargetPainter(
+                outerFill: colors.washOf(colors.primary),
+                midFill: colors.washOf(colors.primary, strength: 2),
+                coreFill: colors.primary,
+                stroke: colors.primary,
+                bullseye: colors.gold,
+                arrow: colors.ink,
+                fletching: colors.success,
+              ),
             ),
           ),
         ),
@@ -87,7 +98,7 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
         const SizedBox(height: 10),
         _GoalToggleTile(
           icon: Icons.local_fire_department_outlined,
-          iconColor: const Color(0xFFD4AF37),
+          iconColor: colors.gold,
           title: 'Calories',
           subtitle: 'Elegant subtle accents',
           value: _caloriesOn,
@@ -163,7 +174,7 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
                                 GoalKind.gain => 'Muscle Gain',
                               },
                               style: TextStyle(
-                                color: kind == selectedKind ? Colors.white : scheme.onSurface,
+                                color: kind == selectedKind ? scheme.onPrimary : scheme.onSurface,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -172,7 +183,9 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
                             Text(
                               '${formatCount(targetsForGoal(kind).kcal)} kcal',
                               style: TextStyle(
-                                color: kind == selectedKind ? Colors.white70 : scheme.onSurfaceVariant,
+                                color: kind == selectedKind
+                                    ? scheme.onPrimary.withValues(alpha: 0.7)
+                                    : scheme.onSurfaceVariant,
                                 fontSize: 10.5,
                               ),
                             ),
@@ -206,7 +219,7 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
         const SizedBox(height: 10),
         _GoalToggleTile(
           icon: Icons.directions_run_rounded,
-          iconColor: const Color(0xFFE59C39),
+          iconColor: colors.accent,
           title: 'Daily Active Calories',
           subtitle: 'Active energy burn objective',
           value: _dailyActiveCalOn,
@@ -236,19 +249,10 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
           width: double.infinity,
           height: 52,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0D5C3A), Color(0xFF1B8255)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: colors.emeraldGradient,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF0D5C3A).withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            // Drops out in dark mode, where a dark shadow would be invisible.
+            boxShadow: colors.shadow(alpha: 0.3, blur: 10),
           ),
           child: Material(
             color: Colors.transparent,
@@ -257,11 +261,11 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
                 Navigator.of(context).maybePop();
               },
               borderRadius: BorderRadius.circular(16),
-              child: const Center(
+              child: Center(
                 child: Text(
                   'Motivational Icons',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: scheme.onPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
@@ -351,6 +355,7 @@ class _GoalToggleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -359,8 +364,10 @@ class _GoalToggleTile extends StatelessWidget {
           Container(
             width: 40,
             height: 40,
+            // washOf, not a flat alpha: the tint is stronger in dark mode,
+            // where a 12% overlay all but disappears on the card.
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
+              color: colors.washOf(iconColor),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: iconColor, size: 21),
@@ -405,7 +412,9 @@ class _GoalToggleTile extends StatelessWidget {
           ),
           Switch(
             value: value,
-            activeColor: const Color(0xFF0D5C3A),
+            // activeThumbColor is the non-deprecated spelling of the old
+            // activeColor on Android (the track derives from the thumb).
+            activeThumbColor: scheme.primary,
             onChanged: onChanged,
           ),
           Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant, size: 20),
@@ -415,8 +424,29 @@ class _GoalToggleTile extends StatelessWidget {
   }
 }
 
-/// Custom Painter for the Archery Target from ui_design2.jpg Screen 6
+/// Custom Painter for the Archery Target from ui_design2.jpg Screen 6.
+///
+/// Takes its colours from the caller so the rings, bullseye and arrow
+/// follow the active theme instead of assuming a light background.
 class _ArcheryTargetPainter extends CustomPainter {
+  const _ArcheryTargetPainter({
+    required this.outerFill,
+    required this.midFill,
+    required this.coreFill,
+    required this.stroke,
+    required this.bullseye,
+    required this.arrow,
+    required this.fletching,
+  });
+
+  final Color outerFill;
+  final Color midFill;
+  final Color coreFill;
+  final Color stroke;
+  final Color bullseye;
+  final Color arrow;
+  final Color fletching;
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -424,41 +454,41 @@ class _ArcheryTargetPainter extends CustomPainter {
 
     // Rings
     final paint1 = Paint()
-      ..color = const Color(0xFFE6F3EC)
+      ..color = outerFill
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, maxR, paint1);
 
     final stroke1 = Paint()
-      ..color = const Color(0xFF28B781).withValues(alpha: 0.3)
+      ..color = stroke.withValues(alpha: 0.35)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
     canvas.drawCircle(center, maxR, stroke1);
 
     final paint2 = Paint()
-      ..color = const Color(0xFFC7E6D7)
+      ..color = midFill
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, maxR * 0.75, paint2);
 
     final stroke2 = Paint()
-      ..color = const Color(0xFF0D5C3A).withValues(alpha: 0.4)
+      ..color = stroke.withValues(alpha: 0.35)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
     canvas.drawCircle(center, maxR * 0.75, stroke2);
 
     final paint3 = Paint()
-      ..color = const Color(0xFF0D5C3A)
+      ..color = coreFill
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, maxR * 0.5, paint3);
 
     // Bullseye
-    final bullseye = Paint()
-      ..color = const Color(0xFFD4AF37)
+    final bullseyePaint = Paint()
+      ..color = bullseye
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, maxR * 0.22, bullseye);
+    canvas.drawCircle(center, maxR * 0.22, bullseyePaint);
 
     // Arrow hitting bullseye from top-right
     final arrowPaint = Paint()
-      ..color = const Color(0xFF16211C)
+      ..color = arrow
       ..strokeWidth = 3.5
       ..strokeCap = StrokeCap.round;
 
@@ -468,7 +498,7 @@ class _ArcheryTargetPainter extends CustomPainter {
 
     // Arrow fletching
     final fletchPaint = Paint()
-      ..color = const Color(0xFF28B781)
+      ..color = fletching
       ..style = PaintingStyle.fill;
     final fletchPath = Path();
     fletchPath.moveTo(start.dx, start.dy);
@@ -479,5 +509,12 @@ class _ArcheryTargetPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ArcheryTargetPainter oldDelegate) =>
+      oldDelegate.outerFill != outerFill ||
+      oldDelegate.midFill != midFill ||
+      oldDelegate.coreFill != coreFill ||
+      oldDelegate.stroke != stroke ||
+      oldDelegate.bullseye != bullseye ||
+      oldDelegate.arrow != arrow ||
+      oldDelegate.fletching != fletching;
 }

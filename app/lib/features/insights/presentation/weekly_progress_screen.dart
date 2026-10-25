@@ -174,6 +174,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
     return Row(
       children: [
         IconButton(
@@ -208,12 +209,12 @@ class _Header extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: const Color(0xFFD4AF37).withValues(alpha: 0.16),
+            color: colors.washOf(colors.gold),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.military_tech_rounded,
-            color: Color(0xFFD4AF37),
+            color: colors.gold,
             size: 24,
           ),
         ),
@@ -394,15 +395,17 @@ class _CaloriesTab extends StatelessWidget {
                       enabled: true,
                       touchTooltipData: BarTouchTooltipData(
                         getTooltipColor: (_) => scheme.inverseSurface,
-                        getTooltipItem: (group, groupIndex, rod, rodIndex) =>
-                            BarTooltipItem(
-                              '${formatCount(rod.toY.round())} ${l10n.kcalUnit}',
-                              AppTypography.caption.copyWith(
-                                color: scheme.onInverseSurface,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          final kcal = formatCount(rod.toY.round());
+                          return BarTooltipItem(
+                            '$kcal ${l10n.kcalUnit}',
+                            AppTypography.caption.copyWith(
+                              color: scheme.onInverseSurface,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                             ),
+                          );
+                        },
                       ),
                       touchCallback: (event, response) {
                         if (event is FlTapUpEvent) {
@@ -413,8 +416,10 @@ class _CaloriesTab extends StatelessWidget {
                     ),
                     gridData: FlGridData(
                       drawVerticalLine: false,
-                      getDrawingHorizontalLine: (value) =>
-                          FlLine(color: scheme.outlineVariant, strokeWidth: 0.7),
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: scheme.outlineVariant,
+                        strokeWidth: 0.7,
+                      ),
                     ),
                     titlesData: FlTitlesData(
                       topTitles: const AxisTitles(),
@@ -478,11 +483,14 @@ class _CaloriesTab extends StatelessWidget {
                           x: i,
                           barRods: [
                             BarChartRodData(
-                              toY: days[i].kcal > 0 ? days[i].kcal.toDouble() : 1200.0 * (0.5 + (i * 0.1)),
+                              // A day with nothing logged is a real 0 and
+                              // draws no rod. It must never plot a
+                              // synthetic ramp — that is invented data.
+                              toY: days[i].kcal.toDouble(),
                               width: 20,
-                              color: i == selected || i == 5
-                                  ? const Color(0xFF0D5C3A)
-                                  : const Color(0xFF0D5C3A).withValues(alpha: 0.45),
+                              color: i == selected
+                                  ? colors.primary
+                                  : colors.primary.withValues(alpha: 0.45),
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(8),
                               ),
@@ -492,41 +500,44 @@ class _CaloriesTab extends StatelessWidget {
                     ],
                   ),
                 ),
-                // "Weekly streak!" Badge hovering above the 6th day bar
-                Positioned(
-                  top: 0,
-                  right: 48,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D5C3A),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.star_rounded, color: Color(0xFFD4AF37), size: 14),
-                        SizedBox(width: 4),
-                        Text(
-                          'Weekly streak!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
+                // The streak badge is data, so it only appears when the
+                // week actually holds seven logged days.
+                if (days.isNotEmpty && days.every((d) => d.logged))
+                  Positioned(
+                    top: 0,
+                    right: 48,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: colors.gold, width: 1.5),
+                        boxShadow: colors.shadow(blur: 6, y: 2, alpha: 0.15),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.star_rounded,
+                            color: colors.gold,
+                            size: 14,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            'Weekly streak!',
+                            style: TextStyle(
+                              color: scheme.onPrimary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

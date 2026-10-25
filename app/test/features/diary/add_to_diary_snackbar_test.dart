@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:app/app/app.dart';
@@ -12,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// "Added to dinner." is a transient confirmation with an Undo. Users
 /// reported it staying on screen, which is worse than not showing it:
@@ -35,6 +37,11 @@ void main() {
       'assets/nutrition/khana_catalog.json',
     );
     catalog = DishCatalog.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+  });
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    markWelcomeSeen();
   });
 
   /// Advances a fixed number of frames.

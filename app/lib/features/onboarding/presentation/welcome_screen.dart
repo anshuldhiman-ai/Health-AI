@@ -161,131 +161,315 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Spacer(flex: 2),
+                  const SizedBox(height: 8),
 
-                  // Brand Hero Disc with Neon Aura
-                  Container(
-                    width: 140,
-                    height: 140,
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: colors.primary.withValues(alpha: 0.45),
-                        width: 2.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colors.primary.withValues(alpha: 0.30),
-                          blurRadius: 36,
-                          spreadRadius: 4,
-                          offset: const Offset(0, 8),
+                  // App Logo & Header: "Health AI" with green leaf
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const BrandMark(size: 28),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.appTitle,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A1C1E),
+                          letterSpacing: -0.4,
                         ),
-                      ],
-                    ),
-                    child: const Center(child: BrandMark(size: 82)),
+                      ),
+                    ],
                   ),
+
                   const SizedBox(height: 24),
 
-                  Text(
-                    l10n.appTitle,
-                    textAlign: TextAlign.center,
-                    style: AppTypography.hero.copyWith(
-                      color: scheme.onSurface,
-                      fontSize: 34,
-                      letterSpacing: -0.8,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Eat Smart. Live Healthier.',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.titleM.copyWith(
-                      color: colors.primary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'On-device AI nutrition tracking & wellness',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.bodyM.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 13.5,
-                      height: 1.4,
-                    ),
+                  // 3 Rounded Square Glassmorphic Cards Showcase
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _GlassThumbnailBox(
+                        icon: Icons.groups_rounded,
+                        bgColor: const Color(0xFFE8F3EE),
+                        iconColor: const Color(0xFF0F5A3C),
+                        size: 64,
+                      ),
+                      const SizedBox(width: 14),
+                      _GlassThumbnailBox(
+                        icon: Icons.volunteer_activism_rounded,
+                        bgColor: const Color(0xFF0F5A3C),
+                        iconColor: Colors.white,
+                        size: 82,
+                        isElevated: true,
+                      ),
+                      const SizedBox(width: 14),
+                      _GlassThumbnailBox(
+                        icon: Icons.favorite_rounded,
+                        bgColor: const Color(0xFFFDECEB),
+                        iconColor: const Color(0xFFE55858),
+                        size: 64,
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 20),
 
-                  // 3 Feature highlight pills
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
+                  // Biometric Face ID Prompt Area
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _FeaturePill(icon: Icons.camera_alt_outlined, label: 'AI Food Scan', colors: colors, scheme: scheme),
-                      _FeaturePill(icon: Icons.water_drop_outlined, label: 'Smart Hydration', colors: colors, scheme: scheme),
-                      _FeaturePill(icon: Icons.shield_outlined, label: '100% Offline', colors: colors, scheme: scheme),
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: const Color(0xFF0F5A3C).withValues(alpha: 0.15),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0F5A3C).withValues(alpha: 0.06),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.face_unlock_rounded,
+                          color: Color(0xFF0F5A3C),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Biometric Face ID',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF6C7278),
+                        ),
+                      ),
                     ],
                   ),
 
-                  const Spacer(flex: 3),
+                  const SizedBox(height: 20),
 
-                  _PrivacyPill(colors: colors, onTap: () => _deviceOnlyNote(context)),
-                  const SizedBox(height: 16),
-
-                  // Shiny Neon 'Get Started' Button
+                  // Onboarding Completion 85% Progress Bar
                   Container(
                     width: double.infinity,
-                    height: 54,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        colors: [
-                          colors.primary,
-                          Color.lerp(colors.primary, colors.success, 0.45)!,
-                        ],
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: colors.primary.withValues(alpha: 0.42),
-                          blurRadius: 20,
-                          offset: const Offset(0, 6),
+                          color: const Color(0xFF0F5A3C).withValues(alpha: 0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () => setState(() => _currentStep = 1),
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                l10n.getStarted,
-                                style: AppTypography.label.copyWith(
-                                  color: scheme.onPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: const [
+                            Text(
+                              'Onboarding Completion',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1A1C1E),
+                              ),
+                            ),
+                            Text(
+                              '85%',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1E885F),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: const LinearProgressIndicator(
+                            value: 0.85,
+                            minHeight: 8,
+                            backgroundColor: Color(0xFFE9F0EC),
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1E885F)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Continue with Apple (Black Pill)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: () => setState(() => _currentStep = 1),
+                      icon: const Icon(Icons.apple, size: 22, color: Colors.white),
+                      label: const Text(
+                        'Continue with Apple',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF000000),
+                        elevation: 0,
+                        shape: const StadiumBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Continue with Google (White Pill with Subtle Shadow)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () => setState(() => _currentStep = 1),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF1A1C1E),
+                        elevation: 0,
+                        shape: StadiumBorder(
+                          side: BorderSide(
+                            color: const Color(0xFFE5E9EE).withValues(alpha: 0.9),
+                          ),
+                        ),
+                        shadowColor: const Color(0xFF0F5A3C).withValues(alpha: 0.08),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF4285F4),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'G',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 13,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.arrow_forward_rounded,
-                                size: 19,
-                                color: scheme.onPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Continue with Google',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1C1E),
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Sign in with Email / Get Started
+                  TextButton(
+                    onPressed: () => setState(() => _currentStep = 1),
+                    child: const Text(
+                      'Sign in with Email or Get Started',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0F5A3C),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Learn Facts / Learn about On-Device AI card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0F5A3C).withValues(alpha: 0.05),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E885F).withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.lightbulb_outline_rounded,
+                            size: 18,
+                            color: Color(0xFF0F5A3C),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Learn Facts',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1A1C1E),
+                                ),
+                              ),
+                              Text(
+                                'Learn about On-Device AI & 100% Privacy',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF6C7278),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: Color(0xFF6C7278),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -748,4 +932,52 @@ class _WelcomeBlobsPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _WelcomeBlobsPainter old) =>
       old.sage != sage || old.cream != cream || old.gold != gold;
+}
+
+class _GlassThumbnailBox extends StatelessWidget {
+  const _GlassThumbnailBox({
+    required this.icon,
+    required this.bgColor,
+    required this.iconColor,
+    required this.size,
+    this.isElevated = false,
+  });
+
+  final IconData icon;
+  final Color bgColor;
+  final Color iconColor;
+  final double size;
+  final bool isElevated;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(isElevated ? 24 : 20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: isElevated ? 0.4 : 0.7),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isElevated
+                ? const Color(0xFF0F5A3C).withValues(alpha: 0.35)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: isElevated ? 24 : 12,
+            offset: Offset(0, isElevated ? 8 : 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Icon(
+          icon,
+          color: iconColor,
+          size: size * 0.48,
+        ),
+      ),
+    );
+  }
 }

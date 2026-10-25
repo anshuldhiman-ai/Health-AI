@@ -23,7 +23,7 @@ import 'package:app/features/scan/presentation/scan_result_sheet.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/l10n/extensions.dart';
 
-/// Full-screen camera capture → on-device recognition flow.
+/// Full-screen camera capture â†’ on-device recognition flow.
 ///
 /// Capture never leaves the phone: the JPEG is decoded in an isolate,
 /// run through the bundled LiteRT classifier, joined with the local
@@ -229,6 +229,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
 
       final added = await showModalBottomSheet<bool>(
         context: context,
+        useRootNavigator: true,
         isScrollControlled: true,
         useSafeArea: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -275,27 +276,150 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   /// wasn't a dish.
   Future<void> _showNotFoodDialog() async {
     final l10n = AppLocalizations.of(context)!;
-    final searchManually = await showDialog<bool>(
+    final searchManually = await showModalBottomSheet<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.scanNotFoodTitle),
-        content: Text(l10n.scanNotFoodBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.scanTryAgain),
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final scheme = Theme.of(sheetContext).colorScheme;
+        final isDark = Theme.of(sheetContext).brightness == Brightness.dark;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 28,
+                offset: const Offset(0, -6),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.scanSearchManually),
+          padding: EdgeInsets.fromLTRB(
+            24,
+            12,
+            24,
+            MediaQuery.viewPaddingOf(sheetContext).bottom + 24,
           ),
-        ],
-      ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4.5,
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 22),
+              // Glowing pulsing amber icon
+              Container(
+                width: 76,
+                height: 76,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.14),
+                  border: Border.all(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                      blurRadius: 24,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.no_food_rounded,
+                  color: Color(0xFFD97706),
+                  size: 38,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Not a Food Item',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.4,
+                  color: scheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "We couldn't recognize a meal in this photo. Make sure your dish is well-lit and placed in the center of the frame, or search our food catalog manually.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  height: 1.45,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Action buttons with neon / glowing effects
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.38),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.of(sheetContext).pop(true),
+                  icon: const Icon(Icons.search_rounded, size: 20),
+                  label: const Text(
+                    'Search Food Manually',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F3E2E),
+                    foregroundColor: const Color(0xFF34D399),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: const BorderSide(color: Color(0xFF10B981), width: 1.2),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.of(sheetContext).pop(false),
+                  icon: const Icon(Icons.refresh_rounded, size: 19),
+                  label: const Text(
+                    'Try Again',
+                    style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
     if (searchManually != true || !mounted) return;
-    // Replace rather than push: the camera has nothing left to show, and
-    // stacking search on top of it would leave the viewfinder running
-    // behind the search screen.
     context.pushReplacement(
       '/search?meal=${_mealKind.name}&day=${widget.dayOffset}',
     );
@@ -321,6 +445,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     var manuallyAdded = false;
     final dishId = await showModalBottomSheet<String>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -372,6 +497,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     });
     final code = await showModalBottomSheet<String>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.black,
@@ -400,7 +526,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     } catch (_) {
       // Ordinary QR text and retail barcodes are handled below.
     }
-    final displayCode = code.length > 30 ? '${code.substring(0, 30)}…' : code;
+    final displayCode = code.length > 30 ? '${code.substring(0, 30)}â€¦' : code;
     return 'Product $displayCode';
   }
 
@@ -599,8 +725,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                   ),
                 ),
                 const SizedBox(height: 10),
-                // "Detecting…" status badge. Only while a capture is
-                // actually being analysed — it used to sit on the screen
+                // "Detectingâ€¦" status badge. Only while a capture is
+                // actually being analysed â€” it used to sit on the screen
                 // permanently, which read as "the app is looking at a
                 // dish" before the user had taken a photo.
                 if (_analyzing)
@@ -643,7 +769,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                   ),
                 const Spacer(),
                 // Candidate detection pills. Only during an active scan, or
-                // from the scan that just finished in this visit — the
+                // from the scan that just finished in this visit â€” the
                 // session is cleared on entry and on sheet dismissal, so a
                 // dish from an earlier visit can never appear here.
                 if (_analyzing || (_showSessionResults && session != null))
@@ -673,13 +799,33 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                     ),
                   ),
                 const SizedBox(height: 14),
-                // Bottom Shutter & Controls per ui_design2.jpg Screen 2
+                // Bottom Shutter & Controls per Showcase 1 & 2 Screen 2
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 20),
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                   child: Column(
                     children: [
+                      const Text(
+                        'Capture Your Meal',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Snap a photo or upload from gallery to get instant nutrition insights',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Column(
                             mainAxisSize: MainAxisSize.min,
@@ -717,24 +863,6 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                             ],
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        l10n.scanCaptureHeading,
-                        style: AppTypography.itemS.copyWith(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.scanCaptureHint,
-                        textAlign: TextAlign.center,
-                        style: AppTypography.caption.copyWith(
-                          color: Colors.white60,
-                          fontSize: 11.5,
-                        ),
                       ),
                     ],
                   ),

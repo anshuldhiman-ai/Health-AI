@@ -132,7 +132,6 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final catalog = ref.watch(dishCatalogProvider);
 
@@ -142,10 +141,11 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Center(
               child: Container(
                 margin: const EdgeInsets.only(top: AppSpacing.x3),
@@ -221,7 +221,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
               error: (_, _) => Padding(
                 padding: const EdgeInsets.all(AppSpacing.x6),
                 child: Text(
-                  l10n.quickAddNoCatalog,
+                  'Food catalog unavailable',
                   textAlign: TextAlign.center,
                   style: AppTypography.bodyM.copyWith(color: scheme.error),
                 ),
@@ -248,10 +248,12 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildPackagedFoodsSection(BuildContext context, ColorScheme scheme) {
+    final colors = context.appColors;
     final lower = _query.trim().toLowerCase();
     final filteredPackaged = packagedFoods.where((item) {
       if (lower.isEmpty) return true;
@@ -268,7 +270,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
         children: [
           Row(
             children: [
-              const Icon(Icons.inventory_2_outlined, size: 16, color: Color(0xFF10B981)),
+              Icon(Icons.inventory_2_outlined, size: 16, color: colors.primary),
               const SizedBox(width: 6),
               Text(
                 'Packaged Foods',
@@ -301,7 +303,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                     decoration: BoxDecoration(
                       color: scheme.surface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                      border: Border.all(color: colors.line),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,13 +327,13 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                           children: [
                             Text(
                               '${item.kcal} kcal',
-                              style: const TextStyle(
-                                color: Color(0xFF10B981),
+                              style: TextStyle(
+                                color: colors.primary,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 12,
                               ),
                             ),
-                            const Icon(Icons.add_circle, size: 16, color: Color(0xFF10B981)),
+                            Icon(Icons.add_circle, size: 16, color: colors.primary),
                           ],
                         ),
                       ],

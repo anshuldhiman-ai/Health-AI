@@ -419,13 +419,15 @@ class _DishRow extends StatelessWidget {
                     vertical: 2.5,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD4AF37).withValues(alpha: 0.18),
+                    color: colors.washOf(colors.gold),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     dish.family.toUpperCase(),
-                    style: const TextStyle(
-                      color: Color(0xFF9E7B15),
+                    style: TextStyle(
+                      // The dark end of the gold family, not `gold` itself:
+                      // 10 px text needs 4.5:1 against its own wash (R14).
+                      color: colors.warning,
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                     ),
@@ -455,15 +457,19 @@ class _DishRow extends StatelessWidget {
           ),
           // Green Circular "+" button from ui_design2.jpg Screen 7
           Material(
-            color: const Color(0xFF0D5C3A),
+            color: colors.primary,
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: onTap,
-              child: const SizedBox(
+              child: SizedBox(
                 width: 32,
                 height: 32,
-                child: Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                child: Icon(
+                  Icons.add_rounded,
+                  color: scheme.onPrimary,
+                  size: 20,
+                ),
               ),
             ),
           ),

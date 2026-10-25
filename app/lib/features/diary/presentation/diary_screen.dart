@@ -29,7 +29,6 @@ class DiaryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     final selectedOffset = ref.watch(selectedDiaryOffsetProvider);
     final state = ref.watch(diaryStateProvider(selectedOffset));
 
@@ -41,7 +40,7 @@ class DiaryScreen extends ConsumerWidget {
             AppSpacing.screenPadding,
             AppSpacing.x2,
             AppSpacing.screenPadding,
-            104,
+            130,
           ),
           children: [
             _DiaryHeader(),
@@ -56,24 +55,18 @@ class DiaryScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(
-          '/search?day=$selectedOffset&meal=${mealForHour(DateTime.now().hour).name}',
-        ),
-        backgroundColor: scheme.primary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add_rounded, size: 28),
-      ),
     );
   }
 }
 
-class _DiaryHeader extends StatelessWidget {
+class _DiaryHeader extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final selectedOffset = ref.watch(selectedDiaryOffsetProvider);
+    final dayLog = ref.watch(dayLogProvider);
+    final hasEntries = (dayLog[selectedOffset] ?? const []).isNotEmpty;
 
     return Row(
       children: [
@@ -105,10 +98,47 @@ class _DiaryHeader extends StatelessWidget {
           ],
         ),
         const Spacer(),
-        IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.more_horiz_rounded, color: scheme.onSurface),
-        ),
+        if (hasEntries)
+          IconButton(
+            tooltip: 'Reset Day Meals',
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: const Text("Reset Today's Meals?"),
+                  content: const Text(
+                    'Are you sure you want to clear all logged food entries for this day? This action cannot be undone.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colors.danger,
+                      ),
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: const Text('Reset Meals'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true) {
+                ref.read(dayLogProvider.notifier).clearDay(selectedOffset);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('All meals cleared for this day'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              }
+            },
+            icon: Icon(Icons.refresh_rounded, color: colors.danger, size: 22),
+          ),
       ],
     );
   }
@@ -134,8 +164,11 @@ class _WeekStrip extends ConsumerWidget {
               final dayName = weekDays[date.weekday % 7];
               final isSelected = i == selectedOffset;
 
+              // Selected day reads as the main action: primary fill with
+              // onPrimary text, so it stays legible when the primary token
+              // flips to a light green in dark mode.
               return Material(
-                color: isSelected ? colors.gold : scheme.surface,
+                color: isSelected ? colors.primary : scheme.surface,
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   onTap: () => ref.read(selectedDiaryOffsetProvider.notifier).state = i,
@@ -144,7 +177,7 @@ class _WeekStrip extends ConsumerWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isSelected ? colors.gold : scheme.outlineVariant,
+                        color: isSelected ? colors.primary : scheme.outlineVariant,
                         width: isSelected ? 1.5 : 1,
                       ),
                     ),
@@ -155,7 +188,9 @@ class _WeekStrip extends ConsumerWidget {
                         Text(
                           dayName,
                           style: TextStyle(
-                            color: isSelected ? Colors.white : scheme.onSurfaceVariant,
+                            color: isSelected
+                                ? scheme.onPrimary
+                                : scheme.onSurfaceVariant,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -164,7 +199,7 @@ class _WeekStrip extends ConsumerWidget {
                         Text(
                           '${date.day}',
                           style: TextStyle(
-                            color: isSelected ? Colors.white : scheme.onSurface,
+                            color: isSelected ? scheme.onPrimary : scheme.onSurface,
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                           ),
@@ -189,7 +224,6 @@ class _CaloriesRemainingArcCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     final remaining = state.caloriesRemaining;
@@ -261,7 +295,6 @@ class _MealSectionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final byMeal = <MealKind, List<MealLogEntry>>{
       for (final e in state.mealLog) e.mealKind: [],
     };
@@ -314,7 +347,20 @@ class _MealRowCard extends StatelessWidget {
 
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      onTap: () => showMealDetailSheet(context, dayOffset: dayOffset, meal: meal),
+      onTap: () async {
+        if (!hasEntries) {
+          context.push('/search?day=$dayOffset&meal=${meal.name}');
+          return;
+        }
+        final addAnother = await showMealDetailSheet(
+          context,
+          dayOffset: dayOffset,
+          meal: meal,
+        );
+        if (addAnother == true && context.mounted) {
+          context.push('/search?day=$dayOffset&meal=${meal.name}');
+        }
+      },
       child: Row(
         children: [
           ClipRRect(
@@ -380,6 +426,13 @@ class _MealRowCard extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+          IconButton(
+            onPressed: () => context.push('/search?day=$dayOffset&meal=${meal.name}'),
+            icon: Icon(Icons.add_circle_outline_rounded, color: colors.primary, size: 23),
+            tooltip: l10n.addFood,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
           PopupMenuButton<String>(
             icon: Icon(Icons.more_vert_rounded, size: 20, color: scheme.onSurfaceVariant),

@@ -38,6 +38,7 @@ void main() {
     ];
 
     for (final route in routes) {
+      debugPrint('>>> Testing route: $route (errors so far: ${errors.length})');
       appRouter.go(route);
       // Fixed pumps, not pumpAndSettle: the search screen's TextField
       // cursor blinks forever, so pumpAndSettle never returns.

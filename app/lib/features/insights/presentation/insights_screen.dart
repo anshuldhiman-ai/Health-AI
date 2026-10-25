@@ -1,30 +1,30 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:app/app/log_store.dart';
 import 'package:app/core/format/count_format.dart';
 import 'package:app/design_system/components/app_card.dart';
-import 'package:app/design_system/components/empty_state.dart';
 import 'package:app/design_system/components/progress_ring.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
-import 'package:app/domain/entities/macro.dart';
 import 'package:app/features/insights/application/insights_state.dart';
 import 'package:app/l10n/app_localizations.dart';
 
-/// Insights per ref_ui.png: range chips, calorie-trend chart with
-/// dotted curve, nutrition balance donut. Charts are always paired
-/// with a text summary so screen readers get the real information
-/// (R14).
+/// Insights matching Health AI Showcase Screen 5:
+/// - Range tabs: Week | Month | 3 Months
+/// - Nutrition Balance Donut with 78% Well Balanced and real macros
+/// - Live interactive Calorie Trend chart with curved fill, dots & tips
+/// - Key Insights card ("You're doing great!...")
 class InsightsScreen extends ConsumerWidget {
   const InsightsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(insightsStateProvider);
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.appColors;
 
     return Scaffold(
       body: SafeArea(
@@ -34,19 +34,22 @@ class InsightsScreen extends ConsumerWidget {
             AppSpacing.screenPadding,
             AppSpacing.x2,
             AppSpacing.screenPadding,
-            88,
+            96,
           ),
           children: [
             _InsightsHeader(),
             const SizedBox(height: 16),
             const _RangeChips(),
-            const SizedBox(height: 16),
-            _TrendCard(state: state),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
+            // Nutrition Balance Donut Card
             _BalanceCard(state: state),
+            const SizedBox(height: 18),
+            // Live Interactive Calorie Trend Chart Card
+            _TrendCard(state: state),
+            const SizedBox(height: 18),
+            // Key Insights Card from showcase
+            _KeyInsightsCard(state: state),
             const SizedBox(height: 16),
-            _HighlyActiveDaysCard(),
-            const SizedBox(height: 14),
             _WeeklyProgressCard(),
           ],
         ),
@@ -59,6 +62,7 @@ class _InsightsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
     return Row(
       children: [
@@ -73,13 +77,560 @@ class _InsightsHeader extends StatelessWidget {
           'Insights',
           style: AppTypography.titleL.copyWith(
             color: scheme.onSurface,
-            fontSize: 22,
+            fontSize: 24,
             fontWeight: FontWeight.w800,
           ),
         ),
         const Spacer(),
-        Icon(Icons.bar_chart_rounded, color: scheme.onSurface, size: 24),
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: colors.washOf(colors.primary),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.insights_rounded, color: colors.primary, size: 20),
+        ),
       ],
+    );
+  }
+}
+
+class _RangeChips extends ConsumerWidget {
+  const _RangeChips();
+
+  static const _ranges = <int>[7, 30, 90];
+  static const _labels = <String>['Week', 'Month', '3 Months'];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final selected = ref.watch(insightsRangeProvider);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          for (var i = 0; i < _ranges.length; i++) ...[
+            Expanded(
+              child: GestureDetector(
+                onTap: () =>
+                    ref.read(insightsRangeProvider.notifier).state = _ranges[i],
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  decoration: BoxDecoration(
+                    // Selected state uses primary/onPrimary so it stays
+                    // legible in both themes (a fixed dark green with
+                    // white text vanishes on a dark canvas).
+                    color: _ranges[i] == selected
+                        ? scheme.primary
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _labels[i],
+                      style: TextStyle(
+                        color: _ranges[i] == selected
+                            ? scheme.onPrimary
+                            : scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Nutrition Balance Donut Card matching showcase
+class _BalanceCard extends ConsumerWidget {
+  const _BalanceCard({required this.state});
+
+  final InsightsState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    ref.watch(dayLogProvider);
+    final log = ref.read(dayLogProvider.notifier);
+    final totals = log.totalsFor(0);
+
+    final totalGrams = totals.protein + totals.carbs + totals.fat;
+    final hasLoggedFood = totalGrams > 0;
+    final pPct = hasLoggedFood
+        ? ((totals.protein / totalGrams) * 100).round()
+        : 0;
+    final cPct = hasLoggedFood
+        ? ((totals.carbs / totalGrams) * 100).round()
+        : 0;
+    final fPct = hasLoggedFood ? (100 - pPct - cPct).clamp(0, 100) : 0;
+
+    final completionPct = (state.balanceCompletion * 100).round();
+    final balanceDisplay = hasLoggedFood ? '$completionPct%' : '0%';
+    final balanceSubtext = hasLoggedFood
+        ? (completionPct >= 70 ? 'Well Balanced' : 'Moderate')
+        : 'No food logged';
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Nutrition Balance',
+                style: AppTypography.itemTitle.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: scheme.onSurface,
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.onSurfaceVariant,
+                size: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              // Concentric / Segmented Donut
+              ProgressRing(
+                size: 136,
+                strokeWidth: 16,
+                segments: hasLoggedFood
+                    ? [
+                        RingSegment(
+                          value: pPct / 100,
+                          color: colors.macroProtein,
+                        ),
+                        RingSegment(value: cPct / 100, color: colors.water),
+                        RingSegment(value: fPct / 100, color: colors.accent),
+                      ]
+                    : [
+                        RingSegment(
+                          value: 0.0,
+                          color: scheme.outlineVariant.withValues(alpha: 0.3),
+                        ),
+                      ],
+                semanticLabel:
+                    'Nutrition Balance: $balanceDisplay $balanceSubtext',
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      balanceDisplay,
+                      style: TextStyle(
+                        fontFamily: AppTypography.family,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: scheme.onSurface,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    Text(
+                      balanceSubtext,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+              // Macro Legend List
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _MacroLegendRow(
+                      color: colors.macroProtein,
+                      label: 'Protein',
+                      amount: '${totals.protein}g',
+                      percentage: '$pPct%',
+                    ),
+                    const SizedBox(height: 12),
+                    _MacroLegendRow(
+                      color: colors.water,
+                      label: 'Carbs',
+                      amount: '${totals.carbs}g',
+                      percentage: '$cPct%',
+                    ),
+                    const SizedBox(height: 12),
+                    _MacroLegendRow(
+                      color: colors.accent,
+                      label: 'Fats',
+                      amount: '${totals.fat}g',
+                      percentage: '$fPct%',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MacroLegendRow extends StatelessWidget {
+  const _MacroLegendRow({
+    required this.color,
+    required this.label,
+    required this.amount,
+    required this.percentage,
+  });
+
+  final Color color;
+  final String label;
+  final String amount;
+  final String percentage;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface,
+            ),
+          ),
+        ),
+        Text(
+          percentage,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: scheme.onSurface,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Live interactive Calorie Trend Chart
+class _TrendCard extends StatelessWidget {
+  const _TrendCard({required this.state});
+
+  final InsightsState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    // Build data points
+    final spots = <FlSpot>[];
+    for (var i = 0; i < state.trend.length; i++) {
+      spots.add(FlSpot(i.toDouble(), state.trend[i].kcal.toDouble()));
+    }
+
+    final maxVal = state.trend.fold<int>(0, (m, p) => p.kcal > m ? p.kcal : m);
+    final effectiveMax = math.max(
+      2400.0,
+      ((maxVal + 400) / 400).ceil() * 400.0,
+    );
+
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Calorie Trend',
+                style: AppTypography.itemTitle.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: scheme.onSurface,
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.onSurfaceVariant,
+                size: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                formatCount(state.avgKcalPerDay),
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: scheme.onSurface,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'avg kcal/day',
+                style: AppTypography.caption.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 190,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  drawVerticalLine: false,
+                  horizontalInterval: 800,
+                  getDrawingHorizontalLine: (v) => FlLine(
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                    strokeWidth: 1,
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(),
+                  rightTitles: const AxisTitles(),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      interval: 800,
+                      getTitlesWidget: (val, meta) => Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Text(
+                          val >= 1000
+                              ? '${(val / 1000).toStringAsFixed(1)}k'
+                              : '${val.toInt()}',
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 26,
+                      interval: 1,
+                      getTitlesWidget: (val, meta) {
+                        final idx = val.toInt();
+                        if (idx < 0 || idx >= state.trend.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final daysAgo = state.trend.length - 1 - idx;
+                        final date = DateTime.now().subtract(
+                          Duration(days: daysAgo),
+                        );
+                        const wds = [
+                          'Mon',
+                          'Tue',
+                          'Wed',
+                          'Thu',
+                          'Fri',
+                          'Sat',
+                          'Sun',
+                        ];
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            wds[date.weekday - 1],
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: 10.5,
+                              fontWeight: daysAgo == 0
+                                  ? FontWeight.w800
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (_) => scheme.primary,
+                    getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
+                      final kcal = spot.y.round();
+                      final idx = spot.x.toInt();
+                      final daysAgo = state.trend.length - 1 - idx;
+                      final date = DateTime.now().subtract(
+                        Duration(days: daysAgo),
+                      );
+                      const wds = [
+                        'Mon',
+                        'Tue',
+                        'Wed',
+                        'Thu',
+                        'Fri',
+                        'Sat',
+                        'Sun',
+                      ];
+                      return LineTooltipItem(
+                        '${wds[date.weekday - 1]} ${date.day}\n$kcal kcal',
+                        TextStyle(
+                          color: scheme.onPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    barWidth: 3.2,
+                    color: colors.primary,
+                    dotData: FlDotData(
+                      getDotPainter: (spot, percent, barData, index) =>
+                          FlDotCirclePainter(
+                            radius: 3.5,
+                            color: colors.primary,
+                            strokeWidth: 2,
+                            // Halo reads as a cut-out against the card, so
+                            // it follows the surface token, not white.
+                            strokeColor: colors.surface,
+                          ),
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          colors.primary.withValues(alpha: 0.32),
+                          colors.primary.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                minX: 0,
+                maxX: (state.trend.length - 1).toDouble(),
+                minY: 0,
+                maxY: effectiveMax,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Key Insights Card matching showcase
+class _KeyInsightsCard extends StatelessWidget {
+  const _KeyInsightsCard({required this.state});
+
+  final InsightsState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final hasLogged = state.avgKcalPerDay > 0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        // A tonal wash of primary rather than a fixed mint/emerald pair:
+        // one definition now covers both themes.
+        color: colors.washOf(colors.primary),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: colors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              color: scheme.onPrimary,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasLogged
+                      ? "You're doing great!"
+                      : 'Start Logging Your Meals',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14.5,
+                    color: colors.primary,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  hasLogged
+                      ? 'Your daily nutrient consistency is on track. '
+                            'Tracking consistently helps reach your ideal '
+                            'health goals.'
+                      : 'Log your breakfast, lunch, or dinner to unlock AI '
+                            'nutritional insights and personal macro trends.',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: scheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -90,9 +641,10 @@ class _WeeklyProgressCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
+
     return AppCard(
       onTap: () => context.push('/weekly'),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           Container(
@@ -100,34 +652,33 @@ class _WeeklyProgressCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: colors.primaryWash,
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               Icons.calendar_month_rounded,
               color: scheme.primary,
-              size: 21,
+              size: 22,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.weeklyProgress,
-                  style: AppTypography.itemS.copyWith(
+                  style: AppTypography.itemTitle.copyWith(
                     color: scheme.onSurface,
-                    fontSize: 13.5,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  l10n.weeklySubtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  'View day-by-day weekly breakdown & streaks',
                   style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 11,
+                    fontSize: 11.5,
                   ),
                 ),
               ],
@@ -137,448 +688,6 @@ class _WeeklyProgressCard extends StatelessWidget {
             Icons.chevron_right_rounded,
             size: 20,
             color: scheme.onSurfaceVariant,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RangeChips extends ConsumerWidget {
-  const _RangeChips();
-
-  static const _ranges = <int>[7, 30, 90];
-  static const _labels = <String>['7D', '30D', '90D'];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    final selected = ref.watch(insightsRangeProvider);
-
-    return Row(
-      spacing: 8,
-      children: [
-        for (var i = 0; i < _ranges.length; i++)
-          // Sized to their content, not expanded: the reference keeps
-          // the range chips small and clustered on the left.
-          Material(
-            color: _ranges[i] == selected ? scheme.primary : scheme.surface,
-            shape: StadiumBorder(
-              side: BorderSide(
-                color: _ranges[i] == selected
-                    ? scheme.primary
-                    : scheme.outlineVariant,
-              ),
-            ),
-            child: InkWell(
-              customBorder: const StadiumBorder(),
-              onTap: () =>
-                  ref.read(insightsRangeProvider.notifier).state = _ranges[i],
-              child: SizedBox(
-                height: 34,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      _labels[i],
-                      style: AppTypography.caption.copyWith(
-                        color: _ranges[i] == selected
-                            ? scheme.onPrimary
-                            : scheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _TrendCard extends StatelessWidget {
-  const _TrendCard({required this.state});
-
-  final InsightsState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.appColors;
-    final scheme = Theme.of(context).colorScheme;
-    final up = state.trendChangePercent >= 0;
-    final change = up
-        ? l10n.trendChangeUp('${state.trendChangePercent}')
-        : l10n.trendChangeDown('${state.trendChangePercent.abs()}');
-
-    return AppCard(
-      padding: const EdgeInsets.fromLTRB(18, 18, 12, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.calorieTrend,
-                  style: AppTypography.titleM.copyWith(color: scheme.onSurface),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.primaryWash,
-                  borderRadius: BorderRadius.circular(AppRadii.pill.x),
-                ),
-                // Text + arrow, not colour alone (R14).
-                child: Text(
-                  change,
-                  style: AppTypography.caption.copyWith(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                formatCount(state.avgKcalPerDay),
-                style: AppTypography.value20.copyWith(color: scheme.onSurface),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                l10n.avgKcalPerDay,
-                style: AppTypography.caption.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 168,
-            child: state.hasData
-                ? LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  drawVerticalLine: false,
-                  horizontalInterval: _gridInterval(state.trend),
-                  getDrawingHorizontalLine: (v) =>
-                      FlLine(color: scheme.outlineVariant, strokeWidth: 1),
-                ),
-                titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(),
-                  // Calories on the LEFT, days along the bottom - the
-                  // reference layout.
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 38,
-                      interval: _gridInterval(state.trend),
-                      getTitlesWidget: (value, meta) => Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: Text(
-                          _compact(value),
-                          style: AppTypography.caption.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  rightTitles: const AxisTitles(),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 26,
-                      interval: _labelInterval(state.trend.length),
-                      getTitlesWidget: (value, meta) => Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          _dayLabel(state.trend, value.round()),
-                          style: AppTypography.caption.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                lineTouchData: const LineTouchData(enabled: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: [
-                      for (var i = 0; i < state.trend.length; i++)
-                        FlSpot(i.toDouble(), state.trend[i].kcal.toDouble()),
-                    ],
-                    isCurved: true,
-                    curveSmoothness: 0.35,
-                    barWidth: 3.0,
-                    color: const Color(0xFF0D5C3A),
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          const Color(0xFF0D5C3A).withValues(alpha: 0.28),
-                          const Color(0xFF0D5C3A).withValues(alpha: 0.0),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-                minX: 0,
-                maxX: (state.trend.length - 1).toDouble(),
-                minY: 0,
-                maxY: _ceil(state.trend),
-              ),
-            )
-                : EmptyState(
-                    icon: Icons.insights_outlined,
-                    title: l10n.calorieTrend,
-                    message: l10n.emptyDayHint,
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Grid / axis label step, so the ticks land on round numbers.
-  double _gridInterval(List<TrendPoint> s) {
-    final max = _maxKcal(s);
-    if (max <= 400) return 200;
-    if (max <= 1000) return 500;
-    return 1000;
-  }
-
-  /// Show a date label every few days so they never collide.
-  double _labelInterval(int points) {
-    if (points <= 8) return 1;
-    return (points / 4).ceilToDouble();
-  }
-
-  /// "Mon 21" for a trend point (dayIndex 0 = oldest).
-  String _dayLabel(List<TrendPoint> s, int dayIndex) {
-    if (s.isEmpty || dayIndex < 0 || dayIndex >= s.length) return '';
-    final daysAgo = s.length - 1 - dayIndex;
-    final date = DateTime.now().subtract(Duration(days: daysAgo));
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return '${weekdays[date.weekday - 1]} ${date.day}';
-  }
-
-  int _maxKcal(List<TrendPoint> s) =>
-      s.fold<int>(0, (m, p) => p.kcal > m ? p.kcal : m);
-
-  static String _compact(double value) {
-    if (value >= 1000) {
-      final k = value / 1000;
-      return '${k.toStringAsFixed(1)}k';
-    }
-    return value.round().toString();
-  }
-
-  double _ceil(List<TrendPoint> s) {
-    final max = _maxKcal(s);
-    final step = _gridInterval(s);
-    return ((((max + step * 0.15) / step).ceil()) * step).toDouble();
-  }
-}
-
-/// Nutritional Balance Card matching ui_design2.jpg Screen 5
-class _BalanceCard extends ConsumerWidget {
-  const _BalanceCard({required this.state});
-
-  final InsightsState state;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-
-    final palette = {
-      MacroKind.protein: const Color(0xFF0D5C3A),
-      MacroKind.carbs: const Color(0xFFD4AF37),
-      MacroKind.fat: const Color(0xFF8A5832),
-    };
-
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-      child: Column(
-        children: [
-          // Large Centered Donut with "Nutritional Balance" in center
-          ProgressRing(
-            size: 160,
-            strokeWidth: 18,
-            segments: [
-              for (final (kind, share) in state.balance)
-                RingSegment(value: share / 100, color: palette[kind]!),
-            ],
-            semanticLabel: 'Nutritional Balance',
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Nutritional',
-                  style: TextStyle(
-                    fontFamily: AppTypography.family,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                  ),
-                ),
-                Text(
-                  'Balance',
-                  style: TextStyle(
-                    fontFamily: AppTypography.family,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Legend row with dots: Dark (16g) · Carbs (22g) · Fat (14g)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _DotItem(color: const Color(0xFF0D5C3A), label: 'Dark (16g)'),
-              const SizedBox(width: 14),
-              _DotItem(color: const Color(0xFFD4AF37), label: 'Carbs (22g)'),
-              const SizedBox(width: 14),
-              _DotItem(color: const Color(0xFF8A5832), label: 'Fat (14g)'),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Detailed micro-and-macro nutrients',
-            style: AppTypography.caption.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontSize: 11.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DotItem extends StatelessWidget {
-  const _DotItem({required this.color, required this.label});
-
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// "Highly Active Days" section from ui_design.jpg Screen 7
-class _HighlyActiveDaysCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Highly Active Days',
-            style: AppTypography.titleM.copyWith(
-              color: scheme.onSurface,
-              fontSize: 15,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: const [
-              _ActivePill(label: 'Dark', amount: '18g', color: Color(0xFF0D5C3A)),
-              _ActivePill(label: 'Carbs', amount: '42g', color: Color(0xFFD4AF37)),
-              _ActivePill(label: 'Fat', amount: '6g', color: Color(0xFF4A6B5D)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActivePill extends StatelessWidget {
-  const _ActivePill({required this.label, required this.amount, required this.color});
-
-  final String label;
-  final String amount;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            amount,
-            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w800),
           ),
         ],
       ),
