@@ -12,7 +12,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    AppLocalStorage.clearMemoryCacheForTest();
+    SharedPreferences.setMockInitialValues({});
+  });
 
   group('sanitize', () {
     // The exact sentinel from FlutterSecureStoragePlugin.java: the

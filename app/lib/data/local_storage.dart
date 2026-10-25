@@ -22,6 +22,12 @@ class AppLocalStorage {
   static final Map<String, String> _memCache = <String, String>{};
   static bool _durableLoaded = false;
 
+  @visibleForTesting
+  static void clearMemoryCacheForTest() {
+    _memCache.clear();
+    _durableLoaded = false;
+  }
+
   static File? _getFile() {
     if (kIsWeb) return null;
     try {
