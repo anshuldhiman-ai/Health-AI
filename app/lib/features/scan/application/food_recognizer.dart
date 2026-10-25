@@ -110,14 +110,14 @@ const _kUncertainTop1Floor = 0.12;
 /// Erring strict is deliberate: a false "not a food item" costs the user
 /// one tap on Search manually, while a false "food" writes a confident
 /// wrong dish into their diary (R4).
-const _kFoodTop1Floor = 0.20;
-const _kFoodTop3MassFloor = 0.55;
+const _kFoodTop1Floor = 0.15;
+const _kFoodTop3MassFloor = 0.48;
 
 /// A margin this wide is food evidence on its own: the model separated
 /// one distinctive dish from everything else. It rescues a picture whose
 /// mass sits mostly on the top class, which [_kFoodTop3MassFloor] alone
 /// would reject.
-const _kFoodClearMarginRatio = 3.0;
+const _kFoodClearMarginRatio = 2.4;
 
 const _kImageSize = 224;
 const _kResizeShortSide = 255;

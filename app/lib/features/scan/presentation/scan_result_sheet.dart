@@ -216,6 +216,43 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
             ),
             const SizedBox(height: 16),
 
+            if (session.topMatches.length > 1) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Alternative Dishes (tap to switch):',
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (var i = 0; i < session.topMatches.length; i++) ...[
+                            ChoiceChip(
+                              label: Text('${session.topMatches[i].dish.name} (${session.topMatches[i].percent}%)'),
+                              selected: i == session.selectedMatch,
+                              onSelected: (_) {
+                                ref.read(scanSessionProvider.notifier).update((s) => s?.selectMatch(i));
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             // Nutrition Facts Section Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),

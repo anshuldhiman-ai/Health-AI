@@ -319,7 +319,7 @@ class _MealSectionList extends StatelessWidget {
   }
 }
 
-class _MealRowCard extends StatelessWidget {
+class _MealRowCard extends ConsumerWidget {
   const _MealRowCard({
     required this.meal,
     required this.entries,
@@ -331,7 +331,7 @@ class _MealRowCard extends StatelessWidget {
   final int dayOffset;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
@@ -436,16 +436,45 @@ class _MealRowCard extends StatelessWidget {
           ),
           PopupMenuButton<String>(
             icon: Icon(Icons.more_vert_rounded, size: 20, color: scheme.onSurfaceVariant),
-            onSelected: (val) {
+            onSelected: (val) async {
               if (val == 'add') {
                 context.push('/search?day=$dayOffset&meal=${meal.name}');
               } else if (val == 'scan') {
                 context.push('/scan?day=$dayOffset&meal=${meal.name}');
+              } else if (val == 'view') {
+                showMealDetailSheet(context, dayOffset: dayOffset, meal: meal);
+              } else if (val == 'clear') {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    title: Text('Clear ${l10n.mealLabel(meal)}?'),
+                    content: Text('Are you sure you want to remove all food entries from ${l10n.mealLabel(meal)}?'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                      FilledButton(
+                        style: FilledButton.styleFrom(backgroundColor: colors.danger),
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        child: const Text('Clear'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  ref.read(dayLogProvider.notifier).removeMeal(dayOffset, meal);
+                }
               }
             },
             itemBuilder: (_) => [
               PopupMenuItem(value: 'add', child: Text(l10n.addFood)),
               PopupMenuItem(value: 'scan', child: Text(l10n.scanScreenTitle)),
+              if (hasEntries) ...[
+                const PopupMenuItem(value: 'view', child: Text('View / Delete Items')),
+                PopupMenuItem(
+                  value: 'clear',
+                  child: Text('Clear ${l10n.mealLabel(meal)}', style: TextStyle(color: colors.danger)),
+                ),
+              ],
             ],
           ),
         ],
