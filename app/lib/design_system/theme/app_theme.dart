@@ -87,7 +87,7 @@ abstract final class AppTheme {
           shadowColor: c.primary.withValues(alpha: isDark ? 0.22 : 0.18),
           side: BorderSide(color: onPrimary.withValues(alpha: 0.22)),
           textStyle: AppTypography.label,
-          minimumSize: const Size.fromHeight(52), // 52dp touch target (R14)
+          minimumSize: const Size(64, 52), // 52dp touch target (R14)
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(AppRadii.button),
           ),
@@ -97,14 +97,14 @@ abstract final class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: c.primary,
           textStyle: AppTypography.label,
-          minimumSize: const Size.fromHeight(48),
+          minimumSize: const Size(64, 48),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: c.primary,
           textStyle: AppTypography.label,
-          minimumSize: const Size.fromHeight(48),
+          minimumSize: const Size(64, 48),
           shape: const StadiumBorder(),
           side: BorderSide(color: c.line, width: 1.5),
         ),

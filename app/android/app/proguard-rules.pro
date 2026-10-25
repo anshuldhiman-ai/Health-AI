@@ -57,10 +57,15 @@
 -keep class com.github.dart_lang.jni_flutter.** { *; }
 -dontwarn com.github.dart_lang.jni.**
 
-# shared_preferences_android 2.5.x resolves these by name through JNI
-# (see messages.g.jni.dart: JClass.forName('io/flutter/plugins/...' )).
+# shared_preferences_android resolves these through JNI and Pigeon
 -keep class io.flutter.plugins.sharedpreferences.** { *; }
 -dontwarn io.flutter.plugins.sharedpreferences.**
+-keep class dev.flutter.pigeon.shared_preferences_android.** { *; }
+-dontwarn dev.flutter.pigeon.shared_preferences_android.**
+-keep class androidx.datastore.** { *; }
+-dontwarn androidx.datastore.**
+-keep class androidx.preference.** { *; }
+-dontwarn androidx.preference.**
 
 # path_provider_android resolves android/content/Context subclasses by name.
 -keep class io.flutter.plugins.pathprovider.** { *; }

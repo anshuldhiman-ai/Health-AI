@@ -14,10 +14,16 @@ class BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Image.asset(
+      'assets/brand/logo.png',
       width: size,
       height: size,
-      child: CustomPaint(painter: _BrandMarkPainter()),
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(painter: _BrandMarkPainter()),
+      ),
     );
   }
 }

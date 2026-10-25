@@ -8,6 +8,7 @@ Future<T?> showAppSheet<T>(BuildContext context, {required Widget child}) {
   final scheme = Theme.of(context).colorScheme;
   return showModalBottomSheet<T>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: scheme.surface,

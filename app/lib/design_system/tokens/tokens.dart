@@ -16,33 +16,37 @@ import 'package:flutter/material.dart';
 abstract final class AppColors {
   AppColors._();
 
-  // --- light theme (sampled from the approved reference) ---
+  // --- light theme (Health AI premium emerald & gold theme) ---
   static const light = AppColorScheme._(
-    canvas: Color(0xFFF3F7F2),
+    brightness: Brightness.light,
+    canvas: Color(0xFFF7F9FB),
     surface: Color(0xFFFFFFFF),
     surfaceRaised: Color(0xFFFFFFFF),
-    ink: Color(0xFF16211C),
-    inkMuted: Color(0xFF6B7A72),
-    primary: Color(0xFF0D5C3A),
-    primaryWash: Color(0xFFE6F3EC),
-    accent: Color(0xFFE5B25D),
-    accentWash: Color(0xFFFBF6EC),
-    accentSoft: Color(0xFFF3D28E),
+    ink: Color(0xFF1A1C1E),
+    inkMuted: Color(0xFF6C7278),
+    primary: Color(0xFF0F5A3C),
+    primaryWash: Color(0xFFE8F2ED),
+    accent: Color(0xFF1E885F),
+    accentWash: Color(0xFFEAF5F0),
+    accentSoft: Color(0xFFBCE3D2),
     gold: Color(0xFFD4AF37),
     goldWash: Color(0xFFFBF6EC),
-    deepSage: Color(0xFF4A6B5D),
-    obsidian: Color(0xFF121614),
-    water: Color(0xFF48ABD9),
-    sleep: Color(0xFF5860AF),
-    macroProtein: Color(0xFF0D5C3A),
-    macroCarbs: Color(0xFFE5B25D),
-    macroFat: Color(0xFF4FA576),
-    danger: Color(0xFFB3392A),
-    line: Color(0xFFE9EFEA),
+    deepSage: Color(0xFF0F5A3C),
+    obsidian: Color(0xFF1A1C1E),
+    water: Color(0xFF0284C7),
+    sleep: Color(0xFF6366F1),
+    macroProtein: Color(0xFF0F5A3C),
+    macroCarbs: Color(0xFFD4AF37),
+    macroFat: Color(0xFF1E885F),
+    danger: Color(0xFFE11D48),
+    warning: Color(0xFFD97706),
+    success: Color(0xFF16A34A),
+    line: Color(0xFFE5E9EE),
   );
 
   // --- dark theme ---
   static const dark = AppColorScheme._(
+    brightness: Brightness.dark,
     canvas: Color(0xFF0E1613),
     surface: Color(0xFF16211C),
     surfaceRaised: Color(0xFF1D2A24),
@@ -63,6 +67,8 @@ abstract final class AppColors {
     macroCarbs: Color(0xFFF0B429),
     macroFat: Color(0xFF8ED6B0),
     danger: Color(0xFFF08A7B),
+    warning: Color(0xFFE0B44A),
+    success: Color(0xFF6FD3A0),
     line: Color(0xFF27332D),
   );
 }
@@ -75,6 +81,7 @@ abstract final class AppColors {
 /// colours only (never body text).
 class AppColorScheme {
   const AppColorScheme._({
+    required this.brightness,
     required this.canvas,
     required this.surface,
     required this.surfaceRaised,
@@ -95,12 +102,17 @@ class AppColorScheme {
     required this.macroCarbs,
     required this.macroFat,
     required this.danger,
+    required this.warning,
+    required this.success,
     required this.line,
   });
 
   /// Smooth token interpolation for the light/dark theme transition.
   factory AppColorScheme.lerp(AppColorScheme a, AppColorScheme b, double t) {
     return AppColorScheme._(
+      // Discrete, not interpolated: this selects which wash strength and
+      // shadow tints apply, so blending it would make it meaningless.
+      brightness: t < 0.5 ? a.brightness : b.brightness,
       canvas: Color.lerp(a.canvas, b.canvas, t)!,
       surface: Color.lerp(a.surface, b.surface, t)!,
       surfaceRaised: Color.lerp(a.surfaceRaised, b.surfaceRaised, t)!,
@@ -121,9 +133,52 @@ class AppColorScheme {
       macroCarbs: Color.lerp(a.macroCarbs, b.macroCarbs, t)!,
       macroFat: Color.lerp(a.macroFat, b.macroFat, t)!,
       danger: Color.lerp(a.danger, b.danger, t)!,
+      warning: Color.lerp(a.warning, b.warning, t)!,
+      success: Color.lerp(a.success, b.success, t)!,
       line: Color.lerp(a.line, b.line, t)!,
     );
   }
+
+  /// Which palette this is. Read it through [isDark] rather than
+  /// comparing brightness at each call site.
+  final Brightness brightness;
+
+  bool get isDark => brightness == Brightness.dark;
+
+  /// A tonal wash of [base] over [surface].
+  ///
+  /// Use this for the tinted tiles and pills (steps, water, sleep,
+  /// macro chips, badges) instead of an opaque pastel literal. The
+  /// result tracks the theme, so text drawn on it keeps using [ink] and
+  /// [inkMuted] and stays legible — opaque light pastels with
+  /// theme-derived text were the cause of near-invisible white-on-pastel
+  /// labels in dark mode. [strength] scales the tint for stronger or
+  /// quieter surfaces.
+  Color washOf(Color base, {double strength = 1.0}) => Color.alphaBlend(
+    base.withValues(alpha: (isDark ? 0.20 : 0.11) * strength),
+    surface,
+  );
+
+  /// A wash of [base] over the app canvas, for full-bleed tinted areas
+  /// and section backgrounds rather than cards.
+  Color canvasWashOf(Color base, {double strength = 1.0}) => Color.alphaBlend(
+    base.withValues(alpha: (isDark ? 0.16 : 0.09) * strength),
+    canvas,
+  );
+
+  /// Soft elevation tint. A fixed dark shadow is invisible on a dark
+  /// canvas, so shadows are only applied in light mode and dark mode
+  /// leans on the surface tone plus [line] instead.
+  List<BoxShadow> shadow({double blur = 16, double y = 4, double alpha = 0.10}) =>
+      isDark
+      ? const <BoxShadow>[]
+      : [
+          BoxShadow(
+            color: ink.withValues(alpha: alpha),
+            blurRadius: blur,
+            offset: Offset(0, y),
+          ),
+        ];
 
   /// App background (warm mist green).
   final Color canvas;
@@ -181,6 +236,13 @@ class AppColorScheme {
 
   /// Errors, destructive actions.
   final Color danger;
+
+  /// Caution: borderline BMI, "under target" states. Fills, icons and
+  /// short labels only — never body copy.
+  final Color warning;
+
+  /// Positive/healthy states: BMI in range, goal met.
+  final Color success;
 
   /// Hairline borders, dividers.
   final Color line;
@@ -366,10 +428,10 @@ abstract final class AppSizing {
 abstract final class AppRadii {
   AppRadii._();
 
-  static const input = Radius.circular(10); // inputs, small tiles
-  static const card = Radius.circular(20); // cards
+  static const input = Radius.circular(12); // inputs, small tiles
+  static const card = Radius.circular(24); // cards (squircle standard 24.0)
   static const sheet = Radius.circular(28); // bottom sheets, hero surfaces
-  static const button = Radius.circular(14); // primary buttons
+  static const button = Radius.circular(16); // primary buttons (standard 16.0)
   static const pill = Radius.circular(999); // chips, segmented controls
 }
 
@@ -386,21 +448,17 @@ abstract final class AppMotion {
   static const emphasized = Curves.easeInOutCubic;
 }
 
-/// Soft diffusion shadows from the approved reference: cards lift on
-/// very low-alpha black, never harsh borders.
+/// Soft diffusion shadows: cards lift on tinted emerald shadow,
+/// never harsh black shadows.
 abstract final class AppShadows {
   AppShadows._();
 
-  /// Cards and tiles.
-  ///
-  /// The reference surfaces are FLAT white on the mist canvas with a
-  /// hairline edge - a heavy shadow made every card read as a floating
-  /// blob. This is now barely-there depth; the hairline border in
-  /// [AppCard] does the defining.
+  /// Cards and tiles: large spread, low opacity, emerald tinted shadow.
   static const card = [
     BoxShadow(
-      color: Color(0x0A10201A), // 4% ink
-      blurRadius: 16,
+      color: Color(0x0D0F5A3C), // Color(0xFF0F5A3C).withValues(alpha: 0.05)
+      blurRadius: 20,
+      spreadRadius: 1,
       offset: Offset(0, 4),
     ),
   ];

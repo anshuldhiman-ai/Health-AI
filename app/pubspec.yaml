@@ -1,7 +1,7 @@
 name: app
 description: "{{APP_NAME}} — offline-first calorie, macro, activity and sleep tracker with on-device Indian food recognition."
 publish_to: "none"
-version: 1.2.0+2
+version: 1.6.0+6
 
 environment:
   sdk: ^3.13.0

@@ -9,7 +9,7 @@ class AppCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(AppSpacing.x4),
     this.onTap,
-    this.radius = 20,
+    this.radius = 24,
     super.key,
   });
 
@@ -25,11 +25,15 @@ class AppCard extends StatelessWidget {
 
     final card = DecoratedBox(
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: scheme.surface.withValues(alpha: 0.95),
         borderRadius: borderRadius,
-        // A hairline edge defines the surface on the mist canvas
-        // without the "floating blob" look a strong shadow gives.
-        border: Border.all(color: scheme.outlineVariant),
+        // Glassmorphic cards: White surfaces with a very subtle 1px border
+        border: Border.all(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? scheme.outlineVariant
+              : Colors.white.withValues(alpha: 0.8),
+          width: 1.0,
+        ),
         boxShadow: AppShadows.card,
       ),
       child: Padding(padding: padding, child: child),
