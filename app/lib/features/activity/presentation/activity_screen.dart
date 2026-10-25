@@ -104,13 +104,122 @@ class _LiveActivity extends StatelessWidget {
 }
 
 
-class _Header extends StatelessWidget {
+class _Header extends ConsumerWidget {
   const _Header({required this.title});
 
   final String title;
 
+  Future<void> _showSetStepGoalSheet(BuildContext context, WidgetRef ref) async {
+    final currentGoal = ref.read(stepGoalProvider);
+    var selected = currentGoal;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final scheme = Theme.of(ctx).colorScheme;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: scheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Set Daily Step Goal',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Consistent daily walking boosts metabolic health.',
+                    style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton.filledTonal(
+                        onPressed: selected > 2000
+                            ? () => setSheetState(() => selected -= 1000)
+                            : null,
+                        icon: const Icon(Icons.remove_rounded),
+                      ),
+                      const SizedBox(width: 24),
+                      Column(
+                        children: [
+                          Text(
+                            formatCount(selected),
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: scheme.primary,
+                            ),
+                          ),
+                          Text(
+                            'steps per day',
+                            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 24),
+                      IconButton.filledTonal(
+                        onPressed: selected < 30000
+                            ? () => setSheetState(() => selected += 1000)
+                            : null,
+                        icon: const Icon(Icons.add_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    spacing: 8,
+                    children: [6000, 8000, 10000, 12000, 15000].map((g) {
+                      final isSel = selected == g;
+                      return ChoiceChip(
+                        label: Text('${g ~/ 1000}k'),
+                        selected: isSel,
+                        onSelected: (_) => setSheetState(() => selected = g),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onPressed: () async {
+                      await ref.read(stepGoalProvider.notifier).setGoal(selected);
+                      if (ctx.mounted) Navigator.of(ctx).pop();
+                    },
+                    child: const Text('Save Step Goal', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
@@ -130,23 +239,29 @@ class _Header extends StatelessWidget {
             ),
           ),
         ),
+        IconButton(
+          tooltip: 'Set Step Goal',
+          onPressed: () => _showSetStepGoalSheet(context, ref),
+          icon: Icon(Icons.tune_rounded, color: scheme.onSurfaceVariant),
+        ),
       ],
     );
   }
 }
 
-class _HeroCard extends StatelessWidget {
+class _HeroCard extends ConsumerWidget {
   const _HeroCard({required this.snapshot});
 
   final StepSnapshot snapshot;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
+    final stepGoal = ref.watch(stepGoalProvider);
     final displaySteps = snapshot.steps;
-    final progress = (displaySteps / kDailyStepGoal).clamp(0.0, 1.0);
+    final progress = (displaySteps / stepGoal).clamp(0.0, 1.0);
 
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -191,7 +306,7 @@ class _HeroCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${formatCount(kDailyStepGoal)} steps',
+                  '${formatCount(stepGoal)} steps goal',
                   style: AppTypography.caption.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontSize: 12,

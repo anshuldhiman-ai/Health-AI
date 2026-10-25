@@ -171,6 +171,33 @@ Future<bool> openStepPermissionSettings() => openAppSettings();
 /// "6,320" style grouping.
 String formatStepCount(int steps) => formatCount(steps);
 
+const stepGoalPrefsKey = 'steps.goal.v1';
+
+class StepGoalController extends Notifier<int> {
+  @override
+  int build() {
+    _load();
+    return 10000;
+  }
+
+  Future<void> _load() async {
+    final raw = await AppLocalStorage.readString(stepGoalPrefsKey);
+    final val = int.tryParse(raw ?? '');
+    if (val != null && val > 0) {
+      state = val;
+    }
+  }
+
+  Future<void> setGoal(int goal) async {
+    state = goal.clamp(1000, 50000);
+    await AppLocalStorage.writeString(stepGoalPrefsKey, state.toString());
+  }
+}
+
+final stepGoalProvider = NotifierProvider<StepGoalController, int>(
+  StepGoalController.new,
+);
+
 /// Label for the Today tile: real count, or an em dash when the sensor
 /// or permission is unavailable (never a fake number).
 String stepTileLabel(AsyncValue<StepSnapshot> value) {
