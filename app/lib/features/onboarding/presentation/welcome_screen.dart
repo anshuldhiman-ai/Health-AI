@@ -393,17 +393,37 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Sign in with Email / Get Started
-                  TextButton(
-                    onPressed: () => setState(() => _currentStep = 1),
-                    child: const Text(
-                      'Sign in with Email or Get Started',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF0F5A3C),
+                  // Sign in with Email & Get Started
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: () => setState(() => _currentStep = 1),
+                        child: const Text(
+                          'Sign in with Email',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6C7278),
+                          ),
+                        ),
                       ),
-                    ),
+                      const Text(
+                        '•',
+                        style: TextStyle(color: Color(0xFF6C7278)),
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() => _currentStep = 1),
+                        child: const Text(
+                          'Get Started',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF0F5A3C),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 10),
