@@ -1,11 +1,81 @@
-# CLAUDE.md — {{APP_NAME}}
+# CLAUDE.md — Health AI
 
-> Offline-first, privacy-first fitness and nutrition app for Android, built with Flutter.
+> Offline-first, privacy-first SaaS-grade fitness and nutrition app for Android, built with Flutter.
 > Every AI feature runs on the user's phone. No account, no server, no data leaves the device.
 
-- Status: pre-alpha (planning). Last reviewed: 2026-10-11.
-- Owner: <your name>. Solo developer, B.Tech student. Prefer simple, boring, testable solutions over clever ones.
-- This file is read at the start of every Claude Code session. Rules marked **MUST / NEVER** are not negotiable. If a task seems to require breaking one, stop and ask first.
+- Status: v1.7.0+7 (Active development, release 1.7 compiled, 110/110 tests passing). Last reviewed: 2026-10-25.
+- App Name: Health AI
+- Owner: Anshul Dhiman. Solo developer. Prefer simple, robust, testable solutions over clever ones.
+- This file is read at the start of every session. Rules marked **MUST / NEVER** are not negotiable. If a task seems to require breaking one, stop and ask first.
+
+---
+
+## 0. Current Requirements & Further Fix Roadmap
+
+### 0.1 Recently Completed in v1.7 (Verified with 110/110 Tests & Release APK Built)
+- **Local Persistence & Data Wipe Resolution**:
+  - Authoritative `SharedPreferences` reads/writes with unawaited non-blocking KeyStore background mirror.
+  - Test mode memory isolation (`Platform.environment['FLUTTER_TEST']`) preventing cached mock pollution.
+  - Automatic purging of corrupted payloads (`FormatException` drops malformed JSON rather than looping).
+  - Safe router redirect (`/welcome` -> `/today` for returning users).
+- **Dashboard Upgrades (`TodayScreen`)**:
+  - Replaced fake dummy metrics with real `caloriesConsumed`, `caloriesTarget`, and `caloriesRemaining`.
+  - Restored real macronutrient progress bars: **Protein**, **Carbs**, and **Fat** with live grams, percentages, and progress ratios from `state.macros` navigating to `/macro-breakdown`.
+  - Removed "Active Cal" ring and inline micro-trends link (trends live exclusively in Insights).
+  - Reduced quick stats to strictly 3 tiles: **Steps**, **Water**, and **Sleep**.
+  - Fixed dark mode transition: dynamic canvas and typography tokens replacing hardcoded light-mode hexes.
+- **Hydration Tracker (`WaterScreen`)**:
+  - Displays real intake volume (removed fake 2.1L fallback).
+  - Added interactive **Daily Water Goal** setting bottom sheet (presets: 2.0L, 2.5L, 3.0L, 3.5L, 4.0L + fine tuning).
+  - Added **"Remove Last Glass"** (-250ml) and **"Reset Today"** with confirmation dialog.
+  - Adaptive light/dark theme styling.
+- **Sleep Tracker (`SleepScreen`)**:
+  - Standout midnight theme with real logged duration or `'No log'` (removed fake 7h 20m fallback).
+  - Added **Daily Sleep Goal** adjustment sheet (7h, 7.5h, 8h, 8.5h, 9h).
+  - Added **"Delete Today's Log"** action with confirmation dialog.
+- **Activity & Step Goal (`ActivityScreen`)**:
+  - Added persistent step goal customizer backed by local storage.
+  - Connected hero progress ring to real dynamic step goal.
+- **Scanning & Food Diary Deletions**:
+  - Balanced food recognition thresholds (`_kFoodTop1Floor = 0.15`, `_kFoodTop3MassFloor = 0.48`) to eliminate false "Not a food item" rejections on real Indian dishes.
+  - Added top-3 alternative candidate dish chips in `ScanResultSheet` allowing 1-tap correction if top guess is mistaken (e.g. kulfi vs sweet vs dish).
+  - Added individual meal item viewing/deletion and meal clearing options to `DiaryScreen`.
+
+---
+
+### 0.2 What We Need to Fix & Build Further (Next Priority Tasks)
+
+1. **Food Recognition & Accuracy Push (High Priority)**:
+   - **Tuning & Class Disambiguation**: Improve classification on visually similar Indian dishes (e.g., Dal Tadka vs Dal Makhani vs Sambar; Kulfi vs Rasmalai vs Ice Cream).
+   - **Offline Barcode Scanner**: Integrate offline barcode scanning for packaged Indian groceries (AMUL, Mother Dairy, Britannia, Haldiram's, etc.) mapped to local nutrition database without network access.
+   - **Custom Food Creation**: Allow manual recipe/food entry with custom macros and serving sizes for unlisted dishes.
+
+2. **Auth & Biometric Screen Polish (`WelcomeScreen`)**:
+   - Replicate `ref_ui_updated.png` Screen 1:
+     - Center app logo (green 'H' blending with leaf and scanning frame).
+     - Biometric prompt (Face ID / Fingerprint) area using `local_auth`.
+     - Premium pill-shaped "Continue with Apple" (Black) and "Continue with Google" (White with subtle shadow) visual buttons.
+
+3. **Meal Diary & Timeline Polish (`DiaryScreen`)**:
+   - Replicate `ref_ui_updated.png` Screen 3:
+     - Sleek horizontal weekly calendar picker with dot indicators for logged meals.
+     - Semi-circle or circular daily goal tracker gauge.
+     - Timeline-style vertical list of meals (Breakfast, Lunch, Dinner, Snacks) with food thumbnails and mini horizontal progress bars for protein/carbs/fats.
+
+4. **Interactive Insights & Target Goals (`InsightsScreen`)**:
+   - Replicate `ref_ui_updated.png` Screen 4:
+     - Curved, gradient-filled `fl_chart` line graphs for calorie & macro trends across toggles: Week / Month / 3M.
+     - Custom thick-track goal sliders for Weight Loss, Macros, Water, and Sleep with segmented category switching.
+
+5. **Account & Profile SaaS Upgrades (`ProfileScreen`)**:
+   - Replicate `ref_ui_updated.png` Screen 6:
+     - Profile picture with Level/Streak badge using `#D4AF37` gold accent.
+     - Cupertino-style switches (emerald green when active) for Health Connect / HealthKit.
+     - "Premium Subscription" showcase section with soft gold glowing border.
+
+6. **Continuous Quality & Theme Polish**:
+   - Ensure all secondary sheets and dialogs strictly follow `#F7F9FB` / `#0F1512` dark mode tokens.
+   - Maintain 100% test pass rate across the full Flutter test suite.
 
 ---
 
