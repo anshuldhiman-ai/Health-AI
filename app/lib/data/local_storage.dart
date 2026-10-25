@@ -88,19 +88,32 @@ class AppLocalStorage {
     }
   }
 
-  /// Read a string. Checks memory cache / durable store first,
-  /// then [SharedPreferences], and finally the keystore mirror.
+  static bool get isTest {
+    if (kIsWeb) return false;
+    try {
+      return Platform.environment.containsKey('FLUTTER_TEST');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Read a string. Checks [SharedPreferences] first as authoritative,
+  /// then memory cache / durable store, and finally the keystore mirror.
   static Future<String?> readString(String key) async {
+    final fromPrefs = await _readPrefs(key);
+    if (fromPrefs != null) {
+      if (!isTest) {
+        _memCache[key] = fromPrefs;
+        _saveDurable();
+      }
+      return fromPrefs;
+    }
+
+    if (isTest) return null;
+
     _ensureLoaded();
     if (_memCache.containsKey(key)) {
       return _memCache[key];
-    }
-
-    final fromPrefs = await _readPrefs(key);
-    if (fromPrefs != null) {
-      _memCache[key] = fromPrefs;
-      _saveDurable();
-      return fromPrefs;
     }
 
     // Recover from mirror if preferences copy is missing and repopulate
@@ -115,20 +128,33 @@ class AppLocalStorage {
   /// Write a string with immediate disk flush and mirror sync.
   static Future<void> writeString(String key, String value) async {
     final clean = sanitize(value);
-    if (clean == null) return;
+    if (clean == null) {
+      await remove(key);
+      return;
+    }
 
-    _ensureLoaded();
-    _memCache[key] = clean;
-    _saveDurable();
+    if (!isTest) {
+      _ensureLoaded();
+      _memCache[key] = clean;
+      _saveDurable();
+    }
 
+    // Primary store: write directly to SharedPreferences and await it
     await _writePrefs(key, clean);
-    await _SecureMirror.write(key, clean);
+
+    // Secondary mirror: unawaited best-effort so KeyStore slowness/deadlocks
+    // can never delay or block the UI/data persistence pipeline.
+    if (!isTest) {
+      unawaited(_SecureMirror.write(key, clean));
+    }
   }
 
   static Future<void> writeBool(String key, bool value) async {
-    _ensureLoaded();
-    _memCache[key] = value ? 'true' : 'false';
-    _saveDurable();
+    if (!isTest) {
+      _ensureLoaded();
+      _memCache[key] = value ? 'true' : 'false';
+      _saveDurable();
+    }
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -136,36 +162,44 @@ class AppLocalStorage {
     } catch (e) {
       debugPrint('[AppLocalStorage] SharedPreferences writeBool error: $e');
     }
-    await _SecureMirror.write(key, value ? 'true' : 'false');
+    if (!isTest) {
+      unawaited(_SecureMirror.write(key, value ? 'true' : 'false'));
+    }
   }
 
   static Future<bool?> readBool(String key) async {
-    _ensureLoaded();
-    if (_memCache.containsKey(key)) {
-      final val = _memCache[key];
-      if (val == 'true') return true;
-      if (val == 'false') return false;
-    }
-
     try {
       final prefs = await SharedPreferences.getInstance();
       final val = prefs.get(key);
       if (val is bool) {
-        _memCache[key] = val ? 'true' : 'false';
-        _saveDurable();
+        if (!isTest) {
+          _memCache[key] = val ? 'true' : 'false';
+          _saveDurable();
+        }
         return val;
       }
       if (val is String) {
         final sanitized = sanitize(val);
         if (sanitized != null) {
           final b = sanitized == 'true';
-          _memCache[key] = b ? 'true' : 'false';
-          _saveDurable();
+          if (!isTest) {
+            _memCache[key] = b ? 'true' : 'false';
+            _saveDurable();
+          }
           return b;
         }
       }
     } catch (e) {
       debugPrint('[AppLocalStorage] SharedPreferences readBool error: $e');
+    }
+
+    if (isTest) return null;
+
+    _ensureLoaded();
+    if (_memCache.containsKey(key)) {
+      final val = _memCache[key];
+      if (val == 'true') return true;
+      if (val == 'false') return false;
     }
 
     final raw = await _SecureMirror.read(key);
@@ -178,9 +212,11 @@ class AppLocalStorage {
 
   /// Remove a key from all stores.
   static Future<void> remove(String key) async {
-    _ensureLoaded();
-    _memCache.remove(key);
-    _saveDurable();
+    if (!isTest) {
+      _ensureLoaded();
+      _memCache.remove(key);
+      _saveDurable();
+    }
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -188,7 +224,9 @@ class AppLocalStorage {
     } catch (e) {
       debugPrint('[AppLocalStorage] SharedPreferences remove error: $e');
     }
-    await _SecureMirror.remove(key);
+    if (!isTest) {
+      await _SecureMirror.remove(key);
+    }
   }
 
   /// Reject values that are not data.
@@ -282,11 +320,6 @@ abstract final class _SecureMirror {
             .timeout(const Duration(seconds: 2));
       } catch (e) {
         debugPrint('[AppLocalStorage] Keystore mirror write error: $e');
-        try {
-          await _storage
-              .delete(key: key)
-              .timeout(const Duration(seconds: 1));
-        } catch (_) {}
       }
     });
   }

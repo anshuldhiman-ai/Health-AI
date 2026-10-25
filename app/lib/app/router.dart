@@ -42,7 +42,9 @@ final appRouter = GoRouter(
   initialLocation: hasSeenWelcome ? '/today' : '/welcome',
   refreshListenable: welcomeSeenNotifier,
   redirect: (context, state) {
-    if (hasSeenWelcome && state.matchedLocation == '/welcome') {
+    if (hasSeenWelcome &&
+        (state.matchedLocation == '/welcome' ||
+            state.matchedLocation == '/')) {
       return '/today';
     }
     return null;

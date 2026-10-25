@@ -116,6 +116,13 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
     _commit(next);
   }
 
+  /// Remove all entries of a specific meal kind for a day.
+  void removeMeal(int dayOffset, MealKind kind) {
+    final entries = entriesFor(dayOffset);
+    final next = entries.where((e) => e.mealKind != kind).toList();
+    _commit({...state, dayOffset: next});
+  }
+
   /// Remove a specific entry from a day (meal detail sheet).
   bool removeAt(int dayOffset, int index) {
     final entries = entriesFor(dayOffset);
@@ -209,7 +216,9 @@ Future<DayLog> _loadSavedDayLog(SharedPreferences? prefs) async {
         }
       }
     } on FormatException catch (e) {
-      debugPrint('[DayLog] Malformed JSON syntax (data preserved): $e');
+      debugPrint('[DayLog] Dropping corrupt payload: $e');
+      if (prefs != null) await prefs.remove(DayLog.storageKey);
+      await AppLocalStorage.remove(DayLog.storageKey);
     } catch (e) {
       debugPrint('[DayLog] Load error (data preserved): $e');
     }
