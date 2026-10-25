@@ -64,6 +64,166 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     );
   }
 
+  Future<void> _showSetSleepGoalSheet(BuildContext context) async {
+    final sleepState = ref.read(sleepProvider);
+    var selectedMinutes = sleepState.targetMinutes;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final hours = selectedMinutes ~/ 60;
+            final mins = selectedMinutes % 60;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Set Daily Sleep Goal',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Recommended adult sleep is 7 to 9 hours nightly.',
+                    style: TextStyle(fontSize: 13, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton.filledTonal(
+                        onPressed: selectedMinutes > 300
+                            ? () => setSheetState(() => selectedMinutes -= 30)
+                            : null,
+                        icon: const Icon(Icons.remove_rounded, color: Colors.white),
+                        style: IconButton.styleFrom(backgroundColor: Colors.white12),
+                      ),
+                      const SizedBox(width: 24),
+                      Column(
+                        children: [
+                          Text(
+                            mins == 0 ? '${hours}h' : '${hours}h ${mins}m',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF38BDF8),
+                            ),
+                          ),
+                          const Text(
+                            'Target duration',
+                            style: TextStyle(fontSize: 12, color: Colors.white60),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 24),
+                      IconButton.filledTonal(
+                        onPressed: selectedMinutes < 720
+                            ? () => setSheetState(() => selectedMinutes += 30)
+                            : null,
+                        icon: const Icon(Icons.add_rounded, color: Colors.white),
+                        style: IconButton.styleFrom(backgroundColor: Colors.white12),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      (7 * 60, '7h'),
+                      (7 * 60 + 30, '7.5h'),
+                      (8 * 60, '8h'),
+                      (8 * 60 + 30, '8.5h'),
+                      (9 * 60, '9h'),
+                    ].map((tuple) {
+                      final isSel = selectedMinutes == tuple.$1;
+                      return ChoiceChip(
+                        label: Text(
+                          tuple.$2,
+                          style: TextStyle(
+                            color: isSel ? Colors.black : Colors.white70,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        selected: isSel,
+                        selectedColor: const Color(0xFF38BDF8),
+                        backgroundColor: Colors.white12,
+                        onSelected: (_) => setSheetState(() => selectedMinutes = tuple.$1),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      backgroundColor: const Color(0xFF1E885F),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onPressed: () async {
+                      await ref.read(sleepProvider.notifier).setGoal(selectedMinutes);
+                      if (ctx.mounted) Navigator.of(ctx).pop();
+                    },
+                    child: const Text('Save Sleep Goal', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDeleteSleep(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0F172A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Delete Today's Sleep Log?", style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Are you sure you want to remove today\'s recorded sleep log?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(sleepProvider.notifier).removeToday();
+      if (context.mounted) {
+        AppToast.show(ScaffoldMessenger.of(context), message: "Today's sleep log removed");
+      }
+    }
+  }
+
   String _formattedAlarmTime() {
     final period = _alarmHour >= 12 ? 'PM' : 'AM';
     final h = _alarmHour % 12 == 0 ? 12 : _alarmHour % 12;
@@ -74,13 +234,16 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
   @override
   Widget build(BuildContext context) {
     final sleepRecord = ref.watch(sleepTodayProvider);
+    final sleepState = ref.watch(sleepProvider);
 
-    // Dummy values showcasing rich UI matching ref_ui_updated.png if empty
     final hasRealRecord = sleepRecord != null;
-    final durationMinutes = hasRealRecord ? sleepRecord.durationMinutes : (7 * 60 + 20);
+    final durationMinutes = hasRealRecord ? sleepRecord.durationMinutes : 0;
     final hours = durationMinutes ~/ 60;
     final minutes = durationMinutes % 60;
-    final qualityScore = 92;
+    final goalMinutes = sleepState.targetMinutes;
+    final qualityScore = hasRealRecord
+        ? ((durationMinutes / goalMinutes) * 100).round().clamp(10, 100)
+        : 0;
 
     return Scaffold(
       backgroundColor: const Color(0xFF070B14),
@@ -127,19 +290,74 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.bedtime_outlined, size: 22),
-                    color: Colors.white70,
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert_rounded, color: Colors.white70),
+                    color: const Color(0xFF0F172A),
+                    onSelected: (val) {
+                      if (val == 'goal') {
+                        _showSetSleepGoalSheet(context);
+                      } else if (val == 'delete') {
+                        _confirmDeleteSleep(context);
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(
+                        value: 'goal',
+                        child: Row(
+                          children: [
+                            Icon(Icons.tune_rounded, color: Colors.white70, size: 18),
+                            SizedBox(width: 10),
+                            Text('Set Sleep Goal', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                      if (hasRealRecord)
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                              SizedBox(width: 10),
+                              Text('Delete Today\'s Log', style: TextStyle(color: Colors.redAccent)),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
 
-              // Dual Cards: Sleep Quality 92% & Sleep 7h 20m
+              // Goal Quick Chip
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ActionChip(
+                    backgroundColor: Colors.white12,
+                    avatar: const Icon(Icons.flag_outlined, size: 16, color: Color(0xFF38BDF8)),
+                    label: Text(
+                      'Goal: ${(goalMinutes / 60).toStringAsFixed(1)}h',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                    onPressed: () => _showSetSleepGoalSheet(context),
+                  ),
+                  if (hasRealRecord) ...[
+                    const SizedBox(width: 10),
+                    ActionChip(
+                      backgroundColor: Colors.red.withValues(alpha: 0.15),
+                      avatar: const Icon(Icons.delete_outline, size: 16, color: Colors.redAccent),
+                      label: const Text('Clear', style: TextStyle(color: Colors.redAccent)),
+                      onPressed: () => _confirmDeleteSleep(context),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Dual Cards: Sleep Quality & Sleep Duration
               _DualQualityCards(
                 qualityPercent: qualityScore,
-                durationText: '${hours}h ${minutes}m',
+                durationText: hasRealRecord ? '${hours}h ${minutes}m' : 'No log',
               ),
               const SizedBox(height: 22),
 
@@ -218,7 +436,7 @@ class _DualQualityCards extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '$qualityPercent%',
+                      qualityPercent > 0 ? '$qualityPercent%' : '--',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -231,8 +449,8 @@ class _DualQualityCards extends StatelessWidget {
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
+                children: [
+                  const Text(
                     'Sleep Quality',
                     style: TextStyle(
                       fontSize: 12,
@@ -240,13 +458,15 @@ class _DualQualityCards extends StatelessWidget {
                       color: Colors.white70,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Optimal',
+                    qualityPercent >= 80
+                        ? 'Optimal'
+                        : (qualityPercent > 0 ? 'Good' : 'Not logged'),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF38BDF8),
+                      color: qualityPercent > 0 ? const Color(0xFF38BDF8) : Colors.white54,
                     ),
                   ),
                 ],

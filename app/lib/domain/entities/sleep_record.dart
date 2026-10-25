@@ -55,7 +55,10 @@ class SleepDay {
 }
 
 class SleepState {
-  const SleepState({required this.records});
+  const SleepState({
+    required this.records,
+    this.customGoalMinutes,
+  });
 
   factory SleepState.empty() =>
       const SleepState(records: <String, SleepRecord>{});
@@ -72,13 +75,24 @@ class SleepState {
         }
       }
     }
-    return SleepState(records: records);
+    final goal = (json['goalMinutes'] as num?)?.toInt();
+    return SleepState(records: records, customGoalMinutes: goal);
   }
 
   /// Product default: eight hours.
   static const int goalMinutes = 8 * 60;
 
   final Map<String, SleepRecord> records;
+  final int? customGoalMinutes;
+
+  int get targetMinutes => customGoalMinutes ?? goalMinutes;
+
+  SleepState setGoal(int minutes) {
+    return SleepState(
+      records: records,
+      customGoalMinutes: minutes.clamp(4 * 60, 14 * 60),
+    );
+  }
 
   SleepRecord? recordFor(DateTime now) => records[localDateKey(now)];
 
@@ -93,13 +107,19 @@ class SleepState {
       bedMinutes: bedMinutes,
       wakeMinutes: wakeMinutes,
     );
-    return SleepState(records: {...records, key: record});
+    return SleepState(
+      records: {...records, key: record},
+      customGoalMinutes: customGoalMinutes,
+    );
   }
 
   SleepState remove(DateTime now) {
     final key = localDateKey(now);
     if (!records.containsKey(key)) return this;
-    return SleepState(records: {...records}..remove(key));
+    return SleepState(
+      records: {...records}..remove(key),
+      customGoalMinutes: customGoalMinutes,
+    );
   }
 
   List<SleepDay> recentDays(DateTime now) {
@@ -117,5 +137,6 @@ class SleepState {
     'records': {
       for (final entry in records.entries) entry.key: entry.value.toJson(),
     },
+    'goalMinutes': targetMinutes,
   };
 }

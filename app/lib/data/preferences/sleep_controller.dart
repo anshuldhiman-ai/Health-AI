@@ -50,6 +50,11 @@ class SleepController extends Notifier<SleepState> {
     await _persist();
   }
 
+  Future<void> setGoal(int goalMinutes) async {
+    state = state.setGoal(goalMinutes);
+    await _persist();
+  }
+
   Future<void> removeToday() async {
     state = state.remove(DateTime.now());
     await _persist();
