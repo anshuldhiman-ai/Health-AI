@@ -89,6 +89,14 @@ class HydrationState {
     );
   }
 
+  HydrationState resetToday() {
+    return HydrationState(
+      date: date,
+      glasses: 0,
+      history: {...history, date: 0},
+    );
+  }
+
   List<HydrationDay> recentDays(DateTime now) {
     final today = localDay(now);
     return [

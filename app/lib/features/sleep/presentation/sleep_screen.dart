@@ -1,17 +1,22 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app/data/preferences/sleep_controller.dart';
-import 'package:app/design_system/components/app_card.dart';
 import 'package:app/design_system/components/app_toast.dart';
-import 'package:app/design_system/components/group_header.dart';
-import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/sleep_record.dart';
-import 'package:app/l10n/app_localizations.dart';
 
-/// Manual sleep log and seven-day history, opened from the dashboard's
-/// sleep tile. No wearable or Health Connect sleep scope is required.
+/// Screen 9: Sleep Tracker & Smart Alarm matching ref_ui_updated.png
+///
+/// Features:
+/// - Standout dark midnight blue / dark purple gradient theme
+/// - Dual circular metric cards: Sleep Quality (92%) & Sleep Duration (7h 20m)
+/// - Interactive sleep stages stepped bar/wave graph: Deep, REM, Light
+/// - Interactive Smart Alarm: "Set for 06:45 AM" with +/- increment buttons
+///   and Smart wake window slider
+/// - Snooze Log Analysis: Behavioral Training Prompts & Behavioral Snooze Habits
 class SleepScreen extends ConsumerStatefulWidget {
   const SleepScreen({super.key});
 
@@ -20,660 +25,286 @@ class SleepScreen extends ConsumerStatefulWidget {
 }
 
 class _SleepScreenState extends ConsumerState<SleepScreen> {
-  static const _defaultBed = TimeOfDay(hour: 22, minute: 30);
-  static const _defaultWake = TimeOfDay(hour: 6, minute: 30);
-
-  late TimeOfDay _bed;
-  late TimeOfDay _wake;
+  // Time picker state for bedtime & alarm
+  int _alarmHour = 6;
+  int _alarmMinute = 45;
+  double _wakeWindowMinutes = 20;
 
   @override
   void initState() {
     super.initState();
     final record = ref.read(sleepTodayProvider);
-    _bed = _fromMinutes(record?.bedMinutes ?? _defaultBed.hour * 60 + 30);
-    _wake = _fromMinutes(record?.wakeMinutes ?? _defaultWake.hour * 60 + 30);
+    if (record != null) {
+      _alarmHour = (record.wakeMinutes ~/ 60) % 24;
+      _alarmMinute = record.wakeMinutes % 60;
+    }
   }
 
-  TimeOfDay _fromMinutes(int minutes) =>
-      TimeOfDay(hour: (minutes ~/ 60) % 24, minute: minutes % 60);
-
-  int get _bedMinutes => _bed.hour * 60 + _bed.minute;
-
-  int get _wakeMinutes => _wake.hour * 60 + _wake.minute;
-
-
-  Future<void> _pickTime({required bool bedtime}) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: bedtime ? _bed : _wake,
-    );
-    if (picked == null || !mounted) return;
+  void _adjustAlarm(int deltaMinutes) {
     setState(() {
-      if (bedtime) {
-        _bed = picked;
-      } else {
-        _wake = picked;
-      }
+      var total = _alarmHour * 60 + _alarmMinute + deltaMinutes;
+      if (total < 0) total += 24 * 60;
+      total = total % (24 * 60);
+      _alarmHour = total ~/ 60;
+      _alarmMinute = total % 60;
     });
   }
 
-  void _save() {
-    ref
-        .read(sleepProvider.notifier)
-        .save(bedMinutes: _bedMinutes, wakeMinutes: _wakeMinutes);
+  Future<void> _saveAlarm() async {
+    const bedMinutes = 23 * 60 + 15; // 11:15 PM
+    final wakeMinutes = _alarmHour * 60 + _alarmMinute;
+    await ref.read(sleepProvider.notifier).save(
+          bedMinutes: bedMinutes,
+          wakeMinutes: wakeMinutes,
+        );
+    if (!mounted) return;
     AppToast.show(
       ScaffoldMessenger.of(context),
-      message: AppLocalizations.of(context)!.savedLabel,
+      message: 'Alarm set for ${_formattedAlarmTime()}!',
     );
   }
 
-  void _clear() {
-    ref.read(sleepProvider.notifier).removeToday();
-    setState(() {
-      _bed = _defaultBed;
-      _wake = _defaultWake;
-    });
+  String _formattedAlarmTime() {
+    final period = _alarmHour >= 12 ? 'PM' : 'AM';
+    final h = _alarmHour % 12 == 0 ? 12 : _alarmHour % 12;
+    final m = _alarmMinute.toString().padLeft(2, '0');
+    return '${h.toString().padLeft(2, '0')}:$m $period';
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final state = ref.watch(sleepProvider);
-    final record = state.recordFor(DateTime.now());
+    final sleepRecord = ref.watch(sleepTodayProvider);
+
+    // Dummy values showcasing rich UI matching ref_ui_updated.png if empty
+    final hasRealRecord = sleepRecord != null;
+    final durationMinutes = hasRealRecord ? sleepRecord.durationMinutes : (7 * 60 + 20);
+    final hours = durationMinutes ~/ 60;
+    final minutes = durationMinutes % 60;
+    final qualityScore = 92;
 
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenPadding,
-            AppSpacing.x2,
-            AppSpacing.screenPadding,
-            AppSpacing.x4,
-          ),
-          children: [
-            _Header(title: 'Sleep Tracker'),
-            const SizedBox(height: 14),
-            _SleepBadgesRow(),
-            const SizedBox(height: 14),
-            _ClockDialCard(
-              bed: _bed,
-              wake: _wake,
-              onPickBed: () => _pickTime(bedtime: true),
-              onPickWake: () => _pickTime(bedtime: false),
-            ),
-            const SizedBox(height: 14),
-            _SmartAlarmCard(),
-            const SizedBox(height: 14),
-            _AverageSnoozeCard(),
-            const SizedBox(height: 14),
-            _RecommendationsCard(),
-            const SizedBox(height: 18),
-            GroupHeader(title: l10n.last7Days),
-            const SizedBox(height: 12),
-            _WeekCard(days: state.recentDays(DateTime.now())),
-            const SizedBox(height: 14),
-            FilledButton.icon(
-              onPressed: _save,
-              icon: const Icon(Icons.check_rounded, size: 20),
-              label: Text(l10n.saveSleep),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-              ),
-            ),
-            if (record != null) ...[
-              const SizedBox(height: 4),
-              TextButton(onPressed: _clear, child: Text(l10n.clearSleep)),
+      backgroundColor: const Color(0xFF070B14),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF070B14),
+              Color(0xFF0F172A),
+              Color(0xFF090D1A),
             ],
-            const SizedBox(height: 14),
-            _NoteCard(text: l10n.sleepNote),
-          ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenPadding,
+              12,
+              AppSpacing.screenPadding,
+              40,
+            ),
+            children: [
+              // Header
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                    tooltip: 'Back',
+                    color: Colors.white,
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        'Sleep Tracker & Smart Alarm',
+                        style: TextStyle(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.bedtime_outlined, size: 22),
+                    color: Colors.white70,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+
+              // Dual Cards: Sleep Quality 92% & Sleep 7h 20m
+              _DualQualityCards(
+                qualityPercent: qualityScore,
+                durationText: '${hours}h ${minutes}m',
+              ),
+              const SizedBox(height: 22),
+
+              // Sleep Stages Legend & Graph
+              _SleepStagesGraphCard(),
+              const SizedBox(height: 20),
+
+              // Interactive Smart Alarm Card
+              _SmartAlarmCard(
+                formattedTime: _formattedAlarmTime(),
+                wakeWindowMinutes: _wakeWindowMinutes,
+                onMinus: () => _adjustAlarm(-15),
+                onPlus: () => _adjustAlarm(15),
+                onWindowChanged: (val) => setState(() => _wakeWindowMinutes = val),
+                onSave: _saveAlarm,
+              ),
+              const SizedBox(height: 20),
+
+              // Snooze Log Analysis
+              const _SnoozeLogAnalysisSection(),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _SleepBadgesRow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF382C62), Color(0xFF4C3D82)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Restful hours',
-                        style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '35.11 hours',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.bedtime_rounded, color: Colors.white70, size: 20),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1E284A), Color(0xFF2C3966)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Sleep',
-                        style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '86 hours',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.nightlight_round, color: Colors.white70, size: 20),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ClockDialCard extends StatelessWidget {
-  const _ClockDialCard({
-    required this.bed,
-    required this.wake,
-    required this.onPickBed,
-    required this.onPickWake,
+/// Dual Quality & Duration Cards: "Sleep Quality 92%" & "Sleep 7h 20m"
+class _DualQualityCards extends StatelessWidget {
+  const _DualQualityCards({
+    required this.qualityPercent,
+    required this.durationText,
   });
 
-  final TimeOfDay bed;
-  final TimeOfDay wake;
-  final VoidCallback onPickBed;
-  final VoidCallback onPickWake;
+  final int qualityPercent;
+  final String durationText;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
-    return AppCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Text(
-            'Bedtime & Wake Time',
-            style: AppTypography.caption.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: SizedBox(
-              width: 180,
-              height: 180,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Circular golden gradient dial track
-                  Container(
-                    width: 176,
-                    height: 176,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: scheme.outlineVariant.withValues(alpha: 0.5),
-                        width: 14,
-                      ),
-                    ),
-                  ),
-                  CustomPaint(
-                    size: const Size(176, 176),
-                    painter: _ClockDialArcPainter(
-                      goldColor: colors.gold,
-                      arcColor: const Color(0xFF0D5C3A),
-                    ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        bed.format(context),
-                        style: TextStyle(
-                          fontFamily: AppTypography.family,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: scheme.onSurface,
-                        ),
-                      ),
-                      Text(
-                        'PM',
-                        style: AppTypography.caption.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              InkWell(
-                onTap: onPickBed,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.bedtime_outlined, size: 18, color: Color(0xFFD4AF37)),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Bed: ${bed.format(context)}',
-                        style: AppTypography.caption.copyWith(
-                          color: scheme.onSurface,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              InkWell(
-                onTap: onPickWake,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.wb_sunny_outlined, size: 18, color: Color(0xFF4CC18F)),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Wake: ${wake.format(context)}',
-                        style: AppTypography.caption.copyWith(
-                          color: scheme.onSurface,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ClockDialArcPainter extends CustomPainter {
-  const _ClockDialArcPainter({required this.goldColor, required this.arcColor});
-
-  final Color goldColor;
-  final Color arcColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromCircle(
-      center: Offset(size.width / 2, size.height / 2),
-      radius: (size.width - 14) / 2,
-    );
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 14
-      ..strokeCap = StrokeCap.round
-      ..shader = SweepGradient(
-        colors: [goldColor, arcColor, goldColor],
-      ).createShader(rect);
-
-    // Draw active arc from 10:30 PM (around 7 o'clock) to 6:30 AM (around 2 o'clock)
-    canvas.drawArc(rect, 0.8, 3.8, false, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _SmartAlarmCard extends StatefulWidget {
-  @override
-  State<_SmartAlarmCard> createState() => _SmartAlarmCardState();
-}
-
-class _SmartAlarmCardState extends State<_SmartAlarmCard> {
-  bool _enabled = true;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0D5C3A).withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.alarm_rounded, color: Color(0xFF0D5C3A), size: 20),
-          ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Smart Alarm',
-                style: AppTypography.itemTitle.copyWith(
-                  color: scheme.onSurface,
-                  fontSize: 15,
-                ),
-              ),
-              Text(
-                'Toggles immediate alarm',
-                style: AppTypography.caption.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontSize: 11.5,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Switch(
-            value: _enabled,
-            activeColor: const Color(0xFF0D5C3A),
-            onChanged: (val) => setState(() => _enabled = val),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AverageSnoozeCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Analytics',
-                style: AppTypography.caption.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Average snooze data',
-                    style: AppTypography.itemTitle.copyWith(
-                      color: scheme.onSurface,
-                      fontSize: 14.5,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '2 Snoozes (18 min)',
-                    style: AppTypography.itemS.copyWith(
-                      color: scheme.onSurface,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RecommendationsCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD4AF37).withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.stars_rounded, color: Color(0xFFD4AF37), size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Personalized recommendations',
-                  style: AppTypography.caption.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'Golden sleep quality badges',
-                  style: AppTypography.itemS.copyWith(
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF131B2E).withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1.2,
         ),
-        const SizedBox(width: 2),
-        Expanded(
-          child: Text(
-            title,
-            style: AppTypography.titleL.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+            blurRadius: 24,
+            spreadRadius: 2,
+            offset: const Offset(0, 6),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-
-class _WeekCard extends StatelessWidget {
-  const _WeekCard({required this.days});
-
-  final List<SleepDay> days;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-    final max = days.fold<int>(
-      SleepState.goalMinutes,
-      (m, d) => d.minutes > m ? d.minutes : m,
-    );
-    final weekdays = MaterialLocalizations.of(context).narrowWeekdays;
-
-    return AppCard(
-      padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
-      child: SizedBox(
-        height: 128,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            for (var i = 0; i < days.length; i++)
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          // Left: Sleep Quality Gauge
+          Row(
+            children: [
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    Text(
-                      days[i].minutes == 0
-                          ? ''
-                          : '${(days[i].minutes / 60).toStringAsFixed(1)}h',
-                      style: AppTypography.caption.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontSize: 9,
+                    CustomPaint(
+                      size: const Size(60, 60),
+                      painter: _NeonRingPainter(
+                        progress: qualityPercent / 100,
+                        color: const Color(0xFF38BDF8),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      height: 76,
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: FractionallySizedBox(
-                          heightFactor: max == 0
-                              ? 0
-                              : (days[i].minutes / max).clamp(0.0, 1.0),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            decoration: BoxDecoration(
-                              color: i == days.length - 1
-                                  ? colors.sleep
-                                  : colors.sleep.withValues(alpha: 0.35),
-                              borderRadius: BorderRadius.circular(7),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
                     Text(
-                      weekdays[days[i].date.weekday % 7],
-                      style: AppTypography.caption.copyWith(
-                        color: i == days.length - 1
-                            ? scheme.onSurface
-                            : scheme.onSurfaceVariant,
-                        fontWeight: i == days.length - 1
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        fontSize: 10.5,
+                      '$qualityPercent%',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NoteCard extends StatelessWidget {
-  const _NoteCard({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.accentWash,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 10,
-        children: [
-          Icon(Icons.info_outline_rounded, size: 18, color: colors.accent),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTypography.caption.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 12,
-                height: 1.4,
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Sleep Quality',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Optimal',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF38BDF8),
+                    ),
+                  ),
+                ],
               ),
+            ],
+          ),
+
+          // Center separator
+          const Text(
+            '&',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w300,
+              color: Colors.white38,
             ),
+          ),
+
+          // Right: Sleep Duration
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                ),
+                child: const Icon(
+                  Icons.nightlight_round,
+                  color: Color(0xFF818CF8),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Sleep',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    durationText,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
@@ -681,9 +312,462 @@ class _NoteCard extends StatelessWidget {
   }
 }
 
-String formatSleepDuration(AppLocalizations l10n, int minutes) {
-  final hours = minutes ~/ 60;
-  final rest = minutes % 60;
-  if (hours == 0) return l10n.durationMinutes('$rest');
-  return l10n.durationHoursMinutes('$hours', '$rest');
+class _NeonRingPainter extends CustomPainter {
+  const _NeonRingPainter({
+    required this.progress,
+    required this.color,
+  });
+
+  final double progress;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - 6) / 2;
+
+    // Track
+    final trackPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.12)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.0;
+    canvas.drawCircle(center, radius, trackPaint);
+
+    // Glow progress arc
+    final progressPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.5
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      2 * math.pi * progress.clamp(0.0, 1.0),
+      false,
+      progressPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _NeonRingPainter old) =>
+      old.progress != progress || old.color != color;
+}
+
+/// Sleep Stages Graph matching ref_ui_updated.png
+class _SleepStagesGraphCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF131B2E).withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Legend row: Deep (cyan), REM (blue), Light (purple)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _StageLegend(color: const Color(0xFF38BDF8), label: 'Deep'),
+              const SizedBox(width: 18),
+              _StageLegend(color: const Color(0xFF6366F1), label: 'REM'),
+              const SizedBox(width: 18),
+              _StageLegend(color: const Color(0xFFC084FC), label: 'Light'),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Stepped wave block graph
+          SizedBox(
+            height: 100,
+            width: double.infinity,
+            child: CustomPaint(
+              painter: _SleepStagesPainter(),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Stage labels along bottom
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text('Deep', style: TextStyle(fontSize: 10.5, color: Colors.white60)),
+              Text('Deep', style: TextStyle(fontSize: 10.5, color: Colors.white60)),
+              Text('Pom', style: TextStyle(fontSize: 10.5, color: Colors.white60)),
+              Text('Turn', style: TextStyle(fontSize: 10.5, color: Colors.white60)),
+              Text('Light', style: TextStyle(fontSize: 10.5, color: Colors.white60)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StageLegend extends StatelessWidget {
+  const _StageLegend({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            color: Colors.white70,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SleepStagesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Grid baseline
+    final baselinePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.08)
+      ..strokeWidth = 1.0;
+    canvas.drawLine(Offset(0, h * 0.25), Offset(w, h * 0.25), baselinePaint);
+    canvas.drawLine(Offset(0, h * 0.50), Offset(w, h * 0.50), baselinePaint);
+    canvas.drawLine(Offset(0, h * 0.75), Offset(w, h * 0.75), baselinePaint);
+
+    // Stepped line path showing sleep stage cycles
+    final path = Path();
+    path.moveTo(0, h * 0.75); // Start Light/Deep
+    path.lineTo(w * 0.12, h * 0.75);
+    path.lineTo(w * 0.12, h * 0.90); // Deep
+    path.lineTo(w * 0.28, h * 0.90);
+    path.lineTo(w * 0.28, h * 0.50); // REM
+    path.lineTo(w * 0.44, h * 0.50);
+    path.lineTo(w * 0.44, h * 0.75); // Light
+    path.lineTo(w * 0.60, h * 0.75);
+    path.lineTo(w * 0.60, h * 0.90); // Deep cycle 2
+    path.lineTo(w * 0.76, h * 0.90);
+    path.lineTo(w * 0.76, h * 0.35); // REM cycle 2
+    path.lineTo(w * 0.88, h * 0.35);
+    path.lineTo(w * 0.88, h * 0.15); // Wake up
+    path.lineTo(w, h * 0.15);
+
+    // Glowing cyan/indigo stroke
+    final strokePaint = Paint()
+      ..color = const Color(0xFF38BDF8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    canvas.drawPath(path, strokePaint);
+
+    // Semi-transparent fill under the steps
+    final fillPath = Path.from(path)
+      ..lineTo(w, h)
+      ..lineTo(0, h)
+      ..close();
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          const Color(0xFF38BDF8).withValues(alpha: 0.25),
+          const Color(0xFF6366F1).withValues(alpha: 0.02),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, w, h));
+
+    canvas.drawPath(fillPath, fillPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Interactive Smart Alarm Card matching ref_ui_updated.png
+class _SmartAlarmCard extends StatelessWidget {
+  const _SmartAlarmCard({
+    required this.formattedTime,
+    required this.wakeWindowMinutes,
+    required this.onMinus,
+    required this.onPlus,
+    required this.onWindowChanged,
+    required this.onSave,
+  });
+
+  final String formattedTime;
+  final double wakeWindowMinutes;
+  final VoidCallback onMinus;
+  final VoidCallback onPlus;
+  final ValueChanged<double> onWindowChanged;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF131B2E).withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Interactive Smart Alarm',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              GestureDetector(
+                onTap: onSave,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E885F),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Save',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Set for',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white54,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Digital Time Display with +/- buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Minus button
+              IconButton(
+                onPressed: onMinus,
+                icon: const Icon(Icons.remove_circle_outline_rounded, size: 30),
+                color: Colors.white70,
+              ),
+              const SizedBox(width: 16),
+              Text(
+                formattedTime,
+                style: const TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Plus button
+              IconButton(
+                onPressed: onPlus,
+                icon: const Icon(Icons.add_circle_outline_rounded, size: 30),
+                color: Colors.white70,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Smart wake window slider
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Smart wake window',
+                style: TextStyle(fontSize: 11.5, color: Colors.white60),
+              ),
+              Text(
+                '±${wakeWindowMinutes.toInt()} mins',
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF38BDF8),
+                ),
+              ),
+            ],
+          ),
+          Slider(
+            value: wakeWindowMinutes,
+            min: 10,
+            max: 45,
+            divisions: 7,
+            activeColor: const Color(0xFF38BDF8),
+            inactiveColor: Colors.white12,
+            onChanged: onWindowChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Snooze Log Analysis Section matching ref_ui_updated.png
+class _SnoozeLogAnalysisSection extends StatelessWidget {
+  const _SnoozeLogAnalysisSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Snooze Log Analysis',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Behavioral Training Prompts
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF131B2E).withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                ),
+                child: const Icon(
+                  Icons.psychology_rounded,
+                  color: Color(0xFF818CF8),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Behavioral Training Prompts',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Wake consistency improves REM efficiency by 18%',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white60,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Behavioral Snooze Habits
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF131B2E).withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
+                ),
+                child: const Icon(
+                  Icons.snooze_rounded,
+                  color: Color(0xFFD4AF37),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Behavioral Snooze Habits',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      '0 snoozes logged this week • Perfect Streak',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white60,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
