@@ -4,7 +4,7 @@
 
 > **Privacy-First Design:** Every AI feature runs on the user's phone. No account, no server, no data leaves the device. Your health data stays yours.
 
-**Status:** Alpha (M1 — MVP UI/UX complete, ML model training in progress). See `CLAUDE.md` for the full product definition, hard rules (R1–R16) and the milestone plan.
+**Status:** Alpha (M1 — MVP UI/UX complete, M2/M3 in progress — bug fixes and data persistence implemented). See `CLAUDE.md` for the full product definition, hard rules (R1–R16) and the milestone plan.
 
 ---
 
@@ -12,20 +12,25 @@
 
 ### 📸 Smart Meal Scanning & Logging
 - **On-Device AI Classifier:** Point your camera at your meal for instant recognition. The model is specifically trained on complex Indian foods, including *Dal, Sabzi, Roti, Rice, Paratha, Thalis, and various snacks*.
+- **Real-time Detection:** Shows actual scan results with confidence scores only after real image analysis (no hardcoded predictions).
 - **Instant Nutritional Breakdown:** Once the food is categorized, the app provides accurate macronutrient estimates (Protein, Carbs, Fat, Fiber) and total calories based on a comprehensive Indian food database.
 - **Portion Estimation:** Select serving sizes from realistic Indian meal portions (Katori, Bowl, Plate, Piece) to log accurate calorie counts.
-- **Manual Food Search:** Search and log from a curated catalog of 80+ Indian dishes with complete nutrition data.
+- **Manual Food Search:** Search and log from a curated catalog of 80+ Indian dishes with complete nutrition data (expanding to 200+).
+- **Quick Add (Planned):** Barcode/QR scanner for packaged foods (coming soon).
 
 ### 🌙 Sleep & Recovery Tracking
-- **Smart Sleep Logging:** Manual entry or Health Connect integration for sleep tracking.
+- **Smart Sleep Logging:** Manual entry with bedtime/wake time inputs.
+- **Snooze Tracking:** Track snooze button usage and correlate with sleep quality.
 - **Sleep Quality Insights:** Correlate sleep patterns with daily energy levels and nutrition intake.
+- **Health Connect Integration:** Planned for automatic sleep data import.
 
 ### 📊 Holistic Wellness Dashboard
 - **Step & Activity Counter:** Track daily steps, total distance, and active minutes with visual daily streaks (Health Connect integration).
-- **Hydration Tracker:** Quick and easy logging for daily water intake goals.
+- **Hydration Tracker:** Quick and easy logging for daily water intake goals with visual glass grid.
 - **Macro & Calorie Diary:** A beautifully designed timeline view of your Breakfast, Lunch, Dinner, and Snacks.
 - **Weekly Insights:** Deep-dive analytics into your macro-nutrient balance and calorie trends over 7, 30, or 90 days.
 - **Goal Planning:** Choose from weight loss, maintenance, or muscle gain goals with automatic calorie and macro targets.
+- **Body Metrics & BMI:** Track height, weight, and activity level with automatic BMI calculation and color-coded health indicators (Green = healthy, Yellow = edge, Red = under/over).
 
 ### 🎨 Premium UI / UX Design
 - **Elegant Light/Dark Theme:** A luxurious interface utilizing a bespoke color palette (Emerald, Deep Sage, Gold, and Obsidian).
@@ -145,10 +150,16 @@ The full list is in `CLAUDE.md` Section 2.
 
 - ✅ **M0 — Foundation:** Project setup, architecture, build pipeline
 - ✅ **M1 — MVP UI/UX:** Complete design system, all major screens, localisation, nutrition catalog
-- 🔄 **M2 — ML Integration:** Model training, export, on-device inference (in progress)
-- ⏳ **M3 — Data Layer:** Encrypted database, preferences, persistence
+- 🔄 **M2 — ML Integration:** Model training (239-class model in progress), export, on-device inference UI improvements
+- 🔄 **M3 — Data Layer:** Encrypted database, preferences, persistence (SharedPreferences implemented, SQLCipher planned)
 - ⏳ **M4 — Testing & Polish:** Comprehensive tests, accessibility audits, performance optimization
 - ⏳ **M5 — v1 Release:** Play Store submission, model cards, documentation
+
+**Recent Fixes (Oct 2026):**
+- Fixed data persistence for food diary entries
+- Fixed water section showing hardcoded empty values
+- Fixed camera showing hardcoded predictions without scan
+- Improved scan UI to show real detection results only
 
 ---
 
