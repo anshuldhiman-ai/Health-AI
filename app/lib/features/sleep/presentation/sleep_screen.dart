@@ -10,10 +10,10 @@ import 'package:app/domain/entities/sleep_record.dart';
 
 /// Screen 5/9: Sleep Tracker & Smart Alarm matching ref_ui_updated.png
 ///
-/// Visual Highlights:
+/// Features:
 /// - Midnight background with soft top-right teal/cyan & top-left violet aurora auras
-/// - Circular back button and clean title
-/// - Unified Hero Card: Dual neon circular gauges (Sleep Quality 92% & Sleep 7h 20m)
+/// - Log Sleep feature: Bedtime & Wake-up time picker with calculated duration
+/// - Unified Hero Card: Dual neon circular gauges (Sleep Quality & Sleep Duration)
 ///   separated by silver '&', stage legend, and authentic stepped sleep architecture graph
 /// - Interactive Smart Alarm card with "Set for 06:45 AM", +/- buttons,
 ///   and emerald-track tick-marked wake window slider
@@ -50,17 +50,254 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     });
   }
 
-  Future<void> _saveAlarm() async {
-    const bedMinutes = 23 * 60 + 15; // 11:15 PM
-    final wakeMinutes = _alarmHour * 60 + _alarmMinute;
-    await ref.read(sleepProvider.notifier).save(
-          bedMinutes: bedMinutes,
-          wakeMinutes: wakeMinutes,
-        );
-    if (!mounted) return;
+  void _saveAlarm() {
     AppToast.show(
       ScaffoldMessenger.of(context),
-      message: 'Alarm set for ${_formattedAlarmTime()}!',
+      message: 'Alarm set for ${_formattedAlarmTime()} (±${_wakeWindowMinutes.toInt()}m window)',
+    );
+  }
+
+  static String _formatMinutesToTime(int totalMinutes) {
+    final normalized = (totalMinutes % (24 * 60) + 24 * 60) % (24 * 60);
+    final hour24 = normalized ~/ 60;
+    final minute = normalized % 60;
+    final period = hour24 >= 12 ? 'PM' : 'AM';
+    final hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12;
+    return '${hour12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+  }
+
+  /// Modal Bottom Sheet to log/edit Bedtime and Wake-up time
+  Future<void> _showLogSleepSheet(BuildContext context) async {
+    final existingRecord = ref.read(sleepTodayProvider);
+    var bedMinutes = existingRecord?.bedMinutes ?? (23 * 60); // Default 11:00 PM
+    var wakeMinutes = existingRecord?.wakeMinutes ?? (7 * 60); // Default 07:00 AM
+    final goalMinutes = ref.read(sleepProvider).targetMinutes;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (stateContext, setSheetState) {
+            final duration = sleepDurationMinutes(bedMinutes: bedMinutes, wakeMinutes: wakeMinutes);
+            final hours = duration ~/ 60;
+            final mins = duration % 60;
+            final durationStr = mins == 0 ? '${hours}h' : '${hours}h ${mins}m';
+            final percent = ((duration / (goalMinutes > 0 ? goalMinutes : 480)) * 100).round();
+
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(stateContext).viewInsets.bottom + 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Drag handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          existingRecord != null ? 'Edit Sleep Record' : 'Log Today\'s Sleep',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (existingRecord != null)
+                          TextButton.icon(
+                            onPressed: () async {
+                              Navigator.of(sheetContext).pop();
+                              await _confirmDeleteSleep(context);
+                            },
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                            label: const Text('Delete', style: TextStyle(color: Colors.redAccent, fontSize: 13)),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Record the time you went to bed and the time you woke up.',
+                      style: TextStyle(fontSize: 13, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Side-by-side Bedtime & Wake Time selection cards
+                    Row(
+                      children: [
+                        // Bedtime Card
+                        Expanded(
+                          child: _TimePickerCard(
+                            title: 'Bedtime',
+                            subtitle: 'When you slept',
+                            timeString: _formatMinutesToTime(bedMinutes),
+                            icon: Icons.bedtime_rounded,
+                            accentColor: const Color(0xFFA855F7),
+                            onTap: () async {
+                              final picked = await showTimePicker(
+                                context: stateContext,
+                                initialTime: TimeOfDay(hour: bedMinutes ~/ 60, minute: bedMinutes % 60),
+                                builder: (c, child) => Theme(
+                                  data: ThemeData.dark().copyWith(
+                                    colorScheme: const ColorScheme.dark(
+                                      primary: Color(0xFFA855F7),
+                                      surface: Color(0xFF131A2A),
+                                    ),
+                                  ),
+                                  child: child!,
+                                ),
+                              );
+                              if (picked != null) {
+                                setSheetState(() {
+                                  bedMinutes = picked.hour * 60 + picked.minute;
+                                });
+                              }
+                            },
+                            onMinus: () => setSheetState(() {
+                              bedMinutes = (bedMinutes - 15 + 1440) % 1440;
+                            }),
+                            onPlus: () => setSheetState(() {
+                              bedMinutes = (bedMinutes + 15) % 1440;
+                            }),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Wake Time Card
+                        Expanded(
+                          child: _TimePickerCard(
+                            title: 'Wake-up',
+                            subtitle: 'When you woke',
+                            timeString: _formatMinutesToTime(wakeMinutes),
+                            icon: Icons.wb_sunny_rounded,
+                            accentColor: const Color(0xFF38BDF8),
+                            onTap: () async {
+                              final picked = await showTimePicker(
+                                context: stateContext,
+                                initialTime: TimeOfDay(hour: wakeMinutes ~/ 60, minute: wakeMinutes % 60),
+                                builder: (c, child) => Theme(
+                                  data: ThemeData.dark().copyWith(
+                                    colorScheme: const ColorScheme.dark(
+                                      primary: Color(0xFF38BDF8),
+                                      surface: Color(0xFF131A2A),
+                                    ),
+                                  ),
+                                  child: child!,
+                                ),
+                              );
+                              if (picked != null) {
+                                setSheetState(() {
+                                  wakeMinutes = picked.hour * 60 + picked.minute;
+                                });
+                              }
+                            },
+                            onMinus: () => setSheetState(() {
+                              wakeMinutes = (wakeMinutes - 15 + 1440) % 1440;
+                            }),
+                            onPlus: () => setSheetState(() {
+                              wakeMinutes = (wakeMinutes + 15) % 1440;
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Calculated Duration Summary Card
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Calculated Duration',
+                                style: TextStyle(fontSize: 12, color: Colors.white60),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                durationStr,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF10B981),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$percent% of goal',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF10B981),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // Save button
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                        backgroundColor: const Color(0xFF10B981),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: () async {
+                        await ref.read(sleepProvider.notifier).save(
+                              bedMinutes: bedMinutes,
+                              wakeMinutes: wakeMinutes,
+                            );
+                        if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                        if (context.mounted) {
+                          AppToast.show(
+                            ScaffoldMessenger.of(context),
+                            message: 'Sleep logged: $durationStr (${_formatMinutesToTime(bedMinutes)} – ${_formatMinutesToTime(wakeMinutes)})',
+                          );
+                        }
+                      },
+                      child: Text(
+                        existingRecord != null ? 'Update Sleep Record' : 'Save Sleep Record',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -237,13 +474,13 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     final sleepState = ref.watch(sleepProvider);
 
     final hasRealRecord = sleepRecord != null;
-    final durationMinutes = hasRealRecord ? sleepRecord.durationMinutes : 440; // Default to 7h 20m if unset
+    final durationMinutes = hasRealRecord ? sleepRecord.durationMinutes : 440; // Default 7h 20m if unlogged
     final hours = durationMinutes ~/ 60;
     final minutes = durationMinutes % 60;
     final goalMinutes = sleepState.targetMinutes;
     final qualityScore = hasRealRecord
         ? ((durationMinutes / goalMinutes) * 100).round().clamp(10, 100)
-        : 92; // 92% per reference mockup
+        : 92;
 
     final durationFormatted = hasRealRecord
         ? (minutes == 0 ? '${hours}h' : '${hours}h ${minutes}m')
@@ -301,7 +538,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                 32,
               ),
               children: [
-                // Top Navigation Bar
+                // Top Navigation Bar with Back Button, Title, and Log Sleep action
                 Row(
                   children: [
                     GestureDetector(
@@ -323,29 +560,85 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
-                        'Sleep Tracker & Smart Alarm',
+                        'Sleep Tracker',
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: 16.5,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                           letterSpacing: -0.3,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+
+                    // Quick "+ Log Sleep" or "Edit" Button
+                    GestureDetector(
+                      onTap: () => _showLogSleepSheet(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.45),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              hasRealRecord ? Icons.edit_calendar_rounded : Icons.add_rounded,
+                              color: const Color(0xFF10B981),
+                              size: 15,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              hasRealRecord ? 'Edit' : 'Log Sleep',
+                              style: const TextStyle(
+                                color: Color(0xFF10B981),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.more_vert_rounded, color: Colors.white70),
                       color: const Color(0xFF0F172A),
                       onSelected: (val) {
-                        if (val == 'goal') {
+                        if (val == 'log') {
+                          _showLogSleepSheet(context);
+                        } else if (val == 'goal') {
                           _showSetSleepGoalSheet(context);
                         } else if (val == 'delete') {
                           _confirmDeleteSleep(context);
                         }
                       },
                       itemBuilder: (ctx) => [
+                        PopupMenuItem(
+                          value: 'log',
+                          child: Row(
+                            children: [
+                              Icon(
+                                hasRealRecord ? Icons.edit_outlined : Icons.add_circle_outline_rounded,
+                                color: const Color(0xFF10B981),
+                                size: 18,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                hasRealRecord ? 'Edit Sleep Log' : 'Log Sleep Data',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
                         const PopupMenuItem(
                           value: 'goal',
                           child: Row(
@@ -371,7 +664,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
                 // Unified Hero Card (Dual Gauges + Legend + Stepped Architecture Graph)
                 _SleepQualityAndStagesHeroCard(
@@ -379,8 +672,52 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                   durationFormatted: durationFormatted,
                   targetMinutes: goalMinutes,
                   actualMinutes: durationMinutes,
+                  onSleepGaugeTap: () => _showLogSleepSheet(context),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+
+                // Status Banner: shows recorded Bedtime & Wake Time or Tap to Log
+                GestureDetector(
+                  onTap: () => _showLogSleepSheet(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131A2A).withValues(alpha: 0.70),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.07),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          hasRealRecord ? Icons.check_circle_outline_rounded : Icons.nightlight_outlined,
+                          size: 16,
+                          color: hasRealRecord ? const Color(0xFF10B981) : const Color(0xFF38BDF8),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            hasRealRecord
+                                ? 'Slept at ${_formatMinutesToTime(sleepRecord.bedMinutes)} • Woke up at ${_formatMinutesToTime(sleepRecord.wakeMinutes)}'
+                                : 'No sleep logged today • Tap here to log bedtime & wake time',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: hasRealRecord ? Colors.white70 : const Color(0xFF38BDF8),
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: Colors.white.withValues(alpha: 0.35),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
 
                 // Interactive Smart Alarm Card
                 _InteractiveSmartAlarmCard(
@@ -411,12 +748,14 @@ class _SleepQualityAndStagesHeroCard extends StatelessWidget {
     required this.durationFormatted,
     required this.targetMinutes,
     required this.actualMinutes,
+    this.onSleepGaugeTap,
   });
 
   final int qualityPercent;
   final String durationFormatted;
   final int targetMinutes;
   final int actualMinutes;
+  final VoidCallback? onSleepGaugeTap;
 
   @override
   Widget build(BuildContext context) {
@@ -471,17 +810,20 @@ class _SleepQualityAndStagesHeroCard extends StatelessWidget {
               ),
 
               // Right Gauge: Sleep Duration (Cyan/Sky-Blue)
-              _NeonCircleGauge(
-                title: 'Sleep',
-                value: durationFormatted,
-                progress: sleepProgress,
-                gradientColors: const [
-                  Color(0xFF38BDF8),
-                  Color(0xFF06B6D4),
-                  Color(0xFF2DD4BF),
-                ],
-                glowColor: const Color(0xFF38BDF8),
-                hasHeadDot: true,
+              GestureDetector(
+                onTap: onSleepGaugeTap,
+                child: _NeonCircleGauge(
+                  title: 'Sleep',
+                  value: durationFormatted,
+                  progress: sleepProgress,
+                  gradientColors: const [
+                    Color(0xFF38BDF8),
+                    Color(0xFF06B6D4),
+                    Color(0xFF2DD4BF),
+                  ],
+                  glowColor: const Color(0xFF38BDF8),
+                  hasHeadDot: true,
+                ),
               ),
             ],
           ),
@@ -733,33 +1075,6 @@ class _SleepStagesArchitectPainter extends CustomPainter {
     canvas.drawLine(Offset(0, yRem), Offset(w, yRem), guidePaint);
     canvas.drawLine(Offset(0, yDeep), Offset(w, yDeep), guidePaint);
 
-    // Stepped wave coordinates matching ref_crops/sleep_screen_ref.png:
-    // (xRatio, y)
-    // 1. Spikes up to awake with pink cap at start
-    // 2. Steps down to Light, then Deep, stays Deep, steps to REM, etc.
-    final steps = [
-      (0.08, yAwake, true),    // Awake spike 1
-      (0.09, yLight, false),
-      (0.18, yLight, false),
-      (0.19, yDeep, false),    // Deep sleep phase 1
-      (0.30, yDeep, false),
-      (0.31, yRem, false),     // Transition to REM
-      (0.40, yRem, false),
-      (0.41, yLight, false),   // Light sleep
-      (0.53, yLight, false),
-      (0.535, yAwake, true),   // Micro-awakening spike 2
-      (0.54, yRem, false),
-      (0.65, yRem, false),
-      (0.66, yLight, false),   // Light sleep phase 2
-      (0.78, yLight, false),
-      (0.785, yAwake, true),   // Micro-awakening spike 3
-      (0.79, yRem, false),
-      (0.85, yRem, false),
-      (0.855, yAwake, true),   // Awake/Alarm wake cap 4
-      (0.89, yAwake, false),
-    ];
-
-    // Build stroke paths for each tier with appropriate neon colors
     // Light segments (Cyan)
     final cyanPath = Path();
     cyanPath.moveTo(w * 0.09, yLight);
@@ -806,30 +1121,22 @@ class _SleepStagesArchitectPainter extends CustomPainter {
 
     // Vertical step connectors
     final connectorPath = Path();
-    // 0.08 awake down to light
     connectorPath.moveTo(w * 0.08, yAwake);
     connectorPath.lineTo(w * 0.08, yLight);
-    // 0.18 light down to deep
     connectorPath.moveTo(w * 0.18, yLight);
     connectorPath.lineTo(w * 0.18, yDeep);
-    // 0.30 deep up to rem
     connectorPath.moveTo(w * 0.30, yDeep);
     connectorPath.lineTo(w * 0.30, yRem);
-    // 0.40 rem up to light
     connectorPath.moveTo(w * 0.40, yRem);
     connectorPath.lineTo(w * 0.40, yLight);
-    // 0.53 light up to awake then down to rem
     connectorPath.moveTo(w * 0.53, yLight);
     connectorPath.lineTo(w * 0.53, yAwake);
     connectorPath.lineTo(w * 0.54, yRem);
-    // 0.65 rem up to light
     connectorPath.moveTo(w * 0.65, yRem);
     connectorPath.lineTo(w * 0.65, yLight);
-    // 0.78 light up to awake then rem
     connectorPath.moveTo(w * 0.78, yLight);
     connectorPath.lineTo(w * 0.78, yAwake);
     connectorPath.lineTo(w * 0.79, yRem);
-    // 0.85 rem up to awake
     connectorPath.moveTo(w * 0.85, yRem);
     connectorPath.lineTo(w * 0.85, yAwake);
 
@@ -891,6 +1198,104 @@ class _SleepStagesArchitectPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Time Picker Card for Bedtime and Wake-up time selection
+class _TimePickerCard extends StatelessWidget {
+  const _TimePickerCard({
+    required this.title,
+    required this.subtitle,
+    required this.timeString,
+    required this.icon,
+    required this.accentColor,
+    required this.onTap,
+    required this.onMinus,
+    required this.onPlus,
+  });
+
+  final String title;
+  final String subtitle;
+  final String timeString;
+  final IconData icon;
+  final Color accentColor;
+  final VoidCallback onTap;
+  final VoidCallback onMinus;
+  final VoidCallback onPlus;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF131A2A),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: accentColor, size: 16),
+              const SizedBox(width: 5),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+              ),
+              child: Text(
+                timeString,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                iconSize: 22,
+                onPressed: onMinus,
+                icon: const Icon(Icons.remove_circle_outline, color: Colors.white60),
+                tooltip: '-15 mins',
+              ),
+              const SizedBox(width: 6),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                iconSize: 22,
+                onPressed: onPlus,
+                icon: const Icon(Icons.add_circle_outline, color: Colors.white60),
+                tooltip: '+15 mins',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Interactive Smart Alarm Card matching reference mockup
