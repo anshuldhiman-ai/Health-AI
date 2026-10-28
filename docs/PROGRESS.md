@@ -38,8 +38,10 @@
 ---
 
 ### Phase 1 — Data foundation (start day 1, runs for weeks)
-- [ ] **T1.1** `ml/taxonomy/taxonomy_v1.yaml`: roles (§5.1), ~40 groups, 239 dishes (map existing `labels.json`), one generic record per group.
-- [ ] **T1.2** `docs/specs/capture_sop.md` + `plates.csv` schema (§5.4): top-down shot ± 3 more at 15° and 30°, IMU tilt logged, each item weighed separately (tare container), varied lighting/plates, ≥ 30 % restaurant/other-home plates.
+- [x] **T1.1** `ml/taxonomy/taxonomy_v1.yaml`: roles (§5.1), ~40 groups, 239 dishes (map existing `labels.json`), one generic record per group.
+  * `T1.1 completed: taxonomy_v1.yaml generated (11 roles, 48 groups, 239 catalog dishes, 48 generic records); verified by test_taxonomy_v1.py`
+- [x] **T1.2** `docs/specs/capture_sop.md` + `plates.csv` schema (§5.4): top-down shot ± 3 more at 15° and 30°, IMU tilt logged, each item weighed separately (tare container), varied lighting/plates, ≥ 30 % restaurant/other-home plates.
+  * `T1.2 completed: docs/specs/capture_sop.md written, ml/data/weighed_plates/plates.csv schema established; verified by test_plates_csv.py`
 - [ ] **T1.3** Ingestion scripts for public data, each logging its license in `ml/data/LICENSES.md`: **Khana** (≈131 K images, 80 Indian classes), **Indian Thali Dataset + Weight Estimation Dataset** (IIIT-H, ICVGIP 2025: 796 plates / 267 weighed plates), **EcoPlate** (313 plate pairs, 8 classes), **Nutrition5k** (5 K dishes, depth + mass), **FoodSeg103 / UEC-FoodPix**.
 - [ ] **T1.4** `sam_preannotate.py` (SAM 2 → candidate masks → map to roles → import into CVAT/Label Studio) + `annotation_guide.md`. Target **≥ 800 verified plates (gate) / 1,500 (target)**.
 - [ ] **T1.5** Splits **by session/plate** (no leakage) in `ml/data/splits/`; freeze the **golden set** (≥ 60 weighed plates + their masks, never trained on, hash saved).

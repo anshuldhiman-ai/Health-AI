@@ -1,0 +1,4 @@
+plate_id,session_id,image_paths,imu_tilt_deg,plate_type,plate_diameter_cm,container_ids,item_index,dish_id,role,net_mass_g,piece_count,variant,lighting,notes
+plate_sample_001,session_001,images/p001_top.jpg;images/p001_tilt15.jpg,4.2,round_plate,28.0,katori_1,0,dal_tadka,gravy_curry,155.0,,home_regular,daylight,standard katori
+plate_sample_001,session_001,images/p001_top.jpg;images/p001_tilt15.jpg,4.2,round_plate,28.0,katori_2,1,aloo_gobi,dry_sabzi,120.0,,home_regular,daylight,light oil
+plate_sample_001,session_001,images/p001_top.jpg;images/p001_tilt15.jpg,4.2,round_plate,28.0,,2,chapati,flat_bread,70.0,2,home_regular,daylight,2 rotis stacked

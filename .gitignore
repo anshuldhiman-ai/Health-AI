@@ -21,6 +21,7 @@ build/
 # --- Python / ML ---
 ml/data/
 !ml/data/LICENSES.md
+!ml/data/weighed_plates/plates.csv
 ml/.venv/
 !ml/reports/.gitkeep
 __pycache__/

@@ -1,0 +1,3668 @@
+version: 1
+roles:
+- id: 0
+  name: background
+- id: 1
+  name: plate_tray
+- id: 2
+  name: bowl
+- id: 3
+  name: mounded_carb
+- id: 4
+  name: flat_bread
+- id: 5
+  name: gravy_curry
+- id: 6
+  name: dry_sabzi
+- id: 7
+  name: salad_raw
+- id: 8
+  name: condiment
+- id: 9
+  name: protein_piece
+- id: 10
+  name: other_food
+groups:
+- group_id: pickle_achar
+  role: condiment
+  name: Pickle Achar
+  generic_dish_id: generic_pickle_achar
+- group_id: mithai_traditional
+  role: other_food
+  name: Mithai Traditional
+  generic_dish_id: generic_mithai_traditional
+- group_id: dry_potato_sabzi
+  role: dry_sabzi
+  name: Dry Potato Sabzi
+  generic_dish_id: generic_dry_potato_sabzi
+- group_id: paratha
+  role: flat_bread
+  name: Paratha
+  generic_dish_id: generic_paratha
+- group_id: puri_bhatura
+  role: flat_bread
+  name: Puri Bhatura
+  generic_dish_id: generic_puri_bhatura
+- group_id: fried_snack
+  role: other_food
+  name: Fried Snack
+  generic_dish_id: generic_fried_snack
+- group_id: naan_kulcha
+  role: flat_bread
+  name: Naan Kulcha
+  generic_dish_id: generic_naan_kulcha
+- group_id: egg_curry
+  role: gravy_curry
+  name: Egg Curry
+  generic_dish_id: generic_egg_curry
+- group_id: dosa_cheela
+  role: flat_bread
+  name: Dosa Cheela
+  generic_dish_id: generic_dosa_cheela
+- group_id: fruit_raw
+  role: other_food
+  name: Fruit Raw
+  generic_dish_id: generic_fruit_raw
+- group_id: western_dessert
+  role: other_food
+  name: Western Dessert
+  generic_dish_id: generic_western_dessert
+- group_id: western_bread
+  role: flat_bread
+  name: Western Bread
+  generic_dish_id: generic_western_bread
+- group_id: dry_gourd_eggplant
+  role: dry_sabzi
+  name: Dry Gourd Eggplant
+  generic_dish_id: generic_dry_gourd_eggplant
+- group_id: dry_crunchy_snack
+  role: other_food
+  name: Dry Crunchy Snack
+  generic_dish_id: generic_dry_crunchy_snack
+- group_id: milk_dessert
+  role: other_food
+  name: Milk Dessert
+  generic_dish_id: generic_milk_dessert
+- group_id: raw_vegetable_salad
+  role: salad_raw
+  name: Raw Vegetable Salad
+  generic_dish_id: generic_raw_vegetable_salad
+- group_id: chaat
+  role: other_food
+  name: Chaat
+  generic_dish_id: generic_chaat
+- group_id: dry_green_sabzi
+  role: dry_sabzi
+  name: Dry Green Sabzi
+  generic_dish_id: generic_dry_green_sabzi
+- group_id: biryani_pulao
+  role: mounded_carb
+  name: Biryani Pulao
+  generic_dish_id: generic_biryani_pulao
+- group_id: western_fastfood
+  role: other_food
+  name: Western Fastfood
+  generic_dish_id: generic_western_fastfood
+- group_id: chicken_curry
+  role: gravy_curry
+  name: Chicken Curry
+  generic_dish_id: generic_chicken_curry
+- group_id: dry_vegetable_sabzi
+  role: dry_sabzi
+  name: Dry Vegetable Sabzi
+  generic_dish_id: generic_dry_vegetable_sabzi
+- group_id: beverage
+  role: other_food
+  name: Beverage
+  generic_dish_id: generic_beverage
+- group_id: dal
+  role: gravy_curry
+  name: Dal
+  generic_dish_id: generic_dal
+- group_id: roti_chapati
+  role: flat_bread
+  name: Roti Chapati
+  generic_dish_id: generic_roti_chapati
+- group_id: chicken_kebab_piece
+  role: protein_piece
+  name: Chicken Kebab Piece
+  generic_dish_id: generic_chicken_kebab_piece
+- group_id: aromatics_raw
+  role: salad_raw
+  name: Aromatics Raw
+  generic_dish_id: generic_aromatics_raw
+- group_id: miscellaneous_food
+  role: other_food
+  name: Miscellaneous Food
+  generic_dish_id: generic_miscellaneous_food
+- group_id: noodle_pasta
+  role: mounded_carb
+  name: Noodle Pasta
+  generic_dish_id: generic_noodle_pasta
+- group_id: porridge_oats
+  role: mounded_carb
+  name: Porridge Oats
+  generic_dish_id: generic_porridge_oats
+- group_id: boiled_salad_tuber
+  role: salad_raw
+  name: Boiled Salad Tuber
+  generic_dish_id: generic_boiled_salad_tuber
+- group_id: traditional_regional_meal
+  role: other_food
+  name: Traditional Regional Meal
+  generic_dish_id: generic_traditional_regional_meal
+- group_id: khichdi_pongal
+  role: mounded_carb
+  name: Khichdi Pongal
+  generic_dish_id: generic_khichdi_pongal
+- group_id: steamed_snack
+  role: other_food
+  name: Steamed Snack
+  generic_dish_id: generic_steamed_snack
+- group_id: halwa_pudding
+  role: other_food
+  name: Halwa Pudding
+  generic_dish_id: generic_halwa_pudding
+- group_id: fish_curry
+  role: gravy_curry
+  name: Fish Curry
+  generic_dish_id: generic_fish_curry
+- group_id: fish_seafood_piece
+  role: protein_piece
+  name: Fish Seafood Piece
+  generic_dish_id: generic_fish_seafood_piece
+- group_id: veg_kebab_piece
+  role: protein_piece
+  name: Veg Kebab Piece
+  generic_dish_id: generic_veg_kebab_piece
+- group_id: rolls_wraps
+  role: other_food
+  name: Rolls Wraps
+  generic_dish_id: generic_rolls_wraps
+- group_id: paneer_gravy
+  role: gravy_curry
+  name: Paneer Gravy
+  generic_dish_id: generic_paneer_gravy
+- group_id: kadhi_curd_curry
+  role: gravy_curry
+  name: Kadhi Curd Curry
+  generic_dish_id: generic_kadhi_curd_curry
+- group_id: papad_crisp
+  role: flat_bread
+  name: Papad Crisp
+  generic_dish_id: generic_papad_crisp
+- group_id: street_curry
+  role: gravy_curry
+  name: Street Curry
+  generic_dish_id: generic_street_curry
+- group_id: dumpling_momo
+  role: other_food
+  name: Dumpling Momo
+  generic_dish_id: generic_dumpling_momo
+- group_id: egg_dish
+  role: protein_piece
+  name: Egg Dish
+  generic_dish_id: generic_egg_dish
+- group_id: poha_upma
+  role: mounded_carb
+  name: Poha Upma
+  generic_dish_id: generic_poha_upma
+- group_id: steamed_rice
+  role: mounded_carb
+  name: Steamed Rice
+  generic_dish_id: generic_steamed_rice
+- group_id: composite_thali
+  role: other_food
+  name: Composite Thali
+  generic_dish_id: generic_composite_thali
+dishes:
+- dish_id: achar
+  raw_name: achar
+  names:
+    en: Achar
+    hi: Achar
+  taxonomy:
+    role: condiment
+    group: pickle_achar
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 20
+- dish_id: adhirasam
+  raw_name: adhirasam
+  names:
+    en: Adhirasam
+    hi: Adhirasam
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: aloo_gobi
+  raw_name: aloo gobi
+  names:
+    en: Aloo Gobi
+    hi: Aloo Gobi
+  taxonomy:
+    role: dry_sabzi
+    group: dry_potato_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 140
+- dish_id: aloo_matar
+  raw_name: aloo matar
+  names:
+    en: Aloo Matar
+    hi: Aloo Matar
+  taxonomy:
+    role: dry_sabzi
+    group: dry_potato_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 140
+- dish_id: aloo_methi
+  raw_name: aloo methi
+  names:
+    en: Aloo Methi
+    hi: Aloo Methi
+  taxonomy:
+    role: dry_sabzi
+    group: dry_potato_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 140
+- dish_id: aloo_paratha
+  raw_name: aloo paratha
+  names:
+    en: Aloo Paratha
+    hi: Aloo Paratha
+  taxonomy:
+    role: flat_bread
+    group: paratha
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: aloo_puri
+  raw_name: aloo puri
+  names:
+    en: Aloo Puri
+    hi: Aloo Puri
+  taxonomy:
+    role: flat_bread
+    group: puri_bhatura
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: aloo_shimla_mirch
+  raw_name: aloo shimla mirch
+  names:
+    en: Aloo Shimla Mirch
+    hi: Aloo Shimla Mirch
+  taxonomy:
+    role: dry_sabzi
+    group: dry_potato_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 140
+- dish_id: aloo_tikki
+  raw_name: aloo tikki
+  names:
+    en: Aloo Tikki
+    hi: Aloo Tikki
+  taxonomy:
+    role: other_food
+    group: fried_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: amritsari_kulcha
+  raw_name: amritsari kulcha
+  names:
+    en: Amritsari Kulcha
+    hi: Amritsari Kulcha
+  taxonomy:
+    role: flat_bread
+    group: naan_kulcha
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 90
+- dish_id: anarsa
+  raw_name: anarsa
+  names:
+    en: Anarsa
+    hi: Anarsa
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: anda_curry
+  raw_name: anda curry
+  names:
+    en: Anda Curry
+    hi: Anda Curry
+  taxonomy:
+    role: gravy_curry
+    group: egg_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 160
+- dish_id: appam
+  raw_name: appam
+  names:
+    en: Appam
+    hi: Appam
+  taxonomy:
+    role: flat_bread
+    group: dosa_cheela
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 90
+- dish_id: apple
+  raw_name: apple
+  names:
+    en: Apple
+    hi: Apple
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: apple_pie
+  raw_name: apple pie
+  names:
+    en: Apple Pie
+    hi: Apple Pie
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: ariselu
+  raw_name: ariselu
+  names:
+    en: Ariselu
+    hi: Ariselu
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: bagels
+  raw_name: bagels
+  names:
+    en: Bagels
+    hi: Bagels
+  taxonomy:
+    role: flat_bread
+    group: western_bread
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: baingan_bharta
+  raw_name: baingan bharta
+  names:
+    en: Baingan Bharta
+    hi: Baingan Bharta
+  taxonomy:
+    role: dry_sabzi
+    group: dry_gourd_eggplant
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 130
+- dish_id: balushahi
+  raw_name: balushahi
+  names:
+    en: Balushahi
+    hi: Balushahi
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: banana
+  raw_name: banana
+  names:
+    en: Banana
+    hi: Banana
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: banana_chips
+  raw_name: banana chips
+  names:
+    en: Banana Chips
+    hi: Banana Chips
+  taxonomy:
+    role: other_food
+    group: dry_crunchy_snack
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 40
+- dish_id: bandar_laddu
+  raw_name: bandar laddu
+  names:
+    en: Bandar Laddu
+    hi: Bandar Laddu
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: basundi
+  raw_name: basundi
+  names:
+    en: Basundi
+    hi: Basundi
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: beetroot
+  raw_name: beetroot
+  names:
+    en: Beetroot
+    hi: Beetroot
+  taxonomy:
+    role: salad_raw
+    group: raw_vegetable_salad
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 75
+- dish_id: besan_cheela
+  raw_name: besan cheela
+  names:
+    en: Besan Cheela
+    hi: Besan Cheela
+  taxonomy:
+    role: flat_bread
+    group: dosa_cheela
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 75
+- dish_id: besan_laddu
+  raw_name: besan laddu
+  names:
+    en: Besan Laddu
+    hi: Besan Laddu
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: bhatura
+  raw_name: bhatura
+  names:
+    en: Bhatura
+    hi: Bhatura
+  taxonomy:
+    role: flat_bread
+    group: puri_bhatura
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 60
+- dish_id: bhel_puri
+  raw_name: bhel puri
+  names:
+    en: Bhel Puri
+    hi: Bhel Puri
+  taxonomy:
+    role: other_food
+    group: chaat
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 100
+- dish_id: bhindi_masala
+  raw_name: bhindi masala
+  names:
+    en: Bhindi Masala
+    hi: Bhindi Masala
+  taxonomy:
+    role: dry_sabzi
+    group: dry_green_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 120
+- dish_id: biryani
+  raw_name: biryani
+  names:
+    en: Biryani
+    hi: Biryani
+  taxonomy:
+    role: mounded_carb
+    group: biryani_pulao
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 220
+- dish_id: boondi
+  raw_name: boondi
+  names:
+    en: Boondi
+    hi: Boondi
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: boondi_laddu
+  raw_name: boondi laddu
+  names:
+    en: Boondi Laddu
+    hi: Boondi Laddu
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: brownie
+  raw_name: brownie
+  names:
+    en: Brownie
+    hi: Brownie
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: burger
+  raw_name: burger
+  names:
+    en: Burger
+    hi: Burger
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: butter_chicken
+  raw_name: butter chicken
+  names:
+    en: Butter Chicken
+    hi: Butter Chicken
+  taxonomy:
+    role: gravy_curry
+    group: chicken_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: butter_naan
+  raw_name: butter naan
+  names:
+    en: Butter Naan
+    hi: Butter Naan
+  taxonomy:
+    role: flat_bread
+    group: naan_kulcha
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: cabbage
+  raw_name: cabbage
+  names:
+    en: Cabbage
+    hi: Cabbage
+  taxonomy:
+    role: dry_sabzi
+    group: dry_vegetable_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 120
+- dish_id: cake
+  raw_name: cake
+  names:
+    en: Cake
+    hi: Cake
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: canned_potatoes
+  raw_name: canned potatoes
+  names:
+    en: Canned Potatoes
+    hi: Canned Potatoes
+  taxonomy:
+    role: dry_sabzi
+    group: dry_potato_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 140
+- dish_id: capsicum
+  raw_name: capsicum
+  names:
+    en: Capsicum
+    hi: Capsicum
+  taxonomy:
+    role: dry_sabzi
+    group: dry_vegetable_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 120
+- dish_id: carrots
+  raw_name: carrots
+  names:
+    en: Carrots
+    hi: Carrots
+  taxonomy:
+    role: salad_raw
+    group: raw_vegetable_salad
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 75
+- dish_id: cauliflower
+  raw_name: cauliflower
+  names:
+    en: Cauliflower
+    hi: Cauliflower
+  taxonomy:
+    role: dry_sabzi
+    group: dry_vegetable_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 120
+- dish_id: chaas
+  raw_name: chaas
+  names:
+    en: Chaas
+    hi: Chaas
+  taxonomy:
+    role: other_food
+    group: beverage
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 200
+- dish_id: chai
+  raw_name: chai
+  names:
+    en: Chai
+    hi: Chai
+  taxonomy:
+    role: other_food
+    group: beverage
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 200
+- dish_id: chak_hao_kheer
+  raw_name: chak hao kheer
+  names:
+    en: Chak Hao Kheer
+    hi: Chak Hao Kheer
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: cham_cham
+  raw_name: cham cham
+  names:
+    en: Cham Cham
+    hi: Cham Cham
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: chana_masala
+  raw_name: chana masala
+  names:
+    en: Chana Masala
+    hi: Chana Masala
+  taxonomy:
+    role: gravy_curry
+    group: dal
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: chapati
+  raw_name: chapati
+  names:
+    en: Chapati
+    hi: Chapati
+  taxonomy:
+    role: flat_bread
+    group: roti_chapati
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 35
+- dish_id: chhena_kheeri
+  raw_name: chhena kheeri
+  names:
+    en: Chhena Kheeri
+    hi: Chhena Kheeri
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: chicken_pizza
+  raw_name: chicken pizza
+  names:
+    en: Chicken Pizza
+    hi: Chicken Pizza
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: chicken_razala
+  raw_name: chicken razala
+  names:
+    en: Chicken Razala
+    hi: Chicken Razala
+  taxonomy:
+    role: gravy_curry
+    group: chicken_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: chicken_rezala
+  raw_name: chicken rezala
+  names:
+    en: Chicken Rezala
+    hi: Chicken Rezala
+  taxonomy:
+    role: gravy_curry
+    group: chicken_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: chicken_tikka
+  raw_name: chicken tikka
+  names:
+    en: Chicken Tikka
+    hi: Chicken Tikka
+  taxonomy:
+    role: protein_piece
+    group: chicken_kebab_piece
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 60
+- dish_id: chicken_tikka_masala
+  raw_name: chicken tikka masala
+  names:
+    en: Chicken Tikka Masala
+    hi: Chicken Tikka Masala
+  taxonomy:
+    role: gravy_curry
+    group: chicken_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: chicken_wings
+  raw_name: chicken wings
+  names:
+    en: Chicken Wings
+    hi: Chicken Wings
+  taxonomy:
+    role: protein_piece
+    group: chicken_kebab_piece
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 60
+- dish_id: chikki
+  raw_name: chikki
+  names:
+    en: Chikki
+    hi: Chikki
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: chilli_pepper
+  raw_name: chilli pepper
+  names:
+    en: Chilli Pepper
+    hi: Chilli Pepper
+  taxonomy:
+    role: salad_raw
+    group: aromatics_raw
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 20
+- dish_id: chilli_potato
+  raw_name: chilli potato
+  names:
+    en: Chilli Potato
+    hi: Chilli Potato
+  taxonomy:
+    role: dry_sabzi
+    group: dry_potato_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 140
+- dish_id: chivda
+  raw_name: chivda
+  names:
+    en: Chivda
+    hi: Chivda
+  taxonomy:
+    role: other_food
+    group: dry_crunchy_snack
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 40
+- dish_id: chole_bhature
+  raw_name: chole bhature
+  names:
+    en: Chole Bhature
+    hi: Chole Bhature
+  taxonomy:
+    role: other_food
+    group: miscellaneous_food
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: chop_suey
+  raw_name: chop suey
+  names:
+    en: Chop Suey
+    hi: Chop Suey
+  taxonomy:
+    role: mounded_carb
+    group: noodle_pasta
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: chow_mein
+  raw_name: chow mein
+  names:
+    en: Chow Mein
+    hi: Chow Mein
+  taxonomy:
+    role: mounded_carb
+    group: noodle_pasta
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: cooked_oatmeal
+  raw_name: cooked oatmeal
+  names:
+    en: Cooked Oatmeal
+    hi: Cooked Oatmeal
+  taxonomy:
+    role: mounded_carb
+    group: porridge_oats
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: cooked_pasta
+  raw_name: cooked pasta
+  names:
+    en: Cooked Pasta
+    hi: Cooked Pasta
+  taxonomy:
+    role: mounded_carb
+    group: noodle_pasta
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: corn
+  raw_name: corn
+  names:
+    en: Corn
+    hi: Corn
+  taxonomy:
+    role: salad_raw
+    group: boiled_salad_tuber
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: cucumber
+  raw_name: cucumber
+  names:
+    en: Cucumber
+    hi: Cucumber
+  taxonomy:
+    role: salad_raw
+    group: raw_vegetable_salad
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 75
+- dish_id: daal_baati_churma
+  raw_name: daal baati churma
+  names:
+    en: Daal Baati Churma
+    hi: Daal Baati Churma
+  taxonomy:
+    role: other_food
+    group: traditional_regional_meal
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 200
+- dish_id: daal_puri
+  raw_name: daal puri
+  names:
+    en: Daal Puri
+    hi: Daal Puri
+  taxonomy:
+    role: flat_bread
+    group: puri_bhatura
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: dal_khichdi
+  raw_name: dal khichdi
+  names:
+    en: Dal Khichdi
+    hi: Dal Khichdi
+  taxonomy:
+    role: mounded_carb
+    group: khichdi_pongal
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 200
+- dish_id: dal_makhani
+  raw_name: dal makhani
+  names:
+    en: Dal Makhani
+    hi: Dal Makhani
+  taxonomy:
+    role: gravy_curry
+    group: dal
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: dal_tadka
+  raw_name: dal tadka
+  names:
+    en: Dal Tadka
+    hi: Dal Tadka
+  taxonomy:
+    role: gravy_curry
+    group: dal
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: dharwad_pedha
+  raw_name: dharwad pedha
+  names:
+    en: Dharwad Pedha
+    hi: Dharwad Pedha
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: dhokla
+  raw_name: dhokla
+  names:
+    en: Dhokla
+    hi: Dhokla
+  taxonomy:
+    role: other_food
+    group: steamed_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: doodhpak
+  raw_name: doodhpak
+  names:
+    en: Doodhpak
+    hi: Doodhpak
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: double_ka_meetha
+  raw_name: double ka meetha
+  names:
+    en: Double Ka Meetha
+    hi: Double Ka Meetha
+  taxonomy:
+    role: other_food
+    group: halwa_pudding
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: doughnut
+  raw_name: doughnut
+  names:
+    en: Doughnut
+    hi: Doughnut
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: dum_aloo
+  raw_name: dum aloo
+  names:
+    en: Dum Aloo
+    hi: Dum Aloo
+  taxonomy:
+    role: dry_sabzi
+    group: dry_potato_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 140
+- dish_id: falooda
+  raw_name: falooda
+  names:
+    en: Falooda
+    hi: Falooda
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: fish_curry
+  raw_name: fish curry
+  names:
+    en: Fish Curry
+    hi: Fish Curry
+  taxonomy:
+    role: gravy_curry
+    group: fish_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: fried_chicken
+  raw_name: fried chicken
+  names:
+    en: Fried Chicken
+    hi: Fried Chicken
+  taxonomy:
+    role: protein_piece
+    group: chicken_kebab_piece
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 60
+- dish_id: fried_fish
+  raw_name: fried fish
+  names:
+    en: Fried Fish
+    hi: Fried Fish
+  taxonomy:
+    role: protein_piece
+    group: fish_seafood_piece
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 75
+- dish_id: fried_rice
+  raw_name: fried rice
+  names:
+    en: Fried Rice
+    hi: Fried Rice
+  taxonomy:
+    role: mounded_carb
+    group: biryani_pulao
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 220
+- dish_id: gajar_ka_halwa
+  raw_name: gajar ka halwa
+  names:
+    en: Gajar Ka Halwa
+    hi: Gajar Ka Halwa
+  taxonomy:
+    role: other_food
+    group: halwa_pudding
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: garlic
+  raw_name: garlic
+  names:
+    en: Garlic
+    hi: Garlic
+  taxonomy:
+    role: salad_raw
+    group: aromatics_raw
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 20
+- dish_id: garlic_bread
+  raw_name: garlic bread
+  names:
+    en: Garlic Bread
+    hi: Garlic Bread
+  taxonomy:
+    role: flat_bread
+    group: western_bread
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: garlic_naan
+  raw_name: garlic naan
+  names:
+    en: Garlic Naan
+    hi: Garlic Naan
+  taxonomy:
+    role: flat_bread
+    group: naan_kulcha
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: gavvalu
+  raw_name: gavvalu
+  names:
+    en: Gavvalu
+    hi: Gavvalu
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: ghevar
+  raw_name: ghevar
+  names:
+    en: Ghevar
+    hi: Ghevar
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: ginger
+  raw_name: ginger
+  names:
+    en: Ginger
+    hi: Ginger
+  taxonomy:
+    role: salad_raw
+    group: aromatics_raw
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 20
+- dish_id: gobi_manchurian
+  raw_name: gobi manchurian
+  names:
+    en: Gobi Manchurian
+    hi: Gobi Manchurian
+  taxonomy:
+    role: other_food
+    group: miscellaneous_food
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: grape
+  raw_name: grape
+  names:
+    en: Grape
+    hi: Grape
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: grilled_sandwich
+  raw_name: grilled sandwich
+  names:
+    en: Grilled Sandwich
+    hi: Grilled Sandwich
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: gujhia
+  raw_name: gujhia
+  names:
+    en: Gujhia
+    hi: Gujhia
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: gujiya
+  raw_name: gujiya
+  names:
+    en: Gujiya
+    hi: Gujiya
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: gulab_jamun
+  raw_name: gulab jamun
+  names:
+    en: Gulab Jamun
+    hi: Gulab Jamun
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: hara_bhara_kabab
+  raw_name: hara bhara kabab
+  names:
+    en: Hara Bhara Kabab
+    hi: Hara Bhara Kabab
+  taxonomy:
+    role: protein_piece
+    group: veg_kebab_piece
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: hot_dogs
+  raw_name: hot dogs
+  names:
+    en: Hot Dogs
+    hi: Hot Dogs
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: ice_cream
+  raw_name: ice cream
+  names:
+    en: Ice Cream
+    hi: Ice Cream
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: idiyappam
+  raw_name: idiyappam
+  names:
+    en: Idiyappam
+    hi: Idiyappam
+  taxonomy:
+    role: flat_bread
+    group: dosa_cheela
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 90
+- dish_id: idli
+  raw_name: idli
+  names:
+    en: Idli
+    hi: Idli
+  taxonomy:
+    role: other_food
+    group: steamed_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: imarti
+  raw_name: imarti
+  names:
+    en: Imarti
+    hi: Imarti
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: jalebi
+  raw_name: jalebi
+  names:
+    en: Jalebi
+    hi: Jalebi
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: kaathi_rolls
+  raw_name: kaathi rolls
+  names:
+    en: Kaathi Rolls
+    hi: Kaathi Rolls
+  taxonomy:
+    role: other_food
+    group: rolls_wraps
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: kachori
+  raw_name: kachori
+  names:
+    en: Kachori
+    hi: Kachori
+  taxonomy:
+    role: other_food
+    group: fried_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: kadai_paneer
+  raw_name: kadai paneer
+  names:
+    en: Kadai Paneer
+    hi: Kadai Paneer
+  taxonomy:
+    role: gravy_curry
+    group: paneer_gravy
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 160
+- dish_id: kadhi_pakoda
+  raw_name: kadhi pakoda
+  names:
+    en: Kadhi Pakoda
+    hi: Kadhi Pakoda
+  taxonomy:
+    role: gravy_curry
+    group: kadhi_curd_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: kajjikaya
+  raw_name: kajjikaya
+  names:
+    en: Kajjikaya
+    hi: Kajjikaya
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: kaju_katli
+  raw_name: kaju katli
+  names:
+    en: Kaju Katli
+    hi: Kaju Katli
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: kakinada_khaja
+  raw_name: kakinada khaja
+  names:
+    en: Kakinada Khaja
+    hi: Kakinada Khaja
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: kalakand
+  raw_name: kalakand
+  names:
+    en: Kalakand
+    hi: Kalakand
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: karela_bharta
+  raw_name: karela bharta
+  names:
+    en: Karela Bharta
+    hi: Karela Bharta
+  taxonomy:
+    role: dry_sabzi
+    group: dry_gourd_eggplant
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 130
+- dish_id: kathi_roll
+  raw_name: kathi roll
+  names:
+    en: Kathi Roll
+    hi: Kathi Roll
+  taxonomy:
+    role: other_food
+    group: rolls_wraps
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: kebabs
+  raw_name: kebabs
+  names:
+    en: Kebabs
+    hi: Kebabs
+  taxonomy:
+    role: protein_piece
+    group: chicken_kebab_piece
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 60
+- dish_id: khakhra
+  raw_name: khakhra
+  names:
+    en: Khakhra
+    hi: Khakhra
+  taxonomy:
+    role: flat_bread
+    group: papad_crisp
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 15
+- dish_id: khandvi
+  raw_name: khandvi
+  names:
+    en: Khandvi
+    hi: Khandvi
+  taxonomy:
+    role: other_food
+    group: steamed_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: kheer
+  raw_name: kheer
+  names:
+    en: Kheer
+    hi: Kheer
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: khichdi
+  raw_name: khichdi
+  names:
+    en: Khichdi
+    hi: Khichdi
+  taxonomy:
+    role: mounded_carb
+    group: khichdi_pongal
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 200
+- dish_id: khubani_ka_meetha
+  raw_name: khubani ka meetha
+  names:
+    en: Khubani Ka Meetha
+    hi: Khubani Ka Meetha
+  taxonomy:
+    role: other_food
+    group: halwa_pudding
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: kiwi
+  raw_name: kiwi
+  names:
+    en: Kiwi
+    hi: Kiwi
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: kofta
+  raw_name: kofta
+  names:
+    en: Kofta
+    hi: Kofta
+  taxonomy:
+    role: gravy_curry
+    group: paneer_gravy
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 160
+- dish_id: kulfi
+  raw_name: kulfi
+  names:
+    en: Kulfi
+    hi: Kulfi
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: kuzhi_paniyaram
+  raw_name: kuzhi paniyaram
+  names:
+    en: Kuzhi Paniyaram
+    hi: Kuzhi Paniyaram
+  taxonomy:
+    role: other_food
+    group: steamed_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: lassi
+  raw_name: lassi
+  names:
+    en: Lassi
+    hi: Lassi
+  taxonomy:
+    role: other_food
+    group: beverage
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 200
+- dish_id: ledikeni
+  raw_name: ledikeni
+  names:
+    en: Ledikeni
+    hi: Ledikeni
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: lemon
+  raw_name: lemon
+  names:
+    en: Lemon
+    hi: Lemon
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: lemonade
+  raw_name: lemonade
+  names:
+    en: Lemonade
+    hi: Lemonade
+  taxonomy:
+    role: other_food
+    group: beverage
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 200
+- dish_id: lettuce
+  raw_name: lettuce
+  names:
+    en: Lettuce
+    hi: Lettuce
+  taxonomy:
+    role: salad_raw
+    group: raw_vegetable_salad
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 75
+- dish_id: litti_chokha
+  raw_name: litti chokha
+  names:
+    en: Litti Chokha
+    hi: Litti Chokha
+  taxonomy:
+    role: other_food
+    group: traditional_regional_meal
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 200
+- dish_id: lyangcha
+  raw_name: lyangcha
+  names:
+    en: Lyangcha
+    hi: Lyangcha
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: maach_jhol
+  raw_name: maach jhol
+  names:
+    en: Maach Jhol
+    hi: Maach Jhol
+  taxonomy:
+    role: gravy_curry
+    group: fish_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: macaroni_salad
+  raw_name: macaroni salad
+  names:
+    en: Macaroni Salad
+    hi: Macaroni Salad
+  taxonomy:
+    role: mounded_carb
+    group: noodle_pasta
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: makki_di_roti_sarson_da_saag
+  raw_name: makki di roti sarson da saag
+  names:
+    en: Makki Di Roti Sarson Da Saag
+    hi: Makki Di Roti Sarson Da Saag
+  taxonomy:
+    role: flat_bread
+    group: roti_chapati
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 35
+- dish_id: malapua
+  raw_name: malapua
+  names:
+    en: Malapua
+    hi: Malapua
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: malpua
+  raw_name: malpua
+  names:
+    en: Malpua
+    hi: Malpua
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: mango
+  raw_name: mango
+  names:
+    en: Mango
+    hi: Mango
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: margherita_pizza
+  raw_name: margherita pizza
+  names:
+    en: Margherita Pizza
+    hi: Margherita Pizza
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: masala_dosa
+  raw_name: masala dosa
+  names:
+    en: Masala Dosa
+    hi: Masala Dosa
+  taxonomy:
+    role: flat_bread
+    group: dosa_cheela
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 90
+- dish_id: masala_papad
+  raw_name: masala papad
+  names:
+    en: Masala Papad
+    hi: Masala Papad
+  taxonomy:
+    role: flat_bread
+    group: papad_crisp
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 15
+- dish_id: medu_vada
+  raw_name: medu vada
+  names:
+    en: Medu Vada
+    hi: Medu Vada
+  taxonomy:
+    role: other_food
+    group: fried_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: misal_pav
+  raw_name: misal pav
+  names:
+    en: Misal Pav
+    hi: Misal Pav
+  taxonomy:
+    role: gravy_curry
+    group: street_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: mishti_doi
+  raw_name: mishti doi
+  names:
+    en: Mishti Doi
+    hi: Mishti Doi
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: misi_roti
+  raw_name: misi roti
+  names:
+    en: Misi Roti
+    hi: Misi Roti
+  taxonomy:
+    role: flat_bread
+    group: roti_chapati
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 35
+- dish_id: missi_roti
+  raw_name: missi roti
+  names:
+    en: Missi Roti
+    hi: Missi Roti
+  taxonomy:
+    role: flat_bread
+    group: roti_chapati
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 35
+- dish_id: misti_doi
+  raw_name: misti doi
+  names:
+    en: Misti Doi
+    hi: Misti Doi
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: modak
+  raw_name: modak
+  names:
+    en: Modak
+    hi: Modak
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: momos
+  raw_name: momos
+  names:
+    en: Momos
+    hi: Momos
+  taxonomy:
+    role: other_food
+    group: dumpling_momo
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 30
+- dish_id: moong_dal_halwa
+  raw_name: moong dal halwa
+  names:
+    en: Moong Dal Halwa
+    hi: Moong Dal Halwa
+  taxonomy:
+    role: other_food
+    group: halwa_pudding
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: muffin
+  raw_name: muffin
+  names:
+    en: Muffin
+    hi: Muffin
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: murukku
+  raw_name: murukku
+  names:
+    en: Murukku
+    hi: Murukku
+  taxonomy:
+    role: other_food
+    group: dry_crunchy_snack
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 40
+- dish_id: mysore_pak
+  raw_name: mysore pak
+  names:
+    en: Mysore Pak
+    hi: Mysore Pak
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: naan
+  raw_name: naan
+  names:
+    en: Naan
+    hi: Naan
+  taxonomy:
+    role: flat_bread
+    group: naan_kulcha
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: naan_bread
+  raw_name: naan bread
+  names:
+    en: Naan Bread
+    hi: Naan Bread
+  taxonomy:
+    role: flat_bread
+    group: naan_kulcha
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: navratan_korma
+  raw_name: navratan korma
+  names:
+    en: Navratan Korma
+    hi: Navratan Korma
+  taxonomy:
+    role: gravy_curry
+    group: paneer_gravy
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 160
+- dish_id: neer_dosa
+  raw_name: neer dosa
+  names:
+    en: Neer Dosa
+    hi: Neer Dosa
+  taxonomy:
+    role: flat_bread
+    group: dosa_cheela
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 90
+- dish_id: omelette
+  raw_name: omelette
+  names:
+    en: Omelette
+    hi: Omelette
+  taxonomy:
+    role: protein_piece
+    group: egg_dish
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: onion
+  raw_name: onion
+  names:
+    en: Onion
+    hi: Onion
+  taxonomy:
+    role: salad_raw
+    group: raw_vegetable_salad
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 75
+- dish_id: onion_pakoda
+  raw_name: onion pakoda
+  names:
+    en: Onion Pakoda
+    hi: Onion Pakoda
+  taxonomy:
+    role: other_food
+    group: fried_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: orange
+  raw_name: orange
+  names:
+    en: Orange
+    hi: Orange
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: paani_puri
+  raw_name: paani puri
+  names:
+    en: Paani Puri
+    hi: Paani Puri
+  taxonomy:
+    role: other_food
+    group: chaat
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 100
+- dish_id: pakode
+  raw_name: pakode
+  names:
+    en: Pakode
+    hi: Pakode
+  taxonomy:
+    role: other_food
+    group: fried_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: palak_paneer
+  raw_name: palak paneer
+  names:
+    en: Palak Paneer
+    hi: Palak Paneer
+  taxonomy:
+    role: gravy_curry
+    group: paneer_gravy
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 160
+- dish_id: pan_cake
+  raw_name: pan cake
+  names:
+    en: Pan Cake
+    hi: Pan Cake
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: pan_fried_prawns
+  raw_name: pan-fried prawns
+  names:
+    en: Pan-fried Prawns
+    hi: Pan-fried Prawns
+  taxonomy:
+    role: protein_piece
+    group: fish_seafood_piece
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 75
+- dish_id: paneer_butter_masala
+  raw_name: paneer butter masala
+  names:
+    en: Paneer Butter Masala
+    hi: Paneer Butter Masala
+  taxonomy:
+    role: gravy_curry
+    group: paneer_gravy
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 160
+- dish_id: paneer_masala
+  raw_name: paneer masala
+  names:
+    en: Paneer Masala
+    hi: Paneer Masala
+  taxonomy:
+    role: gravy_curry
+    group: paneer_gravy
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 160
+- dish_id: paneer_pizza
+  raw_name: paneer pizza
+  names:
+    en: Paneer Pizza
+    hi: Paneer Pizza
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: pani_puri
+  raw_name: pani puri
+  names:
+    en: Pani Puri
+    hi: Pani Puri
+  taxonomy:
+    role: other_food
+    group: chaat
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 100
+- dish_id: paniyaram
+  raw_name: paniyaram
+  names:
+    en: Paniyaram
+    hi: Paniyaram
+  taxonomy:
+    role: other_food
+    group: steamed_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: papad
+  raw_name: papad
+  names:
+    en: Papad
+    hi: Papad
+  taxonomy:
+    role: flat_bread
+    group: papad_crisp
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 15
+- dish_id: papdi_chaat
+  raw_name: papdi chaat
+  names:
+    en: Papdi Chaat
+    hi: Papdi Chaat
+  taxonomy:
+    role: other_food
+    group: chaat
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 100
+- dish_id: paprika
+  raw_name: paprika
+  names:
+    en: Paprika
+    hi: Paprika
+  taxonomy:
+    role: salad_raw
+    group: aromatics_raw
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 20
+- dish_id: paratha
+  raw_name: paratha
+  names:
+    en: Paratha
+    hi: Paratha
+  taxonomy:
+    role: flat_bread
+    group: paratha
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: patrode
+  raw_name: patrode
+  names:
+    en: Patrode
+    hi: Patrode
+  taxonomy:
+    role: dry_sabzi
+    group: dry_vegetable_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 120
+- dish_id: pav_bhaji
+  raw_name: pav bhaji
+  names:
+    en: Pav Bhaji
+    hi: Pav Bhaji
+  taxonomy:
+    role: gravy_curry
+    group: street_curry
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: peanut_chikki
+  raw_name: peanut chikki
+  names:
+    en: Peanut Chikki
+    hi: Peanut Chikki
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: pear
+  raw_name: pear
+  names:
+    en: Pear
+    hi: Pear
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: peas
+  raw_name: peas
+  names:
+    en: Peas
+    hi: Peas
+  taxonomy:
+    role: dry_sabzi
+    group: dry_vegetable_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 120
+- dish_id: peda
+  raw_name: peda
+  names:
+    en: Peda
+    hi: Peda
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: pepperoni_pizza
+  raw_name: pepperoni pizza
+  names:
+    en: Pepperoni Pizza
+    hi: Pepperoni Pizza
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: phirni
+  raw_name: phirni
+  names:
+    en: Phirni
+    hi: Phirni
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: pineapple
+  raw_name: pineapple
+  names:
+    en: Pineapple
+    hi: Pineapple
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: pithe
+  raw_name: pithe
+  names:
+    en: Pithe
+    hi: Pithe
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: pizza
+  raw_name: pizza
+  names:
+    en: Pizza
+    hi: Pizza
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: poha
+  raw_name: poha
+  names:
+    en: Poha
+    hi: Poha
+  taxonomy:
+    role: mounded_carb
+    group: poha_upma
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: pomegranate
+  raw_name: pomegranate
+  names:
+    en: Pomegranate
+    hi: Pomegranate
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: pongal
+  raw_name: pongal
+  names:
+    en: Pongal
+    hi: Pongal
+  taxonomy:
+    role: mounded_carb
+    group: khichdi_pongal
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 200
+- dish_id: poornalu
+  raw_name: poornalu
+  names:
+    en: Poornalu
+    hi: Poornalu
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: pootharekulu
+  raw_name: pootharekulu
+  names:
+    en: Pootharekulu
+    hi: Pootharekulu
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: popcorn
+  raw_name: popcorn
+  names:
+    en: Popcorn
+    hi: Popcorn
+  taxonomy:
+    role: other_food
+    group: dry_crunchy_snack
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 40
+- dish_id: puri_bhaji
+  raw_name: puri bhaji
+  names:
+    en: Puri Bhaji
+    hi: Puri Bhaji
+  taxonomy:
+    role: flat_bread
+    group: puri_bhatura
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: qubani_ka_meetha
+  raw_name: qubani ka meetha
+  names:
+    en: Qubani Ka Meetha
+    hi: Qubani Ka Meetha
+  taxonomy:
+    role: other_food
+    group: halwa_pudding
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: rabri
+  raw_name: rabri
+  names:
+    en: Rabri
+    hi: Rabri
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: radish
+  raw_name: radish
+  names:
+    en: Radish
+    hi: Radish
+  taxonomy:
+    role: salad_raw
+    group: raw_vegetable_salad
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 75
+- dish_id: raj_kachori
+  raw_name: raj kachori
+  names:
+    en: Raj Kachori
+    hi: Raj Kachori
+  taxonomy:
+    role: other_food
+    group: chaat
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 100
+- dish_id: rajma
+  raw_name: rajma
+  names:
+    en: Rajma
+    hi: Rajma
+  taxonomy:
+    role: gravy_curry
+    group: dal
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: rajma_chawal
+  raw_name: rajma chawal
+  names:
+    en: Rajma Chawal
+    hi: Rajma Chawal
+  taxonomy:
+    role: gravy_curry
+    group: dal
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: ras_malai
+  raw_name: ras malai
+  names:
+    en: Ras Malai
+    hi: Ras Malai
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: rasgulla
+  raw_name: rasgulla
+  names:
+    en: Rasgulla
+    hi: Rasgulla
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: rava_dosa
+  raw_name: rava dosa
+  names:
+    en: Rava Dosa
+    hi: Rava Dosa
+  taxonomy:
+    role: flat_bread
+    group: dosa_cheela
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 90
+- dish_id: rice_cooked
+  raw_name: rice cooked
+  names:
+    en: Rice Cooked
+    hi: Rice Cooked
+  taxonomy:
+    role: mounded_carb
+    group: steamed_rice
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: sabudana_khichdi
+  raw_name: sabudana khichdi
+  names:
+    en: Sabudana Khichdi
+    hi: Sabudana Khichdi
+  taxonomy:
+    role: mounded_carb
+    group: khichdi_pongal
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 200
+- dish_id: sabudana_vada
+  raw_name: sabudana vada
+  names:
+    en: Sabudana Vada
+    hi: Sabudana Vada
+  taxonomy:
+    role: other_food
+    group: fried_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: samosa
+  raw_name: samosa
+  names:
+    en: Samosa
+    hi: Samosa
+  taxonomy:
+    role: other_food
+    group: fried_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: sandesh
+  raw_name: sandesh
+  names:
+    en: Sandesh
+    hi: Sandesh
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: sandwich
+  raw_name: sandwich
+  names:
+    en: Sandwich
+    hi: Sandwich
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: scrambled_eggs
+  raw_name: scrambled eggs
+  names:
+    en: Scrambled Eggs
+    hi: Scrambled Eggs
+  taxonomy:
+    role: protein_piece
+    group: egg_dish
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: seekh_kebab
+  raw_name: seekh kebab
+  names:
+    en: Seekh Kebab
+    hi: Seekh Kebab
+  taxonomy:
+    role: protein_piece
+    group: chicken_kebab_piece
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 60
+- dish_id: set_dosa
+  raw_name: set dosa
+  names:
+    en: Set Dosa
+    hi: Set Dosa
+  taxonomy:
+    role: flat_bread
+    group: dosa_cheela
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 90
+- dish_id: sev_puri
+  raw_name: sev puri
+  names:
+    en: Sev Puri
+    hi: Sev Puri
+  taxonomy:
+    role: other_food
+    group: chaat
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 100
+- dish_id: shankarpali
+  raw_name: shankarpali
+  names:
+    en: Shankarpali
+    hi: Shankarpali
+  taxonomy:
+    role: other_food
+    group: dry_crunchy_snack
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 40
+- dish_id: sheer_khurma
+  raw_name: sheer khurma
+  names:
+    en: Sheer Khurma
+    hi: Sheer Khurma
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: sheer_korma
+  raw_name: sheer korma
+  names:
+    en: Sheer Korma
+    hi: Sheer Korma
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: sheera
+  raw_name: sheera
+  names:
+    en: Sheera
+    hi: Sheera
+  taxonomy:
+    role: other_food
+    group: halwa_pudding
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: shelled_soy_bean
+  raw_name: shelled soy bean
+  names:
+    en: Shelled Soy Bean
+    hi: Shelled Soy Bean
+  taxonomy:
+    role: dry_sabzi
+    group: dry_vegetable_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 120
+- dish_id: shrikhand
+  raw_name: shrikhand
+  names:
+    en: Shrikhand
+    hi: Shrikhand
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: sohan_halwa
+  raw_name: sohan halwa
+  names:
+    en: Sohan Halwa
+    hi: Sohan Halwa
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: sohan_papdi
+  raw_name: sohan papdi
+  names:
+    en: Sohan Papdi
+    hi: Sohan Papdi
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: solkadhi
+  raw_name: solkadhi
+  names:
+    en: Solkadhi
+    hi: Solkadhi
+  taxonomy:
+    role: condiment
+    group: beverage
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: spinach
+  raw_name: spinach
+  names:
+    en: Spinach
+    hi: Spinach
+  taxonomy:
+    role: dry_sabzi
+    group: dry_vegetable_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 120
+- dish_id: spring_rolls
+  raw_name: spring rolls
+  names:
+    en: Spring Rolls
+    hi: Spring Rolls
+  taxonomy:
+    role: other_food
+    group: rolls_wraps
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: sprouts
+  raw_name: sprouts
+  names:
+    en: Sprouts
+    hi: Sprouts
+  taxonomy:
+    role: dry_sabzi
+    group: dry_vegetable_sabzi
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 120
+- dish_id: steamed_momo
+  raw_name: steamed momo
+  names:
+    en: Steamed Momo
+    hi: Steamed Momo
+  taxonomy:
+    role: other_food
+    group: dumpling_momo
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 30
+- dish_id: stuffed_karela
+  raw_name: stuffed karela
+  names:
+    en: Stuffed Karela
+    hi: Stuffed Karela
+  taxonomy:
+    role: dry_sabzi
+    group: dry_gourd_eggplant
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 130
+- dish_id: sunny_side_up_eggs
+  raw_name: sunny side up eggs
+  names:
+    en: Sunny Side Up Eggs
+    hi: Sunny Side Up Eggs
+  taxonomy:
+    role: protein_piece
+    group: egg_dish
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: sutar_feni
+  raw_name: sutar feni
+  names:
+    en: Sutar Feni
+    hi: Sutar Feni
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: sweet_potatoes
+  raw_name: sweet potatoes
+  names:
+    en: Sweet Potatoes
+    hi: Sweet Potatoes
+  taxonomy:
+    role: salad_raw
+    group: boiled_salad_tuber
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 100
+- dish_id: taco
+  raw_name: taco
+  names:
+    en: Taco
+    hi: Taco
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: thali
+  raw_name: thali
+  names:
+    en: Thali
+    hi: Thali
+  taxonomy:
+    role: other_food
+    group: composite_thali
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 450
+- dish_id: thukpa
+  raw_name: thukpa
+  names:
+    en: Thukpa
+    hi: Thukpa
+  taxonomy:
+    role: mounded_carb
+    group: noodle_pasta
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 180
+- dish_id: tiramisu
+  raw_name: tiramisu
+  names:
+    en: Tiramisu
+    hi: Tiramisu
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: toast
+  raw_name: toast
+  names:
+    en: Toast
+    hi: Toast
+  taxonomy:
+    role: flat_bread
+    group: western_bread
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 40
+- dish_id: tomato
+  raw_name: tomato
+  names:
+    en: Tomato
+    hi: Tomato
+  taxonomy:
+    role: salad_raw
+    group: raw_vegetable_salad
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 75
+- dish_id: turnip
+  raw_name: turnip
+  names:
+    en: Turnip
+    hi: Turnip
+  taxonomy:
+    role: salad_raw
+    group: raw_vegetable_salad
+    is_generic: false
+  measure:
+    mode: volume
+    serving_default_g: 75
+- dish_id: unni_appam
+  raw_name: unni appam
+  names:
+    en: Unni Appam
+    hi: Unni Appam
+  taxonomy:
+    role: other_food
+    group: steamed_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: uttapam
+  raw_name: uttapam
+  names:
+    en: Uttapam
+    hi: Uttapam
+  taxonomy:
+    role: flat_bread
+    group: dosa_cheela
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 90
+- dish_id: vada_pav
+  raw_name: vada pav
+  names:
+    en: Vada Pav
+    hi: Vada Pav
+  taxonomy:
+    role: other_food
+    group: fried_snack
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 50
+- dish_id: veggie_burger
+  raw_name: veggie burger
+  names:
+    en: Veggie Burger
+    hi: Veggie Burger
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: waffle
+  raw_name: waffle
+  names:
+    en: Waffle
+    hi: Waffle
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 80
+- dish_id: watermelon
+  raw_name: watermelon
+  names:
+    en: Watermelon
+    hi: Watermelon
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: false
+  measure:
+    mode: piece
+    serving_default_g: 120
+- dish_id: generic_aromatics_raw
+  raw_name: Generic Aromatics Raw
+  names:
+    en: Generic Aromatics Raw
+    hi: सामान्य Aromatics Raw
+  taxonomy:
+    role: salad_raw
+    group: aromatics_raw
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_beverage
+  raw_name: Generic Beverage
+  names:
+    en: Generic Beverage
+    hi: सामान्य Beverage
+  taxonomy:
+    role: other_food
+    group: beverage
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_biryani_pulao
+  raw_name: Generic Biryani Pulao
+  names:
+    en: Generic Biryani Pulao
+    hi: सामान्य Biryani Pulao
+  taxonomy:
+    role: mounded_carb
+    group: biryani_pulao
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_boiled_salad_tuber
+  raw_name: Generic Boiled Salad Tuber
+  names:
+    en: Generic Boiled Salad Tuber
+    hi: सामान्य Boiled Salad Tuber
+  taxonomy:
+    role: salad_raw
+    group: boiled_salad_tuber
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_chaat
+  raw_name: Generic Chaat
+  names:
+    en: Generic Chaat
+    hi: सामान्य Chaat
+  taxonomy:
+    role: other_food
+    group: chaat
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_chicken_curry
+  raw_name: Generic Chicken Curry
+  names:
+    en: Generic Chicken Curry
+    hi: सामान्य Chicken Curry
+  taxonomy:
+    role: gravy_curry
+    group: chicken_curry
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_chicken_kebab_piece
+  raw_name: Generic Chicken Kebab Piece
+  names:
+    en: Generic Chicken Kebab Piece
+    hi: सामान्य Chicken Kebab Piece
+  taxonomy:
+    role: protein_piece
+    group: chicken_kebab_piece
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_composite_thali
+  raw_name: Generic Composite Thali
+  names:
+    en: Generic Composite Thali
+    hi: सामान्य Composite Thali
+  taxonomy:
+    role: other_food
+    group: composite_thali
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_dal
+  raw_name: Generic Dal
+  names:
+    en: Generic Dal
+    hi: सामान्य Dal
+  taxonomy:
+    role: gravy_curry
+    group: dal
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_dosa_cheela
+  raw_name: Generic Dosa Cheela
+  names:
+    en: Generic Dosa Cheela
+    hi: सामान्य Dosa Cheela
+  taxonomy:
+    role: flat_bread
+    group: dosa_cheela
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_dry_crunchy_snack
+  raw_name: Generic Dry Crunchy Snack
+  names:
+    en: Generic Dry Crunchy Snack
+    hi: सामान्य Dry Crunchy Snack
+  taxonomy:
+    role: other_food
+    group: dry_crunchy_snack
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_dry_gourd_eggplant
+  raw_name: Generic Dry Gourd Eggplant
+  names:
+    en: Generic Dry Gourd Eggplant
+    hi: सामान्य Dry Gourd Eggplant
+  taxonomy:
+    role: dry_sabzi
+    group: dry_gourd_eggplant
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_dry_green_sabzi
+  raw_name: Generic Dry Green Sabzi
+  names:
+    en: Generic Dry Green Sabzi
+    hi: सामान्य Dry Green Sabzi
+  taxonomy:
+    role: dry_sabzi
+    group: dry_green_sabzi
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_dry_potato_sabzi
+  raw_name: Generic Dry Potato Sabzi
+  names:
+    en: Generic Dry Potato Sabzi
+    hi: सामान्य Dry Potato Sabzi
+  taxonomy:
+    role: dry_sabzi
+    group: dry_potato_sabzi
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_dry_vegetable_sabzi
+  raw_name: Generic Dry Vegetable Sabzi
+  names:
+    en: Generic Dry Vegetable Sabzi
+    hi: सामान्य Dry Vegetable Sabzi
+  taxonomy:
+    role: dry_sabzi
+    group: dry_vegetable_sabzi
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_dumpling_momo
+  raw_name: Generic Dumpling Momo
+  names:
+    en: Generic Dumpling Momo
+    hi: सामान्य Dumpling Momo
+  taxonomy:
+    role: other_food
+    group: dumpling_momo
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_egg_curry
+  raw_name: Generic Egg Curry
+  names:
+    en: Generic Egg Curry
+    hi: सामान्य Egg Curry
+  taxonomy:
+    role: gravy_curry
+    group: egg_curry
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_egg_dish
+  raw_name: Generic Egg Dish
+  names:
+    en: Generic Egg Dish
+    hi: सामान्य Egg Dish
+  taxonomy:
+    role: protein_piece
+    group: egg_dish
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_fish_curry
+  raw_name: Generic Fish Curry
+  names:
+    en: Generic Fish Curry
+    hi: सामान्य Fish Curry
+  taxonomy:
+    role: gravy_curry
+    group: fish_curry
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_fish_seafood_piece
+  raw_name: Generic Fish Seafood Piece
+  names:
+    en: Generic Fish Seafood Piece
+    hi: सामान्य Fish Seafood Piece
+  taxonomy:
+    role: protein_piece
+    group: fish_seafood_piece
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_fried_snack
+  raw_name: Generic Fried Snack
+  names:
+    en: Generic Fried Snack
+    hi: सामान्य Fried Snack
+  taxonomy:
+    role: other_food
+    group: fried_snack
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_fruit_raw
+  raw_name: Generic Fruit Raw
+  names:
+    en: Generic Fruit Raw
+    hi: सामान्य Fruit Raw
+  taxonomy:
+    role: other_food
+    group: fruit_raw
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_halwa_pudding
+  raw_name: Generic Halwa Pudding
+  names:
+    en: Generic Halwa Pudding
+    hi: सामान्य Halwa Pudding
+  taxonomy:
+    role: other_food
+    group: halwa_pudding
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_kadhi_curd_curry
+  raw_name: Generic Kadhi Curd Curry
+  names:
+    en: Generic Kadhi Curd Curry
+    hi: सामान्य Kadhi Curd Curry
+  taxonomy:
+    role: gravy_curry
+    group: kadhi_curd_curry
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_khichdi_pongal
+  raw_name: Generic Khichdi Pongal
+  names:
+    en: Generic Khichdi Pongal
+    hi: सामान्य Khichdi Pongal
+  taxonomy:
+    role: mounded_carb
+    group: khichdi_pongal
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_milk_dessert
+  raw_name: Generic Milk Dessert
+  names:
+    en: Generic Milk Dessert
+    hi: सामान्य Milk Dessert
+  taxonomy:
+    role: other_food
+    group: milk_dessert
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_miscellaneous_food
+  raw_name: Generic Miscellaneous Food
+  names:
+    en: Generic Miscellaneous Food
+    hi: सामान्य Miscellaneous Food
+  taxonomy:
+    role: other_food
+    group: miscellaneous_food
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_mithai_traditional
+  raw_name: Generic Mithai Traditional
+  names:
+    en: Generic Mithai Traditional
+    hi: सामान्य Mithai Traditional
+  taxonomy:
+    role: other_food
+    group: mithai_traditional
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_naan_kulcha
+  raw_name: Generic Naan Kulcha
+  names:
+    en: Generic Naan Kulcha
+    hi: सामान्य Naan Kulcha
+  taxonomy:
+    role: flat_bread
+    group: naan_kulcha
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_noodle_pasta
+  raw_name: Generic Noodle Pasta
+  names:
+    en: Generic Noodle Pasta
+    hi: सामान्य Noodle Pasta
+  taxonomy:
+    role: mounded_carb
+    group: noodle_pasta
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_paneer_gravy
+  raw_name: Generic Paneer Gravy
+  names:
+    en: Generic Paneer Gravy
+    hi: सामान्य Paneer Gravy
+  taxonomy:
+    role: gravy_curry
+    group: paneer_gravy
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_papad_crisp
+  raw_name: Generic Papad Crisp
+  names:
+    en: Generic Papad Crisp
+    hi: सामान्य Papad Crisp
+  taxonomy:
+    role: flat_bread
+    group: papad_crisp
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_paratha
+  raw_name: Generic Paratha
+  names:
+    en: Generic Paratha
+    hi: सामान्य Paratha
+  taxonomy:
+    role: flat_bread
+    group: paratha
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_pickle_achar
+  raw_name: Generic Pickle Achar
+  names:
+    en: Generic Pickle Achar
+    hi: सामान्य Pickle Achar
+  taxonomy:
+    role: condiment
+    group: pickle_achar
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_poha_upma
+  raw_name: Generic Poha Upma
+  names:
+    en: Generic Poha Upma
+    hi: सामान्य Poha Upma
+  taxonomy:
+    role: mounded_carb
+    group: poha_upma
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_porridge_oats
+  raw_name: Generic Porridge Oats
+  names:
+    en: Generic Porridge Oats
+    hi: सामान्य Porridge Oats
+  taxonomy:
+    role: mounded_carb
+    group: porridge_oats
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_puri_bhatura
+  raw_name: Generic Puri Bhatura
+  names:
+    en: Generic Puri Bhatura
+    hi: सामान्य Puri Bhatura
+  taxonomy:
+    role: flat_bread
+    group: puri_bhatura
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_raw_vegetable_salad
+  raw_name: Generic Raw Vegetable Salad
+  names:
+    en: Generic Raw Vegetable Salad
+    hi: सामान्य Raw Vegetable Salad
+  taxonomy:
+    role: salad_raw
+    group: raw_vegetable_salad
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_rolls_wraps
+  raw_name: Generic Rolls Wraps
+  names:
+    en: Generic Rolls Wraps
+    hi: सामान्य Rolls Wraps
+  taxonomy:
+    role: other_food
+    group: rolls_wraps
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_roti_chapati
+  raw_name: Generic Roti Chapati
+  names:
+    en: Generic Roti Chapati
+    hi: सामान्य Roti Chapati
+  taxonomy:
+    role: flat_bread
+    group: roti_chapati
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_steamed_rice
+  raw_name: Generic Steamed Rice
+  names:
+    en: Generic Steamed Rice
+    hi: सामान्य Steamed Rice
+  taxonomy:
+    role: mounded_carb
+    group: steamed_rice
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_steamed_snack
+  raw_name: Generic Steamed Snack
+  names:
+    en: Generic Steamed Snack
+    hi: सामान्य Steamed Snack
+  taxonomy:
+    role: other_food
+    group: steamed_snack
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_street_curry
+  raw_name: Generic Street Curry
+  names:
+    en: Generic Street Curry
+    hi: सामान्य Street Curry
+  taxonomy:
+    role: gravy_curry
+    group: street_curry
+    is_generic: true
+  measure:
+    mode: volume
+    serving_default_g: 150
+- dish_id: generic_traditional_regional_meal
+  raw_name: Generic Traditional Regional Meal
+  names:
+    en: Generic Traditional Regional Meal
+    hi: सामान्य Traditional Regional Meal
+  taxonomy:
+    role: other_food
+    group: traditional_regional_meal
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_veg_kebab_piece
+  raw_name: Generic Veg Kebab Piece
+  names:
+    en: Generic Veg Kebab Piece
+    hi: सामान्य Veg Kebab Piece
+  taxonomy:
+    role: protein_piece
+    group: veg_kebab_piece
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_western_bread
+  raw_name: Generic Western Bread
+  names:
+    en: Generic Western Bread
+    hi: सामान्य Western Bread
+  taxonomy:
+    role: flat_bread
+    group: western_bread
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_western_dessert
+  raw_name: Generic Western Dessert
+  names:
+    en: Generic Western Dessert
+    hi: सामान्य Western Dessert
+  taxonomy:
+    role: other_food
+    group: western_dessert
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+- dish_id: generic_western_fastfood
+  raw_name: Generic Western Fastfood
+  names:
+    en: Generic Western Fastfood
+    hi: सामान्य Western Fastfood
+  taxonomy:
+    role: other_food
+    group: western_fastfood
+    is_generic: true
+  measure:
+    mode: piece
+    serving_default_g: 150
+stats:
+  total_roles: 11
+  total_groups: 48
+  catalog_dishes_count: 239
+  generic_fallbacks_count: 48
+  total_dishes_count: 287
