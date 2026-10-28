@@ -206,7 +206,6 @@ String stepTileLabel(AsyncValue<StepSnapshot> value) {
   return formatStepCount(snapshot.steps);
 }
 
-
 Future<void> addManualSteps(WidgetRef ref, int delta) async {
   final store = ref.read(activityStoreProvider);
   final ledger = await store.load(DateTime.now());

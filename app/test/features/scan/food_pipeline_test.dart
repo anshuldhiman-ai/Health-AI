@@ -172,7 +172,12 @@ void main() {
 
     test('a clear dish reads as food and as certain', () {
       final c = TopConfidence.fromProbabilities([
-        0.62, 0.21, 0.09, 0.04, 0.02, 0.02,
+        0.62,
+        0.21,
+        0.09,
+        0.04,
+        0.02,
+        0.02,
       ]);
 
       expect(c.isLikelyFood, isTrue);
@@ -183,7 +188,13 @@ void main() {
       // An empty wall or a keyboard: nothing wins, and the mass is
       // smeared across unrelated classes.
       final c = TopConfidence.fromProbabilities([
-        0.06, 0.055, 0.05, 0.048, 0.047, 0.045, 0.04,
+        0.06,
+        0.055,
+        0.05,
+        0.048,
+        0.047,
+        0.045,
+        0.04,
       ]);
 
       expect(c.isLikelyFood, isFalse);

@@ -54,56 +54,59 @@ void main() {
     expect(find.text('4,250'), findsOneWidget);
   });
 
-  testWidgets('ActivityScreen allows selecting previous days and returning to today', (
-    tester,
-  ) async {
-    final now = DateTime.now();
-    final snapshot = StepSnapshot(
-      status: StepStatus.live,
-      steps: 5000,
-      distanceMeters: 5000 * 0.762,
-      activeSeconds: 2400,
-      hourlySteps: List.generate(24, (i) => 200),
-      history: [
-        for (var i = 6; i >= 0; i--)
-          DaySteps(
-            date: now.subtract(Duration(days: i)),
-            steps: 2000 + i * 500, // Oldest is 2000, yesterday is 4500, today is 5000
-          ),
-      ],
-      updatedAt: now,
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          stepTrackerProvider.overrideWith((ref) => Stream.value(snapshot)),
+  testWidgets(
+    'ActivityScreen allows selecting previous days and returning to today',
+    (tester) async {
+      final now = DateTime.now();
+      final snapshot = StepSnapshot(
+        status: StepStatus.live,
+        steps: 5000,
+        distanceMeters: 5000 * 0.762,
+        activeSeconds: 2400,
+        hourlySteps: List.generate(24, (i) => 200),
+        history: [
+          for (var i = 6; i >= 0; i--)
+            DaySteps(
+              date: now.subtract(Duration(days: i)),
+              steps:
+                  2000 +
+                  i * 500, // Oldest is 2000, yesterday is 4500, today is 5000
+            ),
         ],
-        child: MaterialApp(
-          theme: AppTheme.dark(),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const ActivityScreen(),
+        updatedAt: now,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            stepTrackerProvider.overrideWith((ref) => Stream.value(snapshot)),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.dark(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const ActivityScreen(),
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // Verify today's real steps
-    expect(find.text('5,000'), findsOneWidget);
-
-    // Tap on the first pill (oldest day in 7-day strip)
-    final streakPill = find.byType(GestureDetector).first;
-    await tester.tap(streakPill);
-    await tester.pumpAndSettle();
-
-    // Now either historical banner is visible or Back to Today is present
-    if (find.text('Back to Today').evaluate().isNotEmpty) {
-      await tester.tap(find.text('Back to Today'));
+      );
       await tester.pumpAndSettle();
+
+      // Verify today's real steps
       expect(find.text('5,000'), findsOneWidget);
-    }
-  });
+
+      // Tap on the first pill (oldest day in 7-day strip)
+      final streakPill = find.byType(GestureDetector).first;
+      await tester.tap(streakPill);
+      await tester.pumpAndSettle();
+
+      // Now either historical banner is visible or Back to Today is present
+      if (find.text('Back to Today').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Back to Today'));
+        await tester.pumpAndSettle();
+        expect(find.text('5,000'), findsOneWidget);
+      }
+    },
+  );
 
   testWidgets('ActivityScreen opens Log Steps sheet', (tester) async {
     final now = DateTime.now();

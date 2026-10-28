@@ -35,7 +35,9 @@ class ActivityScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0B0F19) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark
+          ? const Color(0xFF0B0F19)
+          : const Color(0xFFF8FAFC),
       body: SafeArea(
         bottom: false,
         child: ListView(
@@ -63,20 +65,20 @@ class ActivityScreen extends ConsumerWidget {
               data: (snapshot) => switch (snapshot.status) {
                 StepStatus.live => _LiveActivity(snapshot: snapshot),
                 StepStatus.permissionDenied => _PermissionCard(
-                    onGranted: () => ref.invalidate(stepTrackerProvider),
-                  ),
+                  onGranted: () => ref.invalidate(stepTrackerProvider),
+                ),
                 StepStatus.unsupported => _StatusCard(
-                    icon: Icons.sensors_off_rounded,
-                    title: l10n.activityUnsupportedTitle,
-                    body: l10n.activityUnsupportedBody,
-                  ),
+                  icon: Icons.sensors_off_rounded,
+                  title: l10n.activityUnsupportedTitle,
+                  body: l10n.activityUnsupportedBody,
+                ),
                 StepStatus.unavailable => _StatusCard(
-                    icon: Icons.directions_walk_rounded,
-                    title: l10n.activityUnavailableTitle,
-                    body: l10n.activityUnavailableBody,
-                    actionLabel: l10n.activityRefresh,
-                    onAction: () => ref.invalidate(stepTrackerProvider),
-                  ),
+                  icon: Icons.directions_walk_rounded,
+                  title: l10n.activityUnavailableTitle,
+                  body: l10n.activityUnavailableBody,
+                  actionLabel: l10n.activityRefresh,
+                  onAction: () => ref.invalidate(stepTrackerProvider),
+                ),
               },
             ),
           ],
@@ -104,10 +106,25 @@ class _LiveActivityState extends ConsumerState<_LiveActivity> {
       return 'Today';
     }
     final yesterday = now.subtract(const Duration(days: 1));
-    if (day.year == yesterday.year && day.month == yesterday.month && day.day == yesterday.day) {
+    if (day.year == yesterday.year &&
+        day.month == yesterday.month &&
+        day.day == yesterday.day) {
       return 'Yesterday';
     }
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return '${weekdays[day.weekday - 1]}, ${months[day.month - 1]} ${day.day}';
   }
@@ -118,8 +135,13 @@ class _LiveActivityState extends ConsumerState<_LiveActivity> {
     final isViewingHistory = _selectedDay != null;
 
     // Use selected historical day or today's real steps
-    final displaySteps = isViewingHistory ? _selectedDay!.steps : widget.snapshot.steps;
-    final progress = (displaySteps / (stepGoal > 0 ? stepGoal : 10000)).clamp(0.0, 1.0);
+    final displaySteps = isViewingHistory
+        ? _selectedDay!.steps
+        : widget.snapshot.steps;
+    final progress = (displaySteps / (stepGoal > 0 ? stepGoal : 10000)).clamp(
+      0.0,
+      1.0,
+    );
     final distanceKm = displaySteps * kAverageStrideMeters / 1000;
     final activeMinutes = isViewingHistory
         ? (displaySteps / 100).round()
@@ -136,14 +158,20 @@ class _LiveActivityState extends ConsumerState<_LiveActivity> {
             decoration: BoxDecoration(
               color: const Color(0xFF10B981).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.35)),
+              border: Border.all(
+                color: const Color(0xFF10B981).withValues(alpha: 0.35),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.history_rounded, size: 18, color: Color(0xFF10B981)),
+                    const Icon(
+                      Icons.history_rounded,
+                      size: 18,
+                      color: Color(0xFF10B981),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Viewing: ${_formatDayLabel(_selectedDay!.date)}',
@@ -158,7 +186,10 @@ class _LiveActivityState extends ConsumerState<_LiveActivity> {
                 GestureDetector(
                   onTap: () => setState(() => _selectedDay = null),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF10B981),
                       borderRadius: BorderRadius.circular(12),
@@ -190,11 +221,14 @@ class _LiveActivityState extends ConsumerState<_LiveActivity> {
 
         // 2. Middle Activity Analytics Card (Hourly Activity + Distance, Time, Calories)
         _ActivityAnalyticsCard(
-          hourlySteps: isViewingHistory ? const [] : widget.snapshot.hourlySteps,
+          hourlySteps: isViewingHistory
+              ? const []
+              : widget.snapshot.hourlySteps,
           distanceKm: distanceKm,
           activeMinutes: activeMinutes,
           calories: calories,
-          isLiveActive: !isViewingHistory && widget.snapshot.displayCadence > 40,
+          isLiveActive:
+              !isViewingHistory && widget.snapshot.displayCadence > 40,
           isViewingHistory: isViewingHistory,
         ),
         const SizedBox(height: 18),
@@ -207,7 +241,9 @@ class _LiveActivityState extends ConsumerState<_LiveActivity> {
           onDaySelected: (day) {
             setState(() {
               final now = DateTime.now();
-              if (day.date.year == now.year && day.date.month == now.month && day.date.day == now.day) {
+              if (day.date.year == now.year &&
+                  day.date.month == now.month &&
+                  day.date.day == now.day) {
                 _selectedDay = null; // Today
               } else {
                 _selectedDay = day;
@@ -239,7 +275,12 @@ class _Header extends ConsumerWidget {
           builder: (sheetCtx, setSheetState) {
             return SingleChildScrollView(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(sheetCtx).viewInsets.bottom + 28),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  16,
+                  20,
+                  MediaQuery.of(sheetCtx).viewInsets.bottom + 28,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -296,7 +337,11 @@ class _Header extends ConsumerWidget {
                     TextField(
                       controller: controller,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                       decoration: InputDecoration(
                         labelText: 'Steps to add',
                         hintText: '$selectedQuick',
@@ -306,13 +351,20 @@ class _Header extends ConsumerWidget {
                         fillColor: Colors.white.withValues(alpha: 0.06),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                          borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF10B981)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF10B981),
+                          ),
                         ),
-                        prefixIcon: const Icon(Icons.directions_walk_rounded, color: Color(0xFF10B981)),
+                        prefixIcon: const Icon(
+                          Icons.directions_walk_rounded,
+                          color: Color(0xFF10B981),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 22),
@@ -320,22 +372,33 @@ class _Header extends ConsumerWidget {
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(50),
                         backgroundColor: const Color(0xFF10B981),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       onPressed: () async {
-                        final input = int.tryParse(controller.text.trim()) ?? selectedQuick;
+                        final input =
+                            int.tryParse(controller.text.trim()) ??
+                            selectedQuick;
                         if (input > 0) {
                           await addManualSteps(ref, input);
                           if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
                           if (context.mounted) {
                             AppToast.show(
                               ScaffoldMessenger.of(context),
-                              message: 'Added ${formatCount(input)} steps to today!',
+                              message:
+                                  'Added ${formatCount(input)} steps to today!',
                             );
                           }
                         }
                       },
-                      child: const Text('Add Steps', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                      child: const Text(
+                        'Add Steps',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -343,19 +406,29 @@ class _Header extends ConsumerWidget {
                       children: [
                         TextButton(
                           onPressed: () async {
-                            final input = int.tryParse(controller.text.trim()) ?? selectedQuick;
+                            final input =
+                                int.tryParse(controller.text.trim()) ??
+                                selectedQuick;
                             if (input >= 0) {
                               await setTodaySteps(ref, input);
-                              if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+                              if (sheetCtx.mounted)
+                                Navigator.of(sheetCtx).pop();
                               if (context.mounted) {
                                 AppToast.show(
                                   ScaffoldMessenger.of(context),
-                                  message: 'Set today\'s steps to ${formatCount(input)}',
+                                  message:
+                                      'Set today\'s steps to ${formatCount(input)}',
                                 );
                               }
                             }
                           },
-                          child: const Text('Set as Exact Total', style: TextStyle(color: Color(0xFF38BDF8), fontSize: 13)),
+                          child: const Text(
+                            'Set as Exact Total',
+                            style: TextStyle(
+                              color: Color(0xFF38BDF8),
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                         TextButton(
                           onPressed: () async {
@@ -368,7 +441,13 @@ class _Header extends ConsumerWidget {
                               );
                             }
                           },
-                          child: const Text('Reset to 0', style: TextStyle(color: Colors.redAccent, fontSize: 13)),
+                          child: const Text(
+                            'Reset to 0',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -382,7 +461,10 @@ class _Header extends ConsumerWidget {
     );
   }
 
-  Future<void> _showSetStepGoalSheet(BuildContext context, WidgetRef ref) async {
+  Future<void> _showSetStepGoalSheet(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final currentGoal = ref.read(stepGoalProvider);
     var selected = currentGoal;
 
@@ -420,7 +502,10 @@ class _Header extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Text(
                     'Consistent daily walking boosts metabolic health.',
-                    style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -445,7 +530,10 @@ class _Header extends ConsumerWidget {
                           ),
                           Text(
                             'steps per day',
-                            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
@@ -476,13 +564,23 @@ class _Header extends ConsumerWidget {
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(50),
                       backgroundColor: const Color(0xFF10B981),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     onPressed: () async {
-                      await ref.read(stepGoalProvider.notifier).setGoal(selected);
+                      await ref
+                          .read(stepGoalProvider.notifier)
+                          .setGoal(selected);
                       if (ctx.mounted) Navigator.of(ctx).pop();
                     },
-                    child: const Text('Save Step Goal', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    child: const Text(
+                      'Save Step Goal',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -507,9 +605,13 @@ class _Header extends ConsumerWidget {
             height: 38,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
               border: Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.05),
               ),
             ),
             child: Icon(
@@ -541,7 +643,9 @@ class _Header extends ConsumerWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF10B981).withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+              border: Border.all(
+                color: const Color(0xFF10B981).withValues(alpha: 0.4),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -565,7 +669,11 @@ class _Header extends ConsumerWidget {
         IconButton(
           tooltip: 'Set Step Goal',
           onPressed: () => _showSetStepGoalSheet(context, ref),
-          icon: Icon(Icons.tune_rounded, color: scheme.onSurfaceVariant, size: 20),
+          icon: Icon(
+            Icons.tune_rounded,
+            color: scheme.onSurfaceVariant,
+            size: 20,
+          ),
         ),
       ],
     );
@@ -601,10 +709,7 @@ class _HorseshoeGaugeHero extends StatelessWidget {
           children: [
             CustomPaint(
               size: const Size(250, 205),
-              painter: _HorseshoePainter(
-                progress: progress,
-                isDark: isDark,
-              ),
+              painter: _HorseshoePainter(progress: progress, isDark: isDark),
             ),
             Positioned(
               top: 50,
@@ -640,7 +745,10 @@ class _HorseshoeGaugeHero extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3.5,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark
                           ? const Color(0xFF064E3B).withValues(alpha: 0.6)
@@ -652,7 +760,9 @@ class _HorseshoeGaugeHero extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? const Color(0xFF34D399) : const Color(0xFF166534),
+                        color: isDark
+                            ? const Color(0xFF34D399)
+                            : const Color(0xFF166534),
                       ),
                     ),
                   ),
@@ -667,10 +777,7 @@ class _HorseshoeGaugeHero extends StatelessWidget {
 }
 
 class _HorseshoePainter extends CustomPainter {
-  const _HorseshoePainter({
-    required this.progress,
-    required this.isDark,
-  });
+  const _HorseshoePainter({required this.progress, required this.isDark});
 
   final double progress;
   final bool isDark;
@@ -706,11 +813,7 @@ class _HorseshoePainter extends CustomPainter {
     final gradient = SweepGradient(
       startAngle: startAngle,
       endAngle: startAngle + sweepAngle,
-      colors: const [
-        Color(0xFF047857),
-        Color(0xFF10B981),
-        Color(0xFFFBBF24),
-      ],
+      colors: const [Color(0xFF047857), Color(0xFF10B981), Color(0xFFFBBF24)],
       transform: const GradientRotation(startAngle),
     );
 
@@ -779,7 +882,9 @@ class _ActivityAnalyticsCard extends StatelessWidget {
         color: isDark ? const Color(0xFF131A2A) : Colors.white,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.05),
         ),
         boxShadow: [
           BoxShadow(
@@ -812,11 +917,14 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: isLiveActive
                           ? const Color(0xFF10B981)
-                          : (isViewingHistory ? const Color(0xFF38BDF8) : const Color(0xFF64748B)),
+                          : (isViewingHistory
+                                ? const Color(0xFF38BDF8)
+                                : const Color(0xFF64748B)),
                       boxShadow: [
                         if (isLiveActive)
                           BoxShadow(
-                            color: const Color(0xFF10B981).withValues(alpha: 0.5),
+                            color: const Color(0xFF10B981)
+                                .withValues(alpha: 0.5),
                             blurRadius: 4,
                           ),
                       ],
@@ -848,10 +956,30 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Divider(height: 1, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
-                    Divider(height: 1, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
-                    Divider(height: 1, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
-                    Divider(height: 1, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
+                    Divider(
+                      height: 1,
+                      color: isDark
+                          ? Colors.white10
+                          : Colors.black.withValues(alpha: 0.05),
+                    ),
+                    Divider(
+                      height: 1,
+                      color: isDark
+                          ? Colors.white10
+                          : Colors.black.withValues(alpha: 0.05),
+                    ),
+                    Divider(
+                      height: 1,
+                      color: isDark
+                          ? Colors.white10
+                          : Colors.black.withValues(alpha: 0.05),
+                    ),
+                    Divider(
+                      height: 1,
+                      color: isDark
+                          ? Colors.white10
+                          : Colors.black.withValues(alpha: 0.05),
+                    ),
                   ],
                 ),
 
@@ -864,10 +992,34 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(formatCount(maxVal), style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                      Text(formatCount((maxVal * 0.66).round()), style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                      Text(formatCount((maxVal * 0.33).round()), style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                      Text('0', style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
+                      Text(
+                        formatCount(maxVal),
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      Text(
+                        formatCount((maxVal * 0.66).round()),
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      Text(
+                        formatCount((maxVal * 0.33).round()),
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      Text(
+                        '0',
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -884,16 +1036,22 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                             child: Align(
                               alignment: Alignment.bottomCenter,
                               child: FractionallySizedBox(
-                                heightFactor: (hourlySteps[i] / maxVal).clamp(0.04, 1.0),
+                                heightFactor: (hourlySteps[i] / maxVal).clamp(
+                                  0.04,
+                                  1.0,
+                                ),
                                 child: Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 1.0),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 1.0,
+                                  ),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(2.5),
                                     gradient: LinearGradient(
                                       colors: [
                                         const Color(0xFF047857),
                                         const Color(0xFF10B981),
-                                        if (hourlySteps[i] > maxVal * 0.6) const Color(0xFFFBBF24),
+                                        if (hourlySteps[i] > maxVal * 0.6)
+                                          const Color(0xFFFBBF24),
                                       ],
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
@@ -915,7 +1073,10 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                             ? 'Daily total recorded: ${formatCount(calories * 25)} steps'
                             : '0 hourly steps yet today • Walk with your phone or tap Log Steps',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                        ),
                       ),
                     ),
                   ),
@@ -930,17 +1091,52 @@ class _ActivityAnalyticsCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('12am', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
-                Text('6am', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
-                Text('12pm', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
-                Text('6pm', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
-                Text('11pm', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
+                Text(
+                  '12am',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  '6am',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  '12pm',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  '6pm',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  '11pm',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 14),
 
-          Divider(height: 1, color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06)),
+          Divider(
+            height: 1,
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.06),
+          ),
           const SizedBox(height: 12),
 
           // Bottom 3-column stats: distance, Active Time, Calories
@@ -951,7 +1147,10 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                   children: [
                     Text(
                       'distance',
-                      style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -966,13 +1165,22 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(width: 1, height: 30, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06)),
+              Container(
+                width: 1,
+                height: 30,
+                color: isDark
+                    ? Colors.white10
+                    : Colors.black.withValues(alpha: 0.06),
+              ),
               Expanded(
                 child: Column(
                   children: [
                     Text(
                       'Active Time',
-                      style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -987,13 +1195,22 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(width: 1, height: 30, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06)),
+              Container(
+                width: 1,
+                height: 30,
+                color: isDark
+                    ? Colors.white10
+                    : Colors.black.withValues(alpha: 0.06),
+              ),
               Expanded(
                 child: Column(
                   children: [
                     Text(
                       'Calories',
-                      style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -1038,13 +1255,22 @@ class _HabitStreakCard extends ConsumerWidget {
     final waterState = ref.watch(waterTodayProvider);
     final sleepRecord = ref.watch(sleepTodayProvider);
 
-    final waterProgress = (waterState.glasses / (waterState.targetGlasses > 0 ? waterState.targetGlasses : 10))
-        .clamp(0.05, 1.0);
-    final waterCurrentL = (waterState.glasses * HydrationState.mlPerGlass / 1000).toStringAsFixed(1);
-    final waterTargetL = (waterState.targetGlasses * HydrationState.mlPerGlass / 1000).toStringAsFixed(0);
+    final waterProgress =
+        (waterState.glasses /
+                (waterState.targetGlasses > 0 ? waterState.targetGlasses : 10))
+            .clamp(0.05, 1.0);
+    final waterCurrentL =
+        (waterState.glasses * HydrationState.mlPerGlass / 1000).toStringAsFixed(
+          1,
+        );
+    final waterTargetL =
+        (waterState.targetGlasses * HydrationState.mlPerGlass / 1000)
+            .toStringAsFixed(0);
 
     final sleepDurationMins = sleepRecord?.durationMinutes ?? 0;
-    final sleepProgress = sleepDurationMins > 0 ? (sleepDurationMins / 480).clamp(0.05, 1.0) : 0.05;
+    final sleepProgress = sleepDurationMins > 0
+        ? (sleepDurationMins / 480).clamp(0.05, 1.0)
+        : 0.05;
     final sleepHours = sleepDurationMins ~/ 60;
     final sleepMins = sleepDurationMins % 60;
     final sleepFormatted = sleepDurationMins > 0
@@ -1052,9 +1278,15 @@ class _HabitStreakCard extends ConsumerWidget {
         : 'No log';
 
     // Last 7 days history
-    final days = stepHistory.length >= 7 ? stepHistory.sublist(stepHistory.length - 7) : stepHistory;
-    final completedDays = days.where((d) => d.steps >= (stepGoal > 0 ? stepGoal : 10000)).length;
-    final streakPercentage = days.isNotEmpty ? ((completedDays / days.length) * 100).round() : 0;
+    final days = stepHistory.length >= 7
+        ? stepHistory.sublist(stepHistory.length - 7)
+        : stepHistory;
+    final completedDays = days
+        .where((d) => d.steps >= (stepGoal > 0 ? stepGoal : 10000))
+        .length;
+    final streakPercentage = days.isNotEmpty
+        ? ((completedDays / days.length) * 100).round()
+        : 0;
     const weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return Container(
@@ -1063,7 +1295,9 @@ class _HabitStreakCard extends ConsumerWidget {
         color: isDark ? const Color(0xFF131A2A) : Colors.white,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.05),
         ),
         boxShadow: [
           BoxShadow(
@@ -1142,9 +1376,12 @@ class _HabitStreakCard extends ConsumerWidget {
                         behavior: HitTestBehavior.opaque,
                         child: _DayStreakPill(
                           label: weekdayLetters[days[i].date.weekday - 1],
-                          isDone: days[i].steps >= (stepGoal > 0 ? stepGoal : 10000),
+                          isDone:
+                              days[i].steps >=
+                              (stepGoal > 0 ? stepGoal : 10000),
                           isToday: i == days.length - 1,
-                          isSelected: selectedDate != null &&
+                          isSelected:
+                              selectedDate != null &&
                               days[i].date.year == selectedDate!.year &&
                               days[i].date.month == selectedDate!.month &&
                               days[i].date.day == selectedDate!.day,
@@ -1323,12 +1560,16 @@ class _DayStreakPill extends StatelessWidget {
             color: isSelected
                 ? const Color(0xFFFBBF24)
                 : (isDone
-                    ? const Color(0xFF10B981)
-                    : (steps > 0
-                        ? const Color(0xFF10B981).withValues(alpha: 0.4)
-                        : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)))),
+                      ? const Color(0xFF10B981)
+                      : (steps > 0
+                            ? const Color(0xFF10B981).withValues(alpha: 0.4)
+                            : (isDark
+                                  ? Colors.white12
+                                  : const Color(0xFFE2E8F0)))),
             borderRadius: BorderRadius.circular(4),
-            border: isSelected ? Border.all(color: Colors.white, width: 1.5) : null,
+            border: isSelected
+                ? Border.all(color: Colors.white, width: 1.5)
+                : null,
           ),
         ),
         const SizedBox(height: 4),
@@ -1336,10 +1577,14 @@ class _DayStreakPill extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9.5,
-            fontWeight: (isToday || isSelected) ? FontWeight.w800 : FontWeight.w500,
+            fontWeight: (isToday || isSelected)
+                ? FontWeight.w800
+                : FontWeight.w500,
             color: isSelected
                 ? const Color(0xFFFBBF24)
-                : (isToday ? const Color(0xFF10B981) : scheme.onSurfaceVariant.withValues(alpha: 0.6)),
+                : (isToday
+                      ? const Color(0xFF10B981)
+                      : scheme.onSurfaceVariant.withValues(alpha: 0.6)),
           ),
         ),
       ],
@@ -1348,10 +1593,7 @@ class _DayStreakPill extends StatelessWidget {
 }
 
 class _HabitProgressBar extends StatelessWidget {
-  const _HabitProgressBar({
-    required this.progress,
-    required this.fillColor,
-  });
+  const _HabitProgressBar({required this.progress, required this.fillColor});
 
   final double progress;
   final Color fillColor;
@@ -1510,7 +1752,9 @@ class _StatusCard extends StatelessWidget {
               child: FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF10B981),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 onPressed: onAction,
                 child: Text(actionLabel!),

@@ -328,9 +328,7 @@ abstract final class _SecureMirror {
     if (!AppLocalStorage._secureMirrorAvailable) return;
     return _synchronized(() async {
       try {
-        await _storage
-            .delete(key: key)
-            .timeout(const Duration(seconds: 2));
+        await _storage.delete(key: key).timeout(const Duration(seconds: 2));
       } catch (e) {
         debugPrint('[AppLocalStorage] Keystore mirror delete error: $e');
       }

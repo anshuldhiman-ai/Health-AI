@@ -169,8 +169,11 @@ class AppColorScheme {
   /// Soft elevation tint. A fixed dark shadow is invisible on a dark
   /// canvas, so shadows are only applied in light mode and dark mode
   /// leans on the surface tone plus [line] instead.
-  List<BoxShadow> shadow({double blur = 16, double y = 4, double alpha = 0.10}) =>
-      isDark
+  List<BoxShadow> shadow({
+    double blur = 16,
+    double y = 4,
+    double alpha = 0.10,
+  }) => isDark
       ? const <BoxShadow>[]
       : [
           BoxShadow(

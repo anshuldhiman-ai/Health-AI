@@ -486,7 +486,6 @@ class FoodRecognizer {
     return outBytes.buffer.asFloat32List().toList(growable: false);
   }
 
-
   List<double> _softmax(List<double> logits) {
     if (logits.isEmpty) {
       throw const RecognitionException('Model returned no scores.');

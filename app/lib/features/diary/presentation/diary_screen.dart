@@ -105,7 +105,9 @@ class _DiaryHeader extends ConsumerWidget {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   title: const Text("Reset Today's Meals?"),
                   content: const Text(
                     'Are you sure you want to clear all logged food entries for this day? This action cannot be undone.',
@@ -171,13 +173,16 @@ class _WeekStrip extends ConsumerWidget {
                 color: isSelected ? colors.primary : scheme.surface,
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
-                  onTap: () => ref.read(selectedDiaryOffsetProvider.notifier).state = i,
+                  onTap: () =>
+                      ref.read(selectedDiaryOffsetProvider.notifier).state = i,
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isSelected ? colors.primary : scheme.outlineVariant,
+                        color: isSelected
+                            ? colors.primary
+                            : scheme.outlineVariant,
                         width: isSelected ? 1.5 : 1,
                       ),
                     ),
@@ -199,7 +204,9 @@ class _WeekStrip extends ConsumerWidget {
                         Text(
                           '${date.day}',
                           style: TextStyle(
-                            color: isSelected ? scheme.onPrimary : scheme.onSurface,
+                            color: isSelected
+                                ? scheme.onPrimary
+                                : scheme.onSurface,
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                           ),
@@ -228,7 +235,9 @@ class _CaloriesRemainingArcCard extends StatelessWidget {
     final colors = context.appColors;
     final remaining = state.caloriesRemaining;
     final target = state.caloriesTarget;
-    final progress = target > 0 ? (state.caloriesConsumed / target).clamp(0.0, 1.0) : 0.0;
+    final progress = target > 0
+        ? (state.caloriesConsumed / target).clamp(0.0, 1.0)
+        : 0.0;
 
     return AppCard(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
@@ -245,7 +254,11 @@ class _CaloriesRemainingArcCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant, size: 20),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.onSurfaceVariant,
+                size: 20,
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -372,7 +385,8 @@ class _MealRowCard extends ConsumerWidget {
               child: Image.asset(
                 'assets/brand/meal_thali.png',
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Icon(Icons.restaurant, color: colors.primary),
+                errorBuilder: (_, _, _) =>
+                    Icon(Icons.restaurant, color: colors.primary),
               ),
             ),
           ),
@@ -420,22 +434,28 @@ class _MealRowCard extends ConsumerWidget {
                     ],
                   )
                 else
-                  _TagBadge(
-                    text: '+ ${l10n.addFood}',
-                    color: colors.primary,
-                  ),
+                  _TagBadge(text: '+ ${l10n.addFood}', color: colors.primary),
               ],
             ),
           ),
           IconButton(
-            onPressed: () => context.push('/search?day=$dayOffset&meal=${meal.name}'),
-            icon: Icon(Icons.add_circle_outline_rounded, color: colors.primary, size: 23),
+            onPressed: () =>
+                context.push('/search?day=$dayOffset&meal=${meal.name}'),
+            icon: Icon(
+              Icons.add_circle_outline_rounded,
+              color: colors.primary,
+              size: 23,
+            ),
             tooltip: l10n.addFood,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded, size: 20, color: scheme.onSurfaceVariant),
+            icon: Icon(
+              Icons.more_vert_rounded,
+              size: 20,
+              color: scheme.onSurfaceVariant,
+            ),
             onSelected: (val) async {
               if (val == 'add') {
                 context.push('/search?day=$dayOffset&meal=${meal.name}');
@@ -447,13 +467,22 @@ class _MealRowCard extends ConsumerWidget {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     title: Text('Clear ${l10n.mealLabel(meal)}?'),
-                    content: Text('Are you sure you want to remove all food entries from ${l10n.mealLabel(meal)}?'),
+                    content: Text(
+                      'Are you sure you want to remove all food entries from ${l10n.mealLabel(meal)}?',
+                    ),
                     actions: [
-                      TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('Cancel'),
+                      ),
                       FilledButton(
-                        style: FilledButton.styleFrom(backgroundColor: colors.danger),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colors.danger,
+                        ),
                         onPressed: () => Navigator.of(ctx).pop(true),
                         child: const Text('Clear'),
                       ),
@@ -469,10 +498,16 @@ class _MealRowCard extends ConsumerWidget {
               PopupMenuItem(value: 'add', child: Text(l10n.addFood)),
               PopupMenuItem(value: 'scan', child: Text(l10n.scanScreenTitle)),
               if (hasEntries) ...[
-                const PopupMenuItem(value: 'view', child: Text('View / Delete Items')),
+                const PopupMenuItem(
+                  value: 'view',
+                  child: Text('View / Delete Items'),
+                ),
                 PopupMenuItem(
                   value: 'clear',
-                  child: Text('Clear ${l10n.mealLabel(meal)}', style: TextStyle(color: colors.danger)),
+                  child: Text(
+                    'Clear ${l10n.mealLabel(meal)}',
+                    style: TextStyle(color: colors.danger),
+                  ),
                 ),
               ],
             ],
@@ -560,9 +595,7 @@ class _SnacksMacroCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                energy == 0
-                    ? l10n.mealNotLoggedYet
-                    : '$kcal ${l10n.kcalUnit}',
+                energy == 0 ? l10n.mealNotLoggedYet : '$kcal ${l10n.kcalUnit}',
                 style: AppTypography.caption.copyWith(
                   color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,

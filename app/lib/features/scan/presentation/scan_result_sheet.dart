@@ -70,9 +70,15 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: Icon(Icons.arrow_back_rounded, color: scheme.onSurface),
+                    icon: Icon(
+                      Icons.arrow_back_rounded,
+                      color: scheme.onSurface,
+                    ),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -86,7 +92,10 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                   const Spacer(),
                   IconButton(
                     onPressed: () {},
-                    icon: Icon(Icons.favorite_border_rounded, color: colors.primary),
+                    icon: Icon(
+                      Icons.favorite_border_rounded,
+                      color: colors.primary,
+                    ),
                   ),
                 ],
               ),
@@ -98,7 +107,10 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.primary,
                       borderRadius: BorderRadius.circular(20),
@@ -106,7 +118,11 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.auto_awesome, color: scheme.onPrimary, size: 14),
+                        Icon(
+                          Icons.auto_awesome,
+                          color: scheme.onPrimary,
+                          size: 14,
+                        ),
                         const SizedBox(width: 5),
                         Text(
                           'AI Identified',
@@ -121,7 +137,10 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.washOf(colors.primary),
                       borderRadius: BorderRadius.circular(20),
@@ -148,7 +167,9 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                 decoration: BoxDecoration(
                   color: scheme.surface,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
                   boxShadow: colors.shadow(blur: 10, y: 3, alpha: 0.05),
                 ),
                 child: Row(
@@ -166,7 +187,10 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                               width: 68,
                               height: 68,
                               color: colors.washOf(colors.primary),
-                              child: Icon(Icons.restaurant, color: colors.primary),
+                              child: Icon(
+                                Icons.restaurant,
+                                color: colors.primary,
+                              ),
                             ),
                     ),
                     const SizedBox(width: 14),
@@ -193,7 +217,10 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                           ),
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: colors.washOf(colors.primary),
                               borderRadius: BorderRadius.circular(6),
@@ -236,12 +263,20 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          for (var i = 0; i < session.topMatches.length; i++) ...[
+                          for (
+                            var i = 0;
+                            i < session.topMatches.length;
+                            i++
+                          ) ...[
                             ChoiceChip(
-                              label: Text('${session.topMatches[i].dish.name} (${session.topMatches[i].percent}%)'),
+                              label: Text(
+                                '${session.topMatches[i].dish.name} (${session.topMatches[i].percent}%)',
+                              ),
                               selected: i == session.selectedMatch,
                               onSelected: (_) {
-                                ref.read(scanSessionProvider.notifier).update((s) => s?.selectMatch(i));
+                                ref
+                                    .read(scanSessionProvider.notifier)
+                                    .update((s) => s?.selectMatch(i));
                               },
                             ),
                             const SizedBox(width: 8),
@@ -333,19 +368,23 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      for (var i = 0; i < session.servings.length && i < 3; i++) ...[
+                      for (
+                        var i = 0;
+                        i < session.servings.length && i < 3;
+                        i++
+                      ) ...[
                         Expanded(
                           child: _ServingCard(
                             label: session.servings[i].label,
                             icon: i == 0
                                 ? Icons.rice_bowl_outlined
                                 : i == 1
-                                    ? Icons.soup_kitchen_outlined
-                                    : Icons.dinner_dining_outlined,
+                                ? Icons.soup_kitchen_outlined
+                                : Icons.dinner_dining_outlined,
                             selected: i == session.selectedServing,
-                            onTap: () => ref
-                                .read(scanSessionProvider.notifier)
-                                .state = session.selectServing(i),
+                            onTap: () =>
+                                ref.read(scanSessionProvider.notifier).state =
+                                    session.selectServing(i),
                           ),
                         ),
                         if (i < session.servings.length - 1 && i < 2)
@@ -373,7 +412,10 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.washOf(colors.primary),
                       borderRadius: BorderRadius.circular(20),
@@ -405,7 +447,9 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
                   // in both themes.
                   boxShadow: [
                     BoxShadow(
-                      color: colors.primary.withValues(alpha: _isAdding ? 0.5 : 0.3),
+                      color: colors.primary.withValues(
+                        alpha: _isAdding ? 0.5 : 0.3,
+                      ),
                       blurRadius: _isAdding ? 22 : 16,
                       spreadRadius: _isAdding ? 2 : 0,
                       offset: const Offset(0, 4),
@@ -480,10 +524,7 @@ class _ScanResultSheetState extends ConsumerState<ScanResultSheet> {
     );
   }
 
-  Future<void> _confirm(
-    BuildContext context,
-    ScanSession session,
-  ) async {
+  Future<void> _confirm(BuildContext context, ScanSession session) async {
     if (_isAdding) return;
     setState(() => _isAdding = true);
 

@@ -20,6 +20,7 @@ build/
 
 # --- Python / ML ---
 ml/data/
+!ml/data/LICENSES.md
 ml/.venv/
 !ml/reports/.gitkeep
 __pycache__/

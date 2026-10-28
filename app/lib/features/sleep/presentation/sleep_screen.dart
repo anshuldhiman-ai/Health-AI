@@ -53,7 +53,8 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
   void _saveAlarm() {
     AppToast.show(
       ScaffoldMessenger.of(context),
-      message: 'Alarm set for ${_formattedAlarmTime()} (±${_wakeWindowMinutes.toInt()}m window)',
+      message:
+          'Alarm set for ${_formattedAlarmTime()} (±${_wakeWindowMinutes.toInt()}m window)',
     );
   }
 
@@ -69,8 +70,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
   /// Modal Bottom Sheet to log/edit Bedtime and Wake-up time
   Future<void> _showLogSleepSheet(BuildContext context) async {
     final existingRecord = ref.read(sleepTodayProvider);
-    var bedMinutes = existingRecord?.bedMinutes ?? (23 * 60); // Default 11:00 PM
-    var wakeMinutes = existingRecord?.wakeMinutes ?? (7 * 60); // Default 07:00 AM
+    var bedMinutes =
+        existingRecord?.bedMinutes ?? (23 * 60); // Default 11:00 PM
+    var wakeMinutes =
+        existingRecord?.wakeMinutes ?? (7 * 60); // Default 07:00 AM
     final goalMinutes = ref.read(sleepProvider).targetMinutes;
 
     await showModalBottomSheet<void>(
@@ -83,15 +86,25 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (stateContext, setSheetState) {
-            final duration = sleepDurationMinutes(bedMinutes: bedMinutes, wakeMinutes: wakeMinutes);
+            final duration = sleepDurationMinutes(
+              bedMinutes: bedMinutes,
+              wakeMinutes: wakeMinutes,
+            );
             final hours = duration ~/ 60;
             final mins = duration % 60;
             final durationStr = mins == 0 ? '${hours}h' : '${hours}h ${mins}m';
-            final percent = ((duration / (goalMinutes > 0 ? goalMinutes : 480)) * 100).round();
+            final percent =
+                ((duration / (goalMinutes > 0 ? goalMinutes : 480)) * 100)
+                    .round();
 
             return SingleChildScrollView(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(stateContext).viewInsets.bottom + 28),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  16,
+                  20,
+                  MediaQuery.of(stateContext).viewInsets.bottom + 28,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -112,7 +125,9 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          existingRecord != null ? 'Edit Sleep Record' : 'Log Today\'s Sleep',
+                          existingRecord != null
+                              ? 'Edit Sleep Record'
+                              : 'Log Today\'s Sleep',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -125,8 +140,18 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                               Navigator.of(sheetContext).pop();
                               await _confirmDeleteSleep(context);
                             },
-                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
-                            label: const Text('Delete', style: TextStyle(color: Colors.redAccent, fontSize: 13)),
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.redAccent,
+                              size: 18,
+                            ),
+                            label: const Text(
+                              'Delete',
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -151,7 +176,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                             onTap: () async {
                               final picked = await showTimePicker(
                                 context: stateContext,
-                                initialTime: TimeOfDay(hour: bedMinutes ~/ 60, minute: bedMinutes % 60),
+                                initialTime: TimeOfDay(
+                                  hour: bedMinutes ~/ 60,
+                                  minute: bedMinutes % 60,
+                                ),
                                 builder: (c, child) => Theme(
                                   data: ThemeData.dark().copyWith(
                                     colorScheme: const ColorScheme.dark(
@@ -188,7 +216,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                             onTap: () async {
                               final picked = await showTimePicker(
                                 context: stateContext,
-                                initialTime: TimeOfDay(hour: wakeMinutes ~/ 60, minute: wakeMinutes % 60),
+                                initialTime: TimeOfDay(
+                                  hour: wakeMinutes ~/ 60,
+                                  minute: wakeMinutes % 60,
+                                ),
                                 builder: (c, child) => Theme(
                                   data: ThemeData.dark().copyWith(
                                     colorScheme: const ColorScheme.dark(
@@ -201,7 +232,8 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                               );
                               if (picked != null) {
                                 setSheetState(() {
-                                  wakeMinutes = picked.hour * 60 + picked.minute;
+                                  wakeMinutes =
+                                      picked.hour * 60 + picked.minute;
                                 });
                               }
                             },
@@ -219,11 +251,16 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
 
                     // Calculated Duration Summary Card
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -233,7 +270,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                             children: [
                               const Text(
                                 'Calculated Duration',
-                                style: TextStyle(fontSize: 12, color: Colors.white60),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white60,
+                                ),
                               ),
                               const SizedBox(height: 2),
                               Text(
@@ -247,9 +287,13 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                             ],
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                              color: const Color(0xFF10B981)
+                                  .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -271,24 +315,35 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(50),
                         backgroundColor: const Color(0xFF10B981),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       onPressed: () async {
-                        await ref.read(sleepProvider.notifier).save(
+                        await ref
+                            .read(sleepProvider.notifier)
+                            .save(
                               bedMinutes: bedMinutes,
                               wakeMinutes: wakeMinutes,
                             );
-                        if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                        if (sheetContext.mounted)
+                          Navigator.of(sheetContext).pop();
                         if (context.mounted) {
                           AppToast.show(
                             ScaffoldMessenger.of(context),
-                            message: 'Sleep logged: $durationStr (${_formatMinutesToTime(bedMinutes)} – ${_formatMinutesToTime(wakeMinutes)})',
+                            message:
+                                'Sleep logged: $durationStr (${_formatMinutesToTime(bedMinutes)} – ${_formatMinutesToTime(wakeMinutes)})',
                           );
                         }
                       },
                       child: Text(
-                        existingRecord != null ? 'Update Sleep Record' : 'Save Sleep Record',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                        existingRecord != null
+                            ? 'Update Sleep Record'
+                            : 'Save Sleep Record',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ],
@@ -351,8 +406,13 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                         onPressed: selectedMinutes > 300
                             ? () => setSheetState(() => selectedMinutes -= 30)
                             : null,
-                        icon: const Icon(Icons.remove_rounded, color: Colors.white),
-                        style: IconButton.styleFrom(backgroundColor: Colors.white12),
+                        icon: const Icon(
+                          Icons.remove_rounded,
+                          color: Colors.white,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white12,
+                        ),
                       ),
                       const SizedBox(width: 24),
                       Column(
@@ -367,7 +427,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                           ),
                           const Text(
                             'Target duration',
-                            style: TextStyle(fontSize: 12, color: Colors.white60),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white60,
+                            ),
                           ),
                         ],
                       ),
@@ -376,49 +439,66 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                         onPressed: selectedMinutes < 720
                             ? () => setSheetState(() => selectedMinutes += 30)
                             : null,
-                        icon: const Icon(Icons.add_rounded, color: Colors.white),
-                        style: IconButton.styleFrom(backgroundColor: Colors.white12),
+                        icon: const Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white12,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
                   Wrap(
                     spacing: 8,
-                    children: [
-                      (7 * 60, '7h'),
-                      (7 * 60 + 30, '7.5h'),
-                      (8 * 60, '8h'),
-                      (8 * 60 + 30, '8.5h'),
-                      (9 * 60, '9h'),
-                    ].map((tuple) {
-                      final isSel = selectedMinutes == tuple.$1;
-                      return ChoiceChip(
-                        label: Text(
-                          tuple.$2,
-                          style: TextStyle(
-                            color: isSel ? Colors.black : Colors.white70,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        selected: isSel,
-                        selectedColor: const Color(0xFF38BDF8),
-                        backgroundColor: Colors.white12,
-                        onSelected: (_) => setSheetState(() => selectedMinutes = tuple.$1),
-                      );
-                    }).toList(),
+                    children:
+                        [
+                          (7 * 60, '7h'),
+                          (7 * 60 + 30, '7.5h'),
+                          (8 * 60, '8h'),
+                          (8 * 60 + 30, '8.5h'),
+                          (9 * 60, '9h'),
+                        ].map((tuple) {
+                          final isSel = selectedMinutes == tuple.$1;
+                          return ChoiceChip(
+                            label: Text(
+                              tuple.$2,
+                              style: TextStyle(
+                                color: isSel ? Colors.black : Colors.white70,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            selected: isSel,
+                            selectedColor: const Color(0xFF38BDF8),
+                            backgroundColor: Colors.white12,
+                            onSelected: (_) =>
+                                setSheetState(() => selectedMinutes = tuple.$1),
+                          );
+                        }).toList(),
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(50),
                       backgroundColor: const Color(0xFF10B981),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     onPressed: () async {
-                      await ref.read(sleepProvider.notifier).setGoal(selectedMinutes);
+                      await ref
+                          .read(sleepProvider.notifier)
+                          .setGoal(selectedMinutes);
                       if (ctx.mounted) Navigator.of(ctx).pop();
                     },
-                    child: const Text('Save Sleep Goal', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    child: const Text(
+                      'Save Sleep Goal',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -435,7 +515,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Delete Today's Sleep Log?", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "Delete Today's Sleep Log?",
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
           'Are you sure you want to remove today\'s recorded sleep log?',
           style: TextStyle(color: Colors.white70),
@@ -443,7 +526,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white60),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -456,7 +542,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     if (confirmed == true) {
       await ref.read(sleepProvider.notifier).removeToday();
       if (context.mounted) {
-        AppToast.show(ScaffoldMessenger.of(context), message: "Today's sleep log removed");
+        AppToast.show(
+          ScaffoldMessenger.of(context),
+          message: "Today's sleep log removed",
+        );
       }
     }
   }
@@ -474,7 +563,9 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     final sleepState = ref.watch(sleepProvider);
 
     final hasRealRecord = sleepRecord != null;
-    final durationMinutes = hasRealRecord ? sleepRecord.durationMinutes : 440; // Default 7h 20m if unlogged
+    final durationMinutes = hasRealRecord
+        ? sleepRecord.durationMinutes
+        : 440; // Default 7h 20m if unlogged
     final hours = durationMinutes ~/ 60;
     final minutes = durationMinutes % 60;
     final goalMinutes = sleepState.targetMinutes;
@@ -578,19 +669,26 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                     GestureDetector(
                       onTap: () => _showLogSleepSheet(context),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withValues(alpha: 0.18),
+                          color: const Color(0xFF10B981)
+                              .withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFF10B981).withValues(alpha: 0.45),
+                            color: const Color(0xFF10B981)
+                                .withValues(alpha: 0.45),
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              hasRealRecord ? Icons.edit_calendar_rounded : Icons.add_rounded,
+                              hasRealRecord
+                                  ? Icons.edit_calendar_rounded
+                                  : Icons.add_rounded,
                               color: const Color(0xFF10B981),
                               size: 15,
                             ),
@@ -610,7 +708,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                     const SizedBox(width: 4),
 
                     PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert_rounded, color: Colors.white70),
+                      icon: const Icon(
+                        Icons.more_vert_rounded,
+                        color: Colors.white70,
+                      ),
                       color: const Color(0xFF0F172A),
                       onSelected: (val) {
                         if (val == 'log') {
@@ -627,13 +728,17 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                           child: Row(
                             children: [
                               Icon(
-                                hasRealRecord ? Icons.edit_outlined : Icons.add_circle_outline_rounded,
+                                hasRealRecord
+                                    ? Icons.edit_outlined
+                                    : Icons.add_circle_outline_rounded,
                                 color: const Color(0xFF10B981),
                                 size: 18,
                               ),
                               const SizedBox(width: 10),
                               Text(
-                                hasRealRecord ? 'Edit Sleep Log' : 'Log Sleep Data',
+                                hasRealRecord
+                                    ? 'Edit Sleep Log'
+                                    : 'Log Sleep Data',
                                 style: const TextStyle(color: Colors.white),
                               ),
                             ],
@@ -643,9 +748,16 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                           value: 'goal',
                           child: Row(
                             children: [
-                              Icon(Icons.tune_rounded, color: Colors.white70, size: 18),
+                              Icon(
+                                Icons.tune_rounded,
+                                color: Colors.white70,
+                                size: 18,
+                              ),
                               SizedBox(width: 10),
-                              Text('Set Sleep Goal', style: TextStyle(color: Colors.white)),
+                              Text(
+                                'Set Sleep Goal',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ],
                           ),
                         ),
@@ -654,9 +766,16 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                                Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: Colors.redAccent,
+                                  size: 18,
+                                ),
                                 SizedBox(width: 10),
-                                Text('Delete Today\'s Log', style: TextStyle(color: Colors.redAccent)),
+                                Text(
+                                  'Delete Today\'s Log',
+                                  style: TextStyle(color: Colors.redAccent),
+                                ),
                               ],
                             ),
                           ),
@@ -680,7 +799,10 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                 GestureDetector(
                   onTap: () => _showLogSleepSheet(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF131A2A).withValues(alpha: 0.70),
                       borderRadius: BorderRadius.circular(16),
@@ -691,9 +813,13 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                     child: Row(
                       children: [
                         Icon(
-                          hasRealRecord ? Icons.check_circle_outline_rounded : Icons.nightlight_outlined,
+                          hasRealRecord
+                              ? Icons.check_circle_outline_rounded
+                              : Icons.nightlight_outlined,
                           size: 16,
-                          color: hasRealRecord ? const Color(0xFF10B981) : const Color(0xFF38BDF8),
+                          color: hasRealRecord
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF38BDF8),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -704,7 +830,9 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: hasRealRecord ? Colors.white70 : const Color(0xFF38BDF8),
+                              color: hasRealRecord
+                                  ? Colors.white70
+                                  : const Color(0xFF38BDF8),
                             ),
                           ),
                         ),
@@ -725,7 +853,8 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                   wakeWindowMinutes: _wakeWindowMinutes,
                   onMinus: () => _adjustAlarm(-15),
                   onPlus: () => _adjustAlarm(15),
-                  onWindowChanged: (val) => setState(() => _wakeWindowMinutes = val),
+                  onWindowChanged: (val) =>
+                      setState(() => _wakeWindowMinutes = val),
                   onSave: _saveAlarm,
                 ),
                 const SizedBox(height: 16),
@@ -759,8 +888,11 @@ class _SleepQualityAndStagesHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sleepProgress = (actualMinutes / (targetMinutes > 0 ? targetMinutes : 480))
-        .clamp(0.05, 1.0);
+    final sleepProgress =
+        (actualMinutes / (targetMinutes > 0 ? targetMinutes : 480)).clamp(
+          0.05,
+          1.0,
+        );
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
@@ -846,9 +978,7 @@ class _SleepQualityAndStagesHeroCard extends StatelessWidget {
           SizedBox(
             height: 110,
             width: double.infinity,
-            child: CustomPaint(
-              painter: _SleepStagesArchitectPainter(),
-            ),
+            child: CustomPaint(painter: _SleepStagesArchitectPainter()),
           ),
           const SizedBox(height: 10),
 
@@ -858,11 +988,26 @@ class _SleepQualityAndStagesHeroCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
-                Text('Desp', style: TextStyle(fontSize: 11, color: Colors.white54)),
-                Text('Deep', style: TextStyle(fontSize: 11, color: Colors.white54)),
-                Text('Pom', style: TextStyle(fontSize: 11, color: Colors.white54)),
-                Text('Tum', style: TextStyle(fontSize: 11, color: Colors.white54)),
-                Text('Light', style: TextStyle(fontSize: 11, color: Colors.white54)),
+                Text(
+                  'Desp',
+                  style: TextStyle(fontSize: 11, color: Colors.white54),
+                ),
+                Text(
+                  'Deep',
+                  style: TextStyle(fontSize: 11, color: Colors.white54),
+                ),
+                Text(
+                  'Pom',
+                  style: TextStyle(fontSize: 11, color: Colors.white54),
+                ),
+                Text(
+                  'Tum',
+                  style: TextStyle(fontSize: 11, color: Colors.white54),
+                ),
+                Text(
+                  'Light',
+                  style: TextStyle(fontSize: 11, color: Colors.white54),
+                ),
               ],
             ),
           ),
@@ -1157,7 +1302,10 @@ class _SleepStagesArchitectPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(deepFillRect);
-    canvas.drawRRect(RRect.fromRectAndRadius(deepFillRect, const Radius.circular(3)), deepFill);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(deepFillRect, const Radius.circular(3)),
+      deepFill,
+    );
 
     final remFillRect = Rect.fromLTRB(w * 0.31, yRem, w * 0.40, h);
     final remFill = Paint()
@@ -1169,7 +1317,10 @@ class _SleepStagesArchitectPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(remFillRect);
-    canvas.drawRRect(RRect.fromRectAndRadius(remFillRect, const Radius.circular(3)), remFill);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(remFillRect, const Radius.circular(3)),
+      remFill,
+    );
 
     final lightFillRect = Rect.fromLTRB(w * 0.66, yLight, w * 0.78, h);
     final lightFill = Paint()
@@ -1181,7 +1332,10 @@ class _SleepStagesArchitectPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(lightFillRect);
-    canvas.drawRRect(RRect.fromRectAndRadius(lightFillRect, const Radius.circular(3)), lightFill);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(lightFillRect, const Radius.circular(3)),
+      lightFill,
+    );
 
     // Pink / Magenta Awakening Transition Caps on peaks
     final pinkCapPaint = Paint()
@@ -1190,10 +1344,26 @@ class _SleepStagesArchitectPainter extends CustomPainter {
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawLine(Offset(w * 0.065, yAwake), Offset(w * 0.09, yAwake), pinkCapPaint);
-    canvas.drawLine(Offset(w * 0.525, yAwake), Offset(w * 0.54, yAwake), pinkCapPaint);
-    canvas.drawLine(Offset(w * 0.775, yAwake), Offset(w * 0.79, yAwake), pinkCapPaint);
-    canvas.drawLine(Offset(w * 0.845, yAwake), Offset(w * 0.88, yAwake), pinkCapPaint);
+    canvas.drawLine(
+      Offset(w * 0.065, yAwake),
+      Offset(w * 0.09, yAwake),
+      pinkCapPaint,
+    );
+    canvas.drawLine(
+      Offset(w * 0.525, yAwake),
+      Offset(w * 0.54, yAwake),
+      pinkCapPaint,
+    );
+    canvas.drawLine(
+      Offset(w * 0.775, yAwake),
+      Offset(w * 0.79, yAwake),
+      pinkCapPaint,
+    );
+    canvas.drawLine(
+      Offset(w * 0.845, yAwake),
+      Offset(w * 0.88, yAwake),
+      pinkCapPaint,
+    );
   }
 
   @override
@@ -1278,7 +1448,10 @@ class _TimePickerCard extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 iconSize: 22,
                 onPressed: onMinus,
-                icon: const Icon(Icons.remove_circle_outline, color: Colors.white60),
+                icon: const Icon(
+                  Icons.remove_circle_outline,
+                  color: Colors.white60,
+                ),
                 tooltip: '-15 mins',
               ),
               const SizedBox(width: 6),
@@ -1287,7 +1460,10 @@ class _TimePickerCard extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 iconSize: 22,
                 onPressed: onPlus,
-                icon: const Icon(Icons.add_circle_outline, color: Colors.white60),
+                icon: const Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.white60,
+                ),
                 tooltip: '+15 mins',
               ),
             ],

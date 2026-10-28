@@ -65,11 +65,10 @@ void main() {
     await store.flush();
 
     final restored = await reopen();
-    expect(
-      restored.entriesFor(0).map((e) => e.kcal),
-      [100, 200],
-      reason: 'order is the diary order, not just the set of entries',
-    );
+    expect(restored.entriesFor(0).map((e) => e.kcal), [
+      100,
+      200,
+    ], reason: 'order is the diary order, not just the set of entries');
     expect(restored.entriesFor(3).single.kcal, 300);
   });
 
@@ -88,50 +87,62 @@ void main() {
     );
   });
 
-  test('entries logged yesterday are still under yesterday after a reopen',
-      () async {
-    final prefs = await SharedPreferences.getInstance();
-    final store = DayLog(prefs: prefs);
-    store.add(entry(kcal: 400), dayOffset: 1);
-    await store.flush();
+  test(
+    'entries logged yesterday are still under yesterday after a reopen',
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      final store = DayLog(prefs: prefs);
+      store.add(entry(kcal: 400), dayOffset: 1);
+      await store.flush();
 
-    expect((await reopen()).entriesFor(1).single.kcal, 400);
-  });
+      expect((await reopen()).entriesFor(1).single.kcal, 400);
+    },
+  );
 
-  test('a payload written on an earlier day moves forward, not off the end',
-      () async {
-    // The store indexes days by offset from today, so a log written two
-    // days ago must arrive as day 2, not silently stay day 0.
-    final prefs = await SharedPreferences.getInstance();
-    final base = DateTime.now().subtract(const Duration(days: 2));
-    await prefs.setString(
-      DayLog.storageKey,
-      jsonEncode({
-        'baseDate': DateTime(base.year, base.month, base.day).toIso8601String(),
-        'days': {
-          '0': [
-            LogEntry.estimated(
-              mealKind: MealKind.lunch,
-              dish: 'Dal',
-              kcal: 320,
-            ).toJson(),
-          ],
-          '1': [
-            LogEntry.estimated(
-              mealKind: MealKind.lunch,
-              dish: 'Rice',
-              kcal: 210,
-            ).toJson(),
-          ],
-        },
-      }),
-    );
+  test(
+    'a payload written on an earlier day moves forward, not off the end',
+    () async {
+      // The store indexes days by offset from today, so a log written two
+      // days ago must arrive as day 2, not silently stay day 0.
+      final prefs = await SharedPreferences.getInstance();
+      final base = DateTime.now().subtract(const Duration(days: 2));
+      await prefs.setString(
+        DayLog.storageKey,
+        jsonEncode({
+          'baseDate': DateTime(
+            base.year,
+            base.month,
+            base.day,
+          ).toIso8601String(),
+          'days': {
+            '0': [
+              LogEntry.estimated(
+                mealKind: MealKind.lunch,
+                dish: 'Dal',
+                kcal: 320,
+              ).toJson(),
+            ],
+            '1': [
+              LogEntry.estimated(
+                mealKind: MealKind.lunch,
+                dish: 'Rice',
+                kcal: 210,
+              ).toJson(),
+            ],
+          },
+        }),
+      );
 
-    final restored = await reopen();
-    expect(restored.entriesFor(0), isEmpty, reason: 'today had nothing logged');
-    expect(restored.entriesFor(2).single.dish, 'Dal');
-    expect(restored.entriesFor(3).single.dish, 'Rice');
-  });
+      final restored = await reopen();
+      expect(
+        restored.entriesFor(0),
+        isEmpty,
+        reason: 'today had nothing logged',
+      );
+      expect(restored.entriesFor(2).single.dish, 'Dal');
+      expect(restored.entriesFor(3).single.dish, 'Rice');
+    },
+  );
 
   test('a corrupt payload costs the log, not the app', () async {
     final prefs = await SharedPreferences.getInstance();
@@ -141,14 +152,16 @@ void main() {
     expect(restored.entriesFor(0), isEmpty);
   });
 
-  test('a corrupt payload is dropped rather than re-read every launch',
-      () async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(DayLog.storageKey, '{not json at all');
-    await reopen();
+  test(
+    'a corrupt payload is dropped rather than re-read every launch',
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(DayLog.storageKey, '{not json at all');
+      await reopen();
 
-    expect(prefs.getString(DayLog.storageKey), isNull);
-  });
+      expect(prefs.getString(DayLog.storageKey), isNull);
+    },
+  );
 
   test('one malformed row does not take its day down with it', () async {
     final prefs = await SharedPreferences.getInstance();

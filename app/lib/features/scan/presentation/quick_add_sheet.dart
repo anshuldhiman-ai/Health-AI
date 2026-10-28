@@ -136,9 +136,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     final catalog = ref.watch(dishCatalogProvider);
 
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
         top: false,
         child: SingleChildScrollView(
@@ -146,111 +144,111 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: AppSpacing.x3),
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: scheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenPadding,
-                AppSpacing.x3,
-                AppSpacing.screenPadding,
-                0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Quick Add & Packaged Foods',
-                    style: AppTypography.titleM.copyWith(
-                      color: scheme.onSurface,
-                      fontWeight: FontWeight.w800,
-                    ),
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: AppSpacing.x3),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(height: AppSpacing.x1),
-                  Text(
-                    'Search packaged snacks (e.g. Maggi, Oats, Biscuits) or cooked dishes.',
-                    style: AppTypography.caption.copyWith(
-                      color: scheme.onSurfaceVariant,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.x3,
+                  AppSpacing.screenPadding,
+                  0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quick Add & Packaged Foods',
+                      style: AppTypography.titleM.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
+                    const SizedBox(height: AppSpacing.x1),
+                    Text(
+                      'Search packaged snacks (e.g. Maggi, Oats, Biscuits) or cooked dishes.',
+                      style: AppTypography.caption.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.x3,
+                  AppSpacing.screenPadding,
+                  0,
+                ),
+                child: TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  textInputAction: TextInputAction.search,
+                  onChanged: (value) => setState(() => _query = value),
+                  decoration: InputDecoration(
+                    hintText: 'Search food or brand (e.g. Maggi, Bread)...',
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: () {
+                              _controller.clear();
+                              setState(() => _query = '');
+                            },
+                            icon: const Icon(Icons.clear_rounded),
+                          ),
                   ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenPadding,
-                AppSpacing.x3,
-                AppSpacing.screenPadding,
-                0,
-              ),
-              child: TextField(
-                controller: _controller,
-                autofocus: true,
-                textInputAction: TextInputAction.search,
-                onChanged: (value) => setState(() => _query = value),
-                decoration: InputDecoration(
-                  hintText: 'Search food or brand (e.g. Maggi, Bread)...',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _query.isEmpty
-                      ? null
-                      : IconButton(
-                          onPressed: () {
-                            _controller.clear();
-                            setState(() => _query = '');
-                          },
-                          icon: const Icon(Icons.clear_rounded),
-                        ),
                 ),
               ),
-            ),
-            // Packaged Food Quick Section when search is empty or matches
-            _buildPackagedFoodsSection(context, scheme),
-            catalog.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(AppSpacing.x8),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (_, _) => Padding(
-                padding: const EdgeInsets.all(AppSpacing.x6),
-                child: Text(
-                  'Food catalog unavailable',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.bodyM.copyWith(color: scheme.error),
+              // Packaged Food Quick Section when search is empty or matches
+              _buildPackagedFoodsSection(context, scheme),
+              catalog.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(AppSpacing.x8),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (_, _) => Padding(
+                  padding: const EdgeInsets.all(AppSpacing.x6),
+                  child: Text(
+                    'Food catalog unavailable',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyM.copyWith(color: scheme.error),
+                  ),
+                ),
+                data: (data) => _Results(
+                  catalog: data,
+                  query: _query,
+                  onPick: (dish) => Navigator.of(context).pop(dish.id),
                 ),
               ),
-              data: (data) => _Results(
-                catalog: data,
-                query: _query,
-                onPick: (dish) => Navigator.of(context).pop(dish.id),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  0,
+                  AppSpacing.screenPadding,
+                  AppSpacing.x3,
+                ),
+                child: OutlinedButton.icon(
+                  onPressed: _openCustomFoodDialog,
+                  icon: const Icon(Icons.edit_note_rounded, size: 18),
+                  label: const Text('Add Custom Item & Calories'),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenPadding,
-                0,
-                AppSpacing.screenPadding,
-                AppSpacing.x3,
-              ),
-              child: OutlinedButton.icon(
-                onPressed: _openCustomFoodDialog,
-                icon: const Icon(Icons.edit_note_rounded, size: 18),
-                label: const Text('Add Custom Item & Calories'),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildPackagedFoodsSection(BuildContext context, ColorScheme scheme) {
     final colors = context.appColors;
@@ -264,7 +262,12 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     if (filteredPackaged.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 12, AppSpacing.screenPadding, 4),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        12,
+        AppSpacing.screenPadding,
+        4,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -313,13 +316,19 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                           item.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
                         ),
                         Text(
                           item.servingLabel,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: scheme.onSurfaceVariant,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Row(
@@ -333,7 +342,11 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                                 fontSize: 12,
                               ),
                             ),
-                            Icon(Icons.add_circle, size: 16, color: colors.primary),
+                            Icon(
+                              Icons.add_circle,
+                              size: 16,
+                              color: colors.primary,
+                            ),
                           ],
                         ),
                       ],
@@ -385,7 +398,8 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
           FilledButton(
             onPressed: () {
               final calories = int.tryParse(kcal.text.trim());
-              if (name.text.trim().isEmpty || calories == null || calories <= 0) return;
+              if (name.text.trim().isEmpty || calories == null || calories <= 0)
+                return;
               Navigator.pop(dialogContext, (name.text.trim(), calories));
             },
             child: const Text('Add to meal'),
@@ -487,10 +501,8 @@ class _Results extends StatelessWidget {
                 AppSpacing.x4,
               ),
               itemCount: searchResults.length,
-              separatorBuilder: (_, _) => Divider(
-                height: 1,
-                color: scheme.outlineVariant,
-              ),
+              separatorBuilder: (_, _) =>
+                  Divider(height: 1, color: scheme.outlineVariant),
               itemBuilder: (_, index) {
                 final dish = searchResults[index];
                 return ListTile(

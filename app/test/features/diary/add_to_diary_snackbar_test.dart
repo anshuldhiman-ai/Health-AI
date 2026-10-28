@@ -66,9 +66,7 @@ void main() {
     appRouter.go('/today');
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          dishCatalogProvider.overrideWith((_) async => catalog),
-        ],
+        overrides: [dishCatalogProvider.overrideWith((_) async => catalog)],
         child: const App(),
       ),
     );

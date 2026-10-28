@@ -226,11 +226,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: const Color(0xFF0F5A3C).withValues(alpha: 0.15),
+                            color: const Color(0xFF0F5A3C)
+                                .withValues(alpha: 0.15),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0F5A3C).withValues(alpha: 0.06),
+                              color: const Color(0xFF0F5A3C)
+                                  .withValues(alpha: 0.06),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -259,7 +261,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   // Onboarding Completion 85% Progress Bar
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -268,7 +273,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0F5A3C).withValues(alpha: 0.04),
+                          color: const Color(0xFF0F5A3C)
+                              .withValues(alpha: 0.04),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
@@ -305,7 +311,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             value: 0.85,
                             minHeight: 8,
                             backgroundColor: Color(0xFFE9F0EC),
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1E885F)),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF1E885F),
+                            ),
                           ),
                         ),
                       ],
@@ -320,7 +328,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     height: 52,
                     child: ElevatedButton.icon(
                       onPressed: () => setState(() => _currentStep = 1),
-                      icon: const Icon(Icons.apple, size: 22, color: Colors.white),
+                      icon: const Icon(
+                        Icons.apple,
+                        size: 22,
+                        color: Colors.white,
+                      ),
                       label: const Text(
                         'Continue with Apple',
                         style: TextStyle(
@@ -351,10 +363,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         elevation: 0,
                         shape: StadiumBorder(
                           side: BorderSide(
-                            color: const Color(0xFFE5E9EE).withValues(alpha: 0.9),
+                            color: const Color(0xFFE5E9EE)
+                                .withValues(alpha: 0.9),
                           ),
                         ),
-                        shadowColor: const Color(0xFF0F5A3C).withValues(alpha: 0.08),
+                        shadowColor: const Color(0xFF0F5A3C)
+                            .withValues(alpha: 0.08),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -431,7 +445,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   // Learn Facts / Learn about On-Device AI card
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
@@ -440,7 +457,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0F5A3C).withValues(alpha: 0.05),
+                          color: const Color(0xFF0F5A3C)
+                              .withValues(alpha: 0.05),
                           blurRadius: 14,
                           offset: const Offset(0, 4),
                         ),
@@ -451,7 +469,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E885F).withValues(alpha: 0.12),
+                            color: const Color(0xFF1E885F)
+                                .withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -841,9 +860,7 @@ class _FeaturePill extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.washOf(colors.primary, strength: 0.9),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colors.primary.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -992,11 +1009,7 @@ class _GlassThumbnailBox extends StatelessWidget {
         ],
       ),
       child: Center(
-        child: Icon(
-          icon,
-          color: iconColor,
-          size: size * 0.48,
-        ),
+        child: Icon(icon, color: iconColor, size: size * 0.48),
       ),
     );
   }

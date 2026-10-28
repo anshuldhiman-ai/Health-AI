@@ -55,10 +55,7 @@ class SleepDay {
 }
 
 class SleepState {
-  const SleepState({
-    required this.records,
-    this.customGoalMinutes,
-  });
+  const SleepState({required this.records, this.customGoalMinutes});
 
   factory SleepState.empty() =>
       const SleepState(records: <String, SleepRecord>{});
@@ -70,8 +67,9 @@ class SleepState {
       for (final entry in raw.entries) {
         final value = entry.value;
         if (entry.key is String && value is Map) {
-          records[entry.key as String] =
-              SleepRecord.fromJson(Map<String, dynamic>.from(value));
+          records[entry.key as String] = SleepRecord.fromJson(
+            Map<String, dynamic>.from(value),
+          );
         }
       }
     }

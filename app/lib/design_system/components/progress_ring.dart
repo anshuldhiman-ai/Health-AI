@@ -87,7 +87,8 @@ class ProgressRing extends StatelessWidget {
         child: CustomPaint(
           painter: _RingPainter(
             segments: effectiveSegments,
-            trackColor: trackColor ?? scheme.outlineVariant.withValues(alpha: 0.4),
+            trackColor:
+                trackColor ?? scheme.outlineVariant.withValues(alpha: 0.4),
             strokeWidth: strokeWidth,
             gradientColors: gradientColors,
             isArc: isArc,

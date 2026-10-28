@@ -21,9 +21,12 @@ void main() {
     // The exact sentinel from FlutterSecureStoragePlugin.java: the
     // plugin's error path calls deleteAll() and then
     // result.success("Data has been reset").
-    test('rejects the plugin reset sentinel instead of treating it as data', () {
-      expect(AppLocalStorage.sanitize('Data has been reset'), isNull);
-    });
+    test(
+      'rejects the plugin reset sentinel instead of treating it as data',
+      () {
+        expect(AppLocalStorage.sanitize('Data has been reset'), isNull);
+      },
+    );
 
     test('rejects absent and blank values', () {
       expect(AppLocalStorage.sanitize(null), isNull);
@@ -99,20 +102,26 @@ void main() {
       expect(prefs.getString('k'), isNull);
     });
 
-    test('readBool reads correctly when saved as boolean in SharedPreferences', () async {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('bool_flag', true);
-      expect(await AppLocalStorage.readBool('bool_flag'), isTrue);
-      await prefs.setBool('bool_flag', false);
-      expect(await AppLocalStorage.readBool('bool_flag'), isFalse);
-    });
+    test(
+      'readBool reads correctly when saved as boolean in SharedPreferences',
+      () async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('bool_flag', true);
+        expect(await AppLocalStorage.readBool('bool_flag'), isTrue);
+        await prefs.setBool('bool_flag', false);
+        expect(await AppLocalStorage.readBool('bool_flag'), isFalse);
+      },
+    );
 
-    test('readBool reads correctly when saved as string in SharedPreferences', () async {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('str_flag', 'true');
-      expect(await AppLocalStorage.readBool('str_flag'), isTrue);
-      await prefs.setString('str_flag', 'false');
-      expect(await AppLocalStorage.readBool('str_flag'), isFalse);
-    });
+    test(
+      'readBool reads correctly when saved as string in SharedPreferences',
+      () async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('str_flag', 'true');
+        expect(await AppLocalStorage.readBool('str_flag'), isTrue);
+        await prefs.setString('str_flag', 'false');
+        expect(await AppLocalStorage.readBool('str_flag'), isFalse);
+      },
+    );
   });
 }

@@ -391,7 +391,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: const BorderSide(color: Color(0xFF10B981), width: 1.2),
+                      side: const BorderSide(
+                        color: Color(0xFF10B981),
+                        width: 1.2,
+                      ),
                     ),
                   ),
                 ),
@@ -404,7 +407,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                   icon: const Icon(Icons.refresh_rounded, size: 19),
                   label: const Text(
                     'Try Again',
-                    style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -837,7 +843,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                                 size: 52,
                               ),
                               const SizedBox(height: 4),
-                              const Text('Gallery', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+                              const Text(
+                                'Gallery',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                           _MetallicShutterButton(
@@ -859,7 +872,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                                 size: 52,
                               ),
                               const SizedBox(height: 4),
-                              const Text('Packaged', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+                              const Text(
+                                'Packaged',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                         ],

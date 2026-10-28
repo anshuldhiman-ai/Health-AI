@@ -26,14 +26,15 @@ void main() {
 
     // Profile Setup step
     expect(find.text('Personalize Your Profile'), findsOneWidget);
-    final continueButton = find.widgetWithText(FilledButton, 'Continue to Dashboard');
+    final continueButton = find.widgetWithText(
+      FilledButton,
+      'Continue to Dashboard',
+    );
     await tester.ensureVisible(continueButton);
     await tester.tap(continueButton);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
     await tester.pumpAndSettle();
-
-
 
     // Nav destinations
     expect(find.text('Home'), findsOneWidget);

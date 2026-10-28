@@ -1,5 +1,6 @@
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/features/today/presentation/macro_breakdown_screen.dart';
+
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -43,8 +44,7 @@ final appRouter = GoRouter(
   refreshListenable: welcomeSeenNotifier,
   redirect: (context, state) {
     if (hasSeenWelcome &&
-        (state.matchedLocation == '/welcome' ||
-            state.matchedLocation == '/')) {
+        (state.matchedLocation == '/welcome' || state.matchedLocation == '/')) {
       return '/today';
     }
     return null;
@@ -205,7 +205,9 @@ class _BottomBar extends StatelessWidget {
       final selected = navigationShell.currentIndex == branchIndex;
       final emerald = const Color(0xFF0F5A3C);
       final vibrantEmerald = const Color(0xFF1E885F);
-      final color = selected ? (scheme.brightness == Brightness.dark ? scheme.primary : emerald) : scheme.onSurfaceVariant;
+      final color = selected
+          ? (scheme.brightness == Brightness.dark ? scheme.primary : emerald)
+          : scheme.onSurfaceVariant;
       return Expanded(
         child: Material(
           color: Colors.transparent,
@@ -238,7 +240,9 @@ class _BottomBar extends StatelessWidget {
                     width: 4,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: scheme.brightness == Brightness.dark ? scheme.primary : vibrantEmerald,
+                      color: scheme.brightness == Brightness.dark
+                          ? scheme.primary
+                          : vibrantEmerald,
                       shape: BoxShape.circle,
                     ),
                   )

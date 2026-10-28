@@ -37,14 +37,14 @@ class TodayScreen extends ConsumerWidget {
     final c = context.appColors;
     final scheme = Theme.of(context).colorScheme;
 
-    final displayName = metrics.name.trim().isEmpty ? 'Anshul' : metrics.name.trim();
+    final displayName = metrics.name.trim().isEmpty
+        ? 'Anshul'
+        : metrics.name.trim();
 
     return Scaffold(
       backgroundColor: c.canvas,
       body: Container(
-        decoration: BoxDecoration(
-          color: c.canvas,
-        ),
+        decoration: BoxDecoration(color: c.canvas),
         child: SafeArea(
           bottom: false,
           child: ListView(
@@ -191,11 +191,13 @@ class _CaloriesAndMacrosCard extends StatelessWidget {
 
     final protein = state.macros.firstWhere(
       (m) => m.kind == MacroKind.protein,
-      orElse: () => const MacroLine(kind: MacroKind.protein, value: 0, target: 100),
+      orElse: () =>
+          const MacroLine(kind: MacroKind.protein, value: 0, target: 100),
     );
     final carbs = state.macros.firstWhere(
       (m) => m.kind == MacroKind.carbs,
-      orElse: () => const MacroLine(kind: MacroKind.carbs, value: 0, target: 180),
+      orElse: () =>
+          const MacroLine(kind: MacroKind.carbs, value: 0, target: 180),
     );
     final fat = state.macros.firstWhere(
       (m) => m.kind == MacroKind.fat,
@@ -374,7 +376,10 @@ class _MacroProgressItem extends StatelessWidget {
                   Container(
                     width: 7,
                     height: 7,
-                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                   const SizedBox(width: 5),
                   Text(
@@ -790,7 +795,11 @@ class _AiNutritionCoachCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.camera_alt_outlined, color: scheme.onPrimary, size: 14),
+                Icon(
+                  Icons.camera_alt_outlined,
+                  color: scheme.onPrimary,
+                  size: 14,
+                ),
                 const SizedBox(width: 5),
                 Text(
                   'Scan',
@@ -925,10 +934,7 @@ class _HighlightCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: scheme.outlineVariant,
-          width: 1.0,
-        ),
+        border: Border.all(color: scheme.outlineVariant, width: 1.0),
         boxShadow: AppShadows.card,
       ),
       child: Material(
@@ -960,7 +966,10 @@ class _HighlightCard extends StatelessWidget {
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2.5,
+                      ),
                       decoration: BoxDecoration(
                         color: chipColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),

@@ -66,7 +66,9 @@ class _StartupSplashState extends State<_StartupSplash>
         : const [Color(0xFFF2F8F4), Color(0xFFE4F2E9), Color(0xFFF7FBF8)];
 
     final mintGlow = isDark ? const Color(0xFF4CC18F) : const Color(0xFF0D5C3A);
-    final accentMint = isDark ? const Color(0xFF6FE2AE) : const Color(0xFF10B981);
+    final accentMint = isDark
+        ? const Color(0xFF6FE2AE)
+        : const Color(0xFF10B981);
 
     return Scaffold(
       body: Container(
@@ -81,7 +83,10 @@ class _StartupSplashState extends State<_StartupSplash>
         ),
         child: SafeArea(
           child: AnimatedBuilder(
-            animation: Listenable.merge([_entranceController, _pulseController]),
+            animation: Listenable.merge([
+              _entranceController,
+              _pulseController,
+            ]),
             builder: (context, _) {
               final pulse = _pulseController.value;
               final glowAlpha = 0.25 + 0.20 * pulse;
@@ -118,7 +123,9 @@ class _StartupSplashState extends State<_StartupSplash>
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: accentMint.withValues(alpha: glowAlpha),
+                                      color: accentMint.withValues(
+                                        alpha: glowAlpha,
+                                      ),
                                       blurRadius: 38,
                                       spreadRadius: glowSpread,
                                     ),
@@ -133,20 +140,22 @@ class _StartupSplashState extends State<_StartupSplash>
                                   shape: BoxShape.circle,
                                   color: scheme.surface,
                                   border: Border.all(
-                                    color: accentMint.withValues(alpha: 0.45 + 0.3 * pulse),
+                                    color: accentMint.withValues(
+                                      alpha: 0.45 + 0.3 * pulse,
+                                    ),
                                     width: 2.5,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                                      color: Colors.black.withValues(
+                                        alpha: isDark ? 0.35 : 0.08,
+                                      ),
                                       blurRadius: 20,
                                       offset: const Offset(0, 8),
                                     ),
                                   ],
                                 ),
-                                child: const Center(
-                                  child: BrandMark(size: 72),
-                                ),
+                                child: const Center(child: BrandMark(size: 72)),
                               ),
                             ],
                           ),
@@ -167,9 +176,14 @@ class _StartupSplashState extends State<_StartupSplash>
 
                           // Tagline pill with neon border
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              color: mintGlow.withValues(alpha: isDark ? 0.20 : 0.10),
+                              color: mintGlow.withValues(
+                                alpha: isDark ? 0.20 : 0.10,
+                              ),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: accentMint.withValues(alpha: 0.35),
@@ -179,7 +193,11 @@ class _StartupSplashState extends State<_StartupSplash>
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.auto_awesome, size: 14, color: accentMint),
+                                Icon(
+                                  Icons.auto_awesome,
+                                  size: 14,
+                                  color: accentMint,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   'Smarter Nutrition • Healthier You',
@@ -203,7 +221,9 @@ class _StartupSplashState extends State<_StartupSplash>
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(2),
                               child: LinearProgressIndicator(
-                                backgroundColor: accentMint.withValues(alpha: 0.18),
+                                backgroundColor: accentMint.withValues(
+                                  alpha: 0.18,
+                                ),
                                 valueColor: AlwaysStoppedAnimation(accentMint),
                               ),
                             ),
@@ -222,18 +242,27 @@ class _StartupSplashState extends State<_StartupSplash>
 
                           // Offline privacy guarantee badge
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: scheme.surface.withValues(alpha: 0.7),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: scheme.outlineVariant.withValues(alpha: 0.5),
+                                color: scheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.lock_rounded, size: 13, color: scheme.onSurfaceVariant),
+                                Icon(
+                                  Icons.lock_rounded,
+                                  size: 13,
+                                  color: scheme.onSurfaceVariant,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   '100% Offline • Private & Secure',

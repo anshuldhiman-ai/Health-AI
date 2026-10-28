@@ -68,6 +68,7 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
       onAction: () => store.removeNewest(widget.dayOffset),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -182,7 +183,10 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: colors.washOf(colors.primary),
                                       borderRadius: BorderRadius.circular(10),
@@ -190,7 +194,11 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.auto_awesome_rounded, size: 15, color: colors.primary),
+                                        Icon(
+                                          Icons.auto_awesome_rounded,
+                                          size: 15,
+                                          color: colors.primary,
+                                        ),
                                         const SizedBox(width: 6),
                                         Text(
                                           'Great for muscle recovery',
@@ -207,7 +215,9 @@ class _DishDetailScreenState extends ConsumerState<DishDetailScreen> {
                                   Text(
                                     'Rich in bioavailable dairy proteins and healthy fats, aiding post-workout satiety and energy sustained release.',
                                     style: AppTypography.caption.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                       fontSize: 12,
                                       height: 1.4,
                                     ),
@@ -286,7 +296,9 @@ class _FoodImageBanner extends StatelessWidget {
       children: [
         // Large Food Image Banner with rounded bottom corners
         ClipRRect(
-          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(28),
+          ),
           child: Container(
             height: 250,
             width: double.infinity,
@@ -295,7 +307,11 @@ class _FoodImageBanner extends StatelessWidget {
               'assets/brand/meal_thali.png',
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => Center(
-                child: Icon(Icons.restaurant_rounded, size: 64, color: scheme.primary),
+                child: Icon(
+                  Icons.restaurant_rounded,
+                  size: 64,
+                  color: scheme.primary,
+                ),
               ),
             ),
           ),
@@ -304,7 +320,9 @@ class _FoodImageBanner extends StatelessWidget {
         Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(28),
+              ),
               gradient: LinearGradient(
                 colors: [
                   Colors.black.withValues(alpha: 0.5),
@@ -329,7 +347,10 @@ class _FoodImageBanner extends StatelessWidget {
                 shape: const CircleBorder(),
                 child: IconButton(
                   onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white,
+                  ),
                   tooltip: 'Back',
                 ),
               ),
@@ -339,7 +360,10 @@ class _FoodImageBanner extends StatelessWidget {
                 shape: const CircleBorder(),
                 child: IconButton(
                   onPressed: () {},
-                  icon: const Icon(Icons.favorite_border_rounded, color: Colors.white),
+                  icon: const Icon(
+                    Icons.favorite_border_rounded,
+                    color: Colors.white,
+                  ),
                   tooltip: 'Favorite',
                 ),
               ),
@@ -500,17 +524,16 @@ class _AccordionSectionState extends State<_AccordionSection> {
                 ),
                 const Spacer(),
                 Icon(
-                  _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                  _expanded
+                      ? Icons.expand_less_rounded
+                      : Icons.expand_more_rounded,
                   color: scheme.onSurfaceVariant,
                   size: 22,
                 ),
               ],
             ),
           ),
-          if (_expanded) ...[
-            const SizedBox(height: 12),
-            widget.child,
-          ],
+          if (_expanded) ...[const SizedBox(height: 12), widget.child],
         ],
       ),
     );
@@ -559,7 +582,6 @@ class _Header extends StatelessWidget {
     );
   }
 }
-
 
 class _ServingStrip extends StatelessWidget {
   const _ServingStrip({
@@ -977,10 +999,17 @@ class _AddBar extends StatelessWidget {
                     },
                     borderRadius: BorderRadius.circular(10),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
                       child: Row(
                         children: [
-                          Icon(Icons.favorite_border_rounded, size: 20, color: scheme.primary),
+                          Icon(
+                            Icons.favorite_border_rounded,
+                            size: 20,
+                            color: scheme.primary,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Save to favorites',
@@ -997,7 +1026,11 @@ class _AddBar extends StatelessWidget {
                   const Spacer(),
                   IconButton(
                     onPressed: () {},
-                    icon: Icon(Icons.share_outlined, size: 20, color: scheme.onSurfaceVariant),
+                    icon: Icon(
+                      Icons.share_outlined,
+                      size: 20,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     tooltip: 'Share',
                   ),
                 ],

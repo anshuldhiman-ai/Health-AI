@@ -29,7 +29,11 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
   bool _streakMeterEnabled = true;
   bool _smartAlarmsEnabled = true;
 
-  Future<void> _showSetGoalSheet(BuildContext context, HydrationState water, WaterController notifier) async {
+  Future<void> _showSetGoalSheet(
+    BuildContext context,
+    HydrationState water,
+    WaterController notifier,
+  ) async {
     final current = water.targetGlasses;
     var selected = current;
     await showModalBottomSheet<void>(
@@ -68,14 +72,19 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                   const SizedBox(height: 6),
                   Text(
                     'Recommended intake is 2.0L to 3.5L per day.',
-                    style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 22),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton.filledTonal(
-                        onPressed: selected > 4 ? () => setSheetState(() => selected--) : null,
+                        onPressed: selected > 4
+                            ? () => setSheetState(() => selected--)
+                            : null,
                         icon: const Icon(Icons.remove_rounded),
                       ),
                       const SizedBox(width: 24),
@@ -91,13 +100,18 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                           ),
                           Text(
                             '$selected glasses (250ml each)',
-                            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(width: 24),
                       IconButton.filledTonal(
-                        onPressed: selected < 32 ? () => setSheetState(() => selected++) : null,
+                        onPressed: selected < 32
+                            ? () => setSheetState(() => selected++)
+                            : null,
                         icon: const Icon(Icons.add_rounded),
                       ),
                     ],
@@ -120,13 +134,21 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(50),
                       backgroundColor: const Color(0xFF0F5A3C),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     onPressed: () async {
                       await notifier.setGoal(selected);
                       if (ctx.mounted) Navigator.of(ctx).pop();
                     },
-                    child: const Text('Save Goal', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    child: const Text(
+                      'Save Goal',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -137,15 +159,23 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
     );
   }
 
-  Future<void> _confirmResetWater(BuildContext context, WaterController notifier) async {
+  Future<void> _confirmResetWater(
+    BuildContext context,
+    WaterController notifier,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text("Reset Today's Water?"),
-        content: const Text('Are you sure you want to clear all logged water intake for today?'),
+        content: const Text(
+          'Are you sure you want to clear all logged water intake for today?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -158,7 +188,10 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
       await notifier.resetToday();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Today's water intake reset to 0L"), duration: Duration(seconds: 2)),
+          const SnackBar(
+            content: Text("Today's water intake reset to 0L"),
+            duration: Duration(seconds: 2),
+          ),
         );
       }
     }
@@ -243,9 +276,16 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                         value: 'reset',
                         child: Row(
                           children: [
-                            Icon(Icons.refresh_rounded, size: 18, color: Colors.redAccent),
+                            Icon(
+                              Icons.refresh_rounded,
+                              size: 18,
+                              color: Colors.redAccent,
+                            ),
                             SizedBox(width: 10),
-                            Text('Reset Today', style: TextStyle(color: Colors.redAccent)),
+                            Text(
+                              'Reset Today',
+                              style: TextStyle(color: Colors.redAccent),
+                            ),
                           ],
                         ),
                       ),
@@ -284,7 +324,10 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                       await notifier.removeGlass();
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Removed 1 glass (250ml)'), duration: Duration(seconds: 1)),
+                          const SnackBar(
+                            content: Text('Removed 1 glass (250ml)'),
+                            duration: Duration(seconds: 1),
+                          ),
                         );
                       }
                     },
@@ -327,7 +370,10 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                       await notifier.addGlass();
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Added 150ml drink'), duration: Duration(seconds: 1)),
+                          const SnackBar(
+                            content: Text('Added 150ml drink'),
+                            duration: Duration(seconds: 1),
+                          ),
                         );
                       }
                     },
@@ -343,7 +389,10 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                       await notifier.addGlass();
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Added 250ml (1 glass)'), duration: Duration(seconds: 1)),
+                          const SnackBar(
+                            content: Text('Added 250ml (1 glass)'),
+                            duration: Duration(seconds: 1),
+                          ),
                         );
                       }
                     },
@@ -360,7 +409,10 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                       await notifier.addGlass();
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Added 500ml (bottle)'), duration: Duration(seconds: 1)),
+                          const SnackBar(
+                            content: Text('Added 500ml (bottle)'),
+                            duration: Duration(seconds: 1),
+                          ),
                         );
                       }
                     },
@@ -430,8 +482,10 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                   Switch.adaptive(
                     value: _streakMeterEnabled,
                     activeColor: const Color(0xFF0F5A3C),
-                    activeTrackColor: const Color(0xFF1E885F).withValues(alpha: 0.3),
-                    onChanged: (val) => setState(() => _streakMeterEnabled = val),
+                    activeTrackColor: const Color(0xFF1E885F)
+                        .withValues(alpha: 0.3),
+                    onChanged: (val) =>
+                        setState(() => _streakMeterEnabled = val),
                   ),
                 ],
               ),
@@ -483,8 +537,10 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                   Switch.adaptive(
                     value: _smartAlarmsEnabled,
                     activeColor: const Color(0xFF0F5A3C),
-                    activeTrackColor: const Color(0xFF1E885F).withValues(alpha: 0.3),
-                    onChanged: (val) => setState(() => _smartAlarmsEnabled = val),
+                    activeTrackColor: const Color(0xFF1E885F)
+                        .withValues(alpha: 0.3),
+                    onChanged: (val) =>
+                        setState(() => _smartAlarmsEnabled = val),
                   ),
                 ],
               ),
@@ -498,10 +554,7 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
 
 /// Giant Luminous Water Droplet displaying "2.1L of 3.0L"
 class _LuminousWaterDroplet extends StatelessWidget {
-  const _LuminousWaterDroplet({
-    required this.liters,
-    required this.goalLiters,
-  });
+  const _LuminousWaterDroplet({required this.liters, required this.goalLiters});
 
   final double liters;
   final double goalLiters;
@@ -597,7 +650,10 @@ class _LuminousWaterDroplet extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(12),
@@ -630,32 +686,11 @@ class _DropletClipper extends CustomClipper<Path> {
     // Top tip
     path.moveTo(w * 0.5, h * 0.04);
     // Right curve down
-    path.cubicTo(
-      w * 0.78,
-      h * 0.38,
-      w * 0.98,
-      h * 0.64,
-      w * 0.88,
-      h * 0.84,
-    );
+    path.cubicTo(w * 0.78, h * 0.38, w * 0.98, h * 0.64, w * 0.88, h * 0.84);
     // Bottom round base
-    path.cubicTo(
-      w * 0.78,
-      h * 1.0,
-      w * 0.22,
-      h * 1.0,
-      w * 0.12,
-      h * 0.84,
-    );
+    path.cubicTo(w * 0.78, h * 1.0, w * 0.22, h * 1.0, w * 0.12, h * 0.84);
     // Left curve up
-    path.cubicTo(
-      w * 0.02,
-      h * 0.64,
-      w * 0.22,
-      h * 0.38,
-      w * 0.5,
-      h * 0.04,
-    );
+    path.cubicTo(w * 0.02, h * 0.64, w * 0.22, h * 0.38, w * 0.5, h * 0.04);
     path.close();
     return path;
   }
@@ -679,14 +714,7 @@ class _DropletLiquidPainter extends CustomPainter {
     final path = Path();
     path.moveTo(0, topY);
     // Subtle wave curve
-    path.cubicTo(
-      w * 0.3,
-      topY - 6,
-      w * 0.7,
-      topY + 6,
-      w,
-      topY,
-    );
+    path.cubicTo(w * 0.3, topY - 6, w * 0.7, topY + 6, w, topY);
     path.lineTo(w, h);
     path.lineTo(0, h);
     path.close();
@@ -708,14 +736,7 @@ class _DropletLiquidPainter extends CustomPainter {
 
     final crestPath = Path();
     crestPath.moveTo(0, topY);
-    crestPath.cubicTo(
-      w * 0.3,
-      topY - 6,
-      w * 0.7,
-      topY + 6,
-      w,
-      topY,
-    );
+    crestPath.cubicTo(w * 0.3, topY - 6, w * 0.7, topY + 6, w, topY);
     canvas.drawPath(crestPath, crestPaint);
   }
 
@@ -835,9 +856,7 @@ class _HydrationIntakeChartCard extends StatelessWidget {
           SizedBox(
             height: 90,
             width: double.infinity,
-            child: CustomPaint(
-              painter: _HydrationChartPainter(),
-            ),
+            child: CustomPaint(painter: _HydrationChartPainter()),
           ),
           const SizedBox(height: 10),
 
@@ -845,11 +864,26 @@ class _HydrationIntakeChartCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
-              Text('0am', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
-              Text('5am', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
-              Text('10am', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
-              Text('15am', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
-              Text('20am', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+              Text(
+                '0am',
+                style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
+              ),
+              Text(
+                '5am',
+                style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
+              ),
+              Text(
+                '10am',
+                style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
+              ),
+              Text(
+                '15am',
+                style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
+              ),
+              Text(
+                '20am',
+                style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
+              ),
             ],
           ),
         ],

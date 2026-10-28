@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -152,17 +151,22 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Material(
-                    color: kind == selectedKind ? colors.primary : scheme.surface,
+                    color: kind == selectedKind
+                        ? colors.primary
+                        : scheme.surface,
                     borderRadius: BorderRadius.circular(12),
                     child: InkWell(
-                      onTap: () => ref.read(goalKindProvider.notifier).select(kind),
+                      onTap: () =>
+                          ref.read(goalKindProvider.notifier).select(kind),
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: kind == selectedKind ? colors.primary : scheme.outlineVariant,
+                            color: kind == selectedKind
+                                ? colors.primary
+                                : scheme.outlineVariant,
                           ),
                         ),
                         child: Column(
@@ -174,7 +178,9 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
                                 GoalKind.gain => 'Muscle Gain',
                               },
                               style: TextStyle(
-                                color: kind == selectedKind ? scheme.onPrimary : scheme.onSurface,
+                                color: kind == selectedKind
+                                    ? scheme.onPrimary
+                                    : scheme.onSurface,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -288,9 +294,7 @@ class _GoalSettingsScreenState extends ConsumerState<GoalSettingsScreen> {
       );
     }
 
-    return Scaffold(
-      body: SafeArea(child: content),
-    );
+    return Scaffold(body: SafeArea(child: content));
   }
 }
 
@@ -417,7 +421,11 @@ class _GoalToggleTile extends StatelessWidget {
             activeThumbColor: scheme.primary,
             onChanged: onChanged,
           ),
-          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant, size: 20),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: scheme.onSurfaceVariant,
+            size: 20,
+          ),
         ],
       ),
     );
