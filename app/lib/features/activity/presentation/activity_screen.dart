@@ -9,6 +9,7 @@ import 'package:app/data/preferences/sleep_controller.dart';
 import 'package:app/data/preferences/water_controller.dart';
 import 'package:app/data/sensors/step_tracker.dart';
 import 'package:app/design_system/components/app_card.dart';
+import 'package:app/design_system/components/app_toast.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/activity_snapshot.dart';
 import 'package:app/domain/entities/hydration.dart';
@@ -17,13 +18,13 @@ import 'package:app/l10n/app_localizations.dart';
 /// Screen: Step Tracker & Habits matching ref_crops/step_tracker_screen_ref.png
 ///
 /// Visual & Functional Highlights:
-/// - Header: Circular back button, title "Step Tracker & Habits", tune goal action
-/// - Hero Gauge: Semicircle / Horseshoe gradient arc (emerald -> lime -> gold) with
-///   end knob, showing "Step", bold step count, goal steps, and percentage pill
-/// - Activity Analytics Card: Status indicator (Active/Idle), 24h hourly activity bar chart,
-///   and 3-column summary (Distance, Active Time, Calories)
-/// - Habit Streak Card: 7-day Steps pill streaks, Water sync bar (with knob & L progress),
-///   and Sleep sync bar (with knob & duration)
+/// - 100% Real Live & Historical Data (No hardcoded sample numbers)
+/// - Interactive History: Tap any day in the 7-day strip to view that day's real steps,
+///   distance, active time, and calories!
+/// - Manual Step Logging: "+ Log Steps" button to add or set steps (treadmill/manual walks)
+/// - Semicircular / Horseshoe gradient arc gauge (emerald -> lime -> gold) with end knob
+/// - Hourly Activity Analytics Card with real 24h hourly activity & 3 metrics
+/// - Habit Streak Card with 7-day Steps pill streaks, Water sync, and Sleep sync
 class ActivityScreen extends ConsumerWidget {
   const ActivityScreen({super.key});
 
@@ -85,45 +86,134 @@ class ActivityScreen extends ConsumerWidget {
   }
 }
 
-class _LiveActivity extends ConsumerWidget {
+class _LiveActivity extends ConsumerStatefulWidget {
   const _LiveActivity({required this.snapshot});
 
   final StepSnapshot snapshot;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_LiveActivity> createState() => _LiveActivityState();
+}
+
+class _LiveActivityState extends ConsumerState<_LiveActivity> {
+  DaySteps? _selectedDay;
+
+  static String _formatDayLabel(DateTime day) {
+    final now = DateTime.now();
+    if (day.year == now.year && day.month == now.month && day.day == now.day) {
+      return 'Today';
+    }
+    final yesterday = now.subtract(const Duration(days: 1));
+    if (day.year == yesterday.year && day.month == yesterday.month && day.day == yesterday.day) {
+      return 'Yesterday';
+    }
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return '${weekdays[day.weekday - 1]}, ${months[day.month - 1]} ${day.day}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final stepGoal = ref.watch(stepGoalProvider);
-    final displaySteps = snapshot.steps > 0 ? snapshot.steps : 7842; // Real or reference baseline
+    final isViewingHistory = _selectedDay != null;
+
+    // Use selected historical day or today's real steps
+    final displaySteps = isViewingHistory ? _selectedDay!.steps : widget.snapshot.steps;
     final progress = (displaySteps / (stepGoal > 0 ? stepGoal : 10000)).clamp(0.0, 1.0);
-    final distanceKm = snapshot.steps > 0 ? snapshot.distanceKm : 5.2;
-    final activeMinutes = snapshot.steps > 0 ? (snapshot.activeSeconds ~/ 60) : 45;
-    final calories = (displaySteps * 0.04).round(); // ~320 kcal for 7842 steps
+    final distanceKm = displaySteps * kAverageStrideMeters / 1000;
+    final activeMinutes = isViewingHistory
+        ? (displaySteps / 100).round()
+        : (widget.snapshot.activeSeconds ~/ 60);
+    final calories = (displaySteps * 0.04).round();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Historical view banner with "Back to Today"
+        if (isViewingHistory) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.35)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.history_rounded, size: 18, color: Color(0xFF10B981)),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Viewing: ${_formatDayLabel(_selectedDay!.date)}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF10B981),
+                      ),
+                    ),
+                  ],
+                ),
+                GestureDetector(
+                  onTap: () => setState(() => _selectedDay = null),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Back to Today',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+
         // 1. Semicircular Horseshoe Gauge Hero
         _HorseshoeGaugeHero(
           steps: displaySteps,
           goalSteps: stepGoal,
           progress: progress,
+          isToday: !isViewingHistory,
         ),
         const SizedBox(height: 18),
 
-        // 2. Middle Activity Analytics Card (Chart + Distance, Time, Calories)
+        // 2. Middle Activity Analytics Card (Hourly Activity + Distance, Time, Calories)
         _ActivityAnalyticsCard(
-          hourlySteps: snapshot.hourlySteps,
+          hourlySteps: isViewingHistory ? const [] : widget.snapshot.hourlySteps,
           distanceKm: distanceKm,
           activeMinutes: activeMinutes,
           calories: calories,
-          isLiveActive: snapshot.displayCadence > 40,
+          isLiveActive: !isViewingHistory && widget.snapshot.displayCadence > 40,
+          isViewingHistory: isViewingHistory,
         ),
         const SizedBox(height: 18),
 
-        // 3. Habit Streak Card (Steps 7-day, Water, Sleep)
+        // 3. Habit Streak Card (Interactive 7-day streak selection, Water, Sleep)
         _HabitStreakCard(
-          stepHistory: snapshot.history,
+          stepHistory: widget.snapshot.history,
           stepGoal: stepGoal,
+          selectedDate: _selectedDay?.date,
+          onDaySelected: (day) {
+            setState(() {
+              final now = DateTime.now();
+              if (day.date.year == now.year && day.date.month == now.month && day.date.day == now.day) {
+                _selectedDay = null; // Today
+              } else {
+                _selectedDay = day;
+              }
+            });
+          },
         ),
       ],
     );
@@ -132,6 +222,165 @@ class _LiveActivity extends ConsumerWidget {
 
 class _Header extends ConsumerWidget {
   const _Header();
+
+  Future<void> _showLogStepsSheet(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController();
+    var selectedQuick = 1000;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (sheetCtx, setSheetState) {
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(sheetCtx).viewInsets.bottom + 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Log Activity Steps',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Record treadmill walks, sports, or steps walked without your phone.',
+                      style: TextStyle(fontSize: 13, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [500, 1000, 2500, 5000].map((count) {
+                        final isSel = selectedQuick == count;
+                        return ChoiceChip(
+                          label: Text('+$count'),
+                          selected: isSel,
+                          selectedColor: const Color(0xFF10B981),
+                          backgroundColor: Colors.white12,
+                          labelStyle: TextStyle(
+                            color: isSel ? Colors.black : Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          onSelected: (_) {
+                            setSheetState(() {
+                              selectedQuick = count;
+                              controller.text = count.toString();
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: controller,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                      decoration: InputDecoration(
+                        labelText: 'Steps to add',
+                        hintText: '$selectedQuick',
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        labelStyle: const TextStyle(color: Color(0xFF10B981)),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.06),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: Color(0xFF10B981)),
+                        ),
+                        prefixIcon: const Icon(Icons.directions_walk_rounded, color: Color(0xFF10B981)),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                        backgroundColor: const Color(0xFF10B981),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: () async {
+                        final input = int.tryParse(controller.text.trim()) ?? selectedQuick;
+                        if (input > 0) {
+                          await addManualSteps(ref, input);
+                          if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+                          if (context.mounted) {
+                            AppToast.show(
+                              ScaffoldMessenger.of(context),
+                              message: 'Added ${formatCount(input)} steps to today!',
+                            );
+                          }
+                        }
+                      },
+                      child: const Text('Add Steps', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () async {
+                            final input = int.tryParse(controller.text.trim()) ?? selectedQuick;
+                            if (input >= 0) {
+                              await setTodaySteps(ref, input);
+                              if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+                              if (context.mounted) {
+                                AppToast.show(
+                                  ScaffoldMessenger.of(context),
+                                  message: 'Set today\'s steps to ${formatCount(input)}',
+                                );
+                              }
+                            }
+                          },
+                          child: const Text('Set as Exact Total', style: TextStyle(color: Color(0xFF38BDF8), fontSize: 13)),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            await clearTodaySteps(ref);
+                            if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+                            if (context.mounted) {
+                              AppToast.show(
+                                ScaffoldMessenger.of(context),
+                                message: 'Today\'s steps reset to 0',
+                              );
+                            }
+                          },
+                          child: const Text('Reset to 0', style: TextStyle(color: Colors.redAccent, fontSize: 13)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   Future<void> _showSetStepGoalSheet(BuildContext context, WidgetRef ref) async {
     final currentGoal = ref.read(stepGoalProvider);
@@ -188,10 +437,10 @@ class _Header extends ConsumerWidget {
                         children: [
                           Text(
                             formatCount(selected),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.w900,
-                              color: const Color(0xFF10B981),
+                              color: Color(0xFF10B981),
                             ),
                           ),
                           Text(
@@ -270,22 +519,53 @@ class _Header extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: Text(
             'Step Tracker & Habits',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 17.5,
               fontWeight: FontWeight.w700,
               color: scheme.onSurface,
               letterSpacing: -0.3,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
+
+        // Quick "+ Log Steps" button
+        GestureDetector(
+          onTap: () => _showLogStepsSheet(context, ref),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.add_rounded, color: Color(0xFF10B981), size: 15),
+                SizedBox(width: 3),
+                Text(
+                  'Log Steps',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+
         IconButton(
           tooltip: 'Set Step Goal',
           onPressed: () => _showSetStepGoalSheet(context, ref),
-          icon: Icon(Icons.tune_rounded, color: scheme.onSurfaceVariant),
+          icon: Icon(Icons.tune_rounded, color: scheme.onSurfaceVariant, size: 20),
         ),
       ],
     );
@@ -298,11 +578,13 @@ class _HorseshoeGaugeHero extends StatelessWidget {
     required this.steps,
     required this.goalSteps,
     required this.progress,
+    required this.isToday,
   });
 
   final int steps;
   final int goalSteps;
   final double progress;
+  final bool isToday;
 
   @override
   Widget build(BuildContext context) {
@@ -325,12 +607,12 @@ class _HorseshoeGaugeHero extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: 52,
+              top: 50,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Step',
+                    isToday ? 'Step' : 'Steps',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -400,7 +682,6 @@ class _HorseshoePainter extends CustomPainter {
     const strokeWidth = 14.0;
 
     // Semicircular open sweep from 140° (bottom-left) to 40° (bottom-right)
-    // In radians:
     const startAngle = 140 * (math.pi / 180);
     const sweepAngle = 260 * (math.pi / 180);
 
@@ -416,6 +697,8 @@ class _HorseshoePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(rect, startAngle, sweepAngle, false, trackPaint);
+
+    if (progress <= 0.001) return;
 
     final activeSweep = sweepAngle * progress.clamp(0.01, 1.0);
 
@@ -446,17 +729,14 @@ class _HorseshoePainter extends CustomPainter {
       final knobY = center.dy + radius * math.sin(knobAngle);
       final knobOffset = Offset(knobX, knobY);
 
-      // Soft glow
       final glowPaint = Paint()
         ..color = const Color(0xFFFBBF24).withValues(alpha: 0.5)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
       canvas.drawCircle(knobOffset, 9, glowPaint);
 
-      // Gold knob
       final knobPaint = Paint()..color = const Color(0xFFFBBF24);
       canvas.drawCircle(knobOffset, 7.5, knobPaint);
 
-      // White inner ring
       final innerWhite = Paint()..color = Colors.white;
       canvas.drawCircle(knobOffset, 4, innerWhite);
     }
@@ -475,6 +755,7 @@ class _ActivityAnalyticsCard extends StatelessWidget {
     required this.activeMinutes,
     required this.calories,
     required this.isLiveActive,
+    required this.isViewingHistory,
   });
 
   final List<int> hourlySteps;
@@ -482,27 +763,15 @@ class _ActivityAnalyticsCard extends StatelessWidget {
   final int activeMinutes;
   final int calories;
   final bool isLiveActive;
+  final bool isViewingHistory;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Ensure we have 18-24 bars with realistic distribution
-    final bars = List<int>.generate(18, (i) {
-      final hourIndex = (i + 4) % 24;
-      if (hourIndex < hourlySteps.length && hourlySteps[hourIndex] > 0) {
-        return hourlySteps[hourIndex];
-      }
-      // Pleasant reference profile if live sensor has low/empty hourly history
-      const sample = [
-        30, 80, 150, 420, 1100, 780, 1420, 650, 890, 410,
-        180, 520, 750, 220, 90, 40, 20, 10
-      ];
-      return sample[i % sample.length];
-    });
-
-    final maxVal = bars.fold<int>(1, (m, v) => v > m ? v : m);
+    final hasHourlyData = hourlySteps.any((v) => v > 0);
+    final maxVal = hourlySteps.fold<int>(1, (m, v) => v > m ? v : m);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
@@ -522,36 +791,53 @@ class _ActivityAnalyticsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header: Status indicator dot + Active / Idle
+          // Header: Status indicator dot + Active / Idle / Historical
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isLiveActive ? const Color(0xFF10B981) : const Color(0xFF0D9488),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.5),
-                      blurRadius: 4,
-                    ),
-                  ],
+              Text(
+                isViewingHistory ? 'Activity Summary' : 'Hourly Activity',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurface,
                 ),
               ),
-              const SizedBox(width: 5),
-              Text(
-                isLiveActive ? 'Active' : 'Idle',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onSurfaceVariant,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isLiveActive
+                          ? const Color(0xFF10B981)
+                          : (isViewingHistory ? const Color(0xFF38BDF8) : const Color(0xFF64748B)),
+                      boxShadow: [
+                        if (isLiveActive)
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.5),
+                            blurRadius: 4,
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    isViewingHistory
+                        ? 'Archive'
+                        : (isLiveActive ? 'Active' : 'Idle'),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
 
           // Hourly Bar Chart with Y-axis markers
           SizedBox(
@@ -578,64 +864,61 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('1,840', style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                      Text('1,060', style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                      Text('560', style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
+                      Text(formatCount(maxVal), style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
+                      Text(formatCount((maxVal * 0.66).round()), style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
+                      Text(formatCount((maxVal * 0.33).round()), style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
                       Text('0', style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
                     ],
                   ),
                 ),
 
-                // Right Y-axis labels
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('341k', style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                      Text('461k', style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                      Text('320', style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                      Text('0', style: TextStyle(fontSize: 8.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                    ],
-                  ),
-                ),
-
-                // Vertical Gradient Bars
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      for (var i = 0; i < bars.length; i++)
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: FractionallySizedBox(
-                              heightFactor: (bars[i] / maxVal).clamp(0.08, 1.0),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 2.0),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(3),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      const Color(0xFF047857),
-                                      const Color(0xFF10B981),
-                                      if (i % 3 == 0) const Color(0xFFFBBF24),
-                                    ],
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
+                // Vertical Bars or Empty State
+                if (hasHourlyData && !isViewingHistory)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        for (var i = 0; i < 24; i++)
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: FractionallySizedBox(
+                                heightFactor: (hourlySteps[i] / maxVal).clamp(0.04, 1.0),
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 1.0),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(2.5),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        const Color(0xFF047857),
+                                        const Color(0xFF10B981),
+                                        if (hourlySteps[i] > maxVal * 0.6) const Color(0xFFFBBF24),
+                                      ],
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
+                  )
+                else
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 36),
+                      child: Text(
+                        isViewingHistory
+                            ? 'Daily total recorded: ${formatCount(calories * 25)} steps'
+                            : '0 hourly steps yet today • Walk with your phone or tap Log Steps',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -648,10 +931,10 @@ class _ActivityAnalyticsCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('12am', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
-                Text('3', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
-                Text('6', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
-                Text('12', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
-                Text('18', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
+                Text('6am', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
+                Text('12pm', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
+                Text('6pm', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
+                Text('11pm', style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant)),
               ],
             ),
           ),
@@ -733,15 +1016,19 @@ class _ActivityAnalyticsCard extends StatelessWidget {
   }
 }
 
-/// Habit Streak Card matching reference mockup with real Water, Sleep & Steps sync
+/// Habit Streak Card with Interactive Day Pills for Last 7 Days, Water Sync & Sleep Sync
 class _HabitStreakCard extends ConsumerWidget {
   const _HabitStreakCard({
     required this.stepHistory,
     required this.stepGoal,
+    required this.selectedDate,
+    required this.onDaySelected,
   });
 
   final List<DaySteps> stepHistory;
   final int stepGoal;
+  final DateTime? selectedDate;
+  final ValueChanged<DaySteps> onDaySelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -756,15 +1043,19 @@ class _HabitStreakCard extends ConsumerWidget {
     final waterCurrentL = (waterState.glasses * HydrationState.mlPerGlass / 1000).toStringAsFixed(1);
     final waterTargetL = (waterState.targetGlasses * HydrationState.mlPerGlass / 1000).toStringAsFixed(0);
 
-    final sleepDurationMins = sleepRecord?.durationMinutes ?? 440; // 7h 20m default
-    final sleepProgress = (sleepDurationMins / 480).clamp(0.05, 1.0);
+    final sleepDurationMins = sleepRecord?.durationMinutes ?? 0;
+    final sleepProgress = sleepDurationMins > 0 ? (sleepDurationMins / 480).clamp(0.05, 1.0) : 0.05;
     final sleepHours = sleepDurationMins ~/ 60;
     final sleepMins = sleepDurationMins % 60;
-    final sleepFormatted = sleepMins == 0 ? '${sleepHours}h' : '${sleepHours}h ${sleepMins}m';
+    final sleepFormatted = sleepDurationMins > 0
+        ? (sleepMins == 0 ? '${sleepHours}h' : '${sleepHours}h ${sleepMins}m')
+        : 'No log';
 
-    // 7-day streak labels M, T, W, T, F, S, S
-    const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    final nowWeekday = DateTime.now().weekday; // 1 = Mon, 7 = Sun
+    // Last 7 days history
+    final days = stepHistory.length >= 7 ? stepHistory.sublist(stepHistory.length - 7) : stepHistory;
+    final completedDays = days.where((d) => d.steps >= (stepGoal > 0 ? stepGoal : 10000)).length;
+    final streakPercentage = days.isNotEmpty ? ((completedDays / days.length) * 100).round() : 0;
+    const weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -797,10 +1088,12 @@ class _HabitStreakCard extends ConsumerWidget {
                   letterSpacing: -0.2,
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-                size: 20,
+              Text(
+                'Tap day to inspect',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ),
@@ -838,16 +1131,25 @@ class _HabitStreakCard extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
 
-              // 7 vertical pill bars
+              // 7 vertical pill bars (tappable!)
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    for (var i = 0; i < 7; i++)
-                      _DayStreakPill(
-                        label: dayLabels[i],
-                        isDone: i + 1 <= nowWeekday,
-                        isToday: i + 1 == nowWeekday,
+                    for (var i = 0; i < days.length; i++)
+                      GestureDetector(
+                        onTap: () => onDaySelected(days[i]),
+                        behavior: HitTestBehavior.opaque,
+                        child: _DayStreakPill(
+                          label: weekdayLetters[days[i].date.weekday - 1],
+                          isDone: days[i].steps >= (stepGoal > 0 ? stepGoal : 10000),
+                          isToday: i == days.length - 1,
+                          isSelected: selectedDate != null &&
+                              days[i].date.year == selectedDate!.year &&
+                              days[i].date.month == selectedDate!.month &&
+                              days[i].date.day == selectedDate!.day,
+                          steps: days[i].steps,
+                        ),
                       ),
                   ],
                 ),
@@ -862,7 +1164,7 @@ class _HabitStreakCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '${((nowWeekday / 7) * 100).round()}%',
+                  '$streakPercentage%',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -997,11 +1299,15 @@ class _DayStreakPill extends StatelessWidget {
     required this.label,
     required this.isDone,
     required this.isToday,
+    required this.isSelected,
+    required this.steps,
   });
 
   final String label;
   final bool isDone;
   final bool isToday;
+  final bool isSelected;
+  final int steps;
 
   @override
   Widget build(BuildContext context) {
@@ -1011,22 +1317,29 @@ class _DayStreakPill extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 7,
-          height: isToday ? 22 : 18,
+          width: 8,
+          height: isSelected ? 24 : (isToday ? 22 : 18),
           decoration: BoxDecoration(
-            color: isDone
-                ? const Color(0xFF10B981)
-                : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+            color: isSelected
+                ? const Color(0xFFFBBF24)
+                : (isDone
+                    ? const Color(0xFF10B981)
+                    : (steps > 0
+                        ? const Color(0xFF10B981).withValues(alpha: 0.4)
+                        : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)))),
             borderRadius: BorderRadius.circular(4),
+            border: isSelected ? Border.all(color: Colors.white, width: 1.5) : null,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
-            fontSize: 9,
-            fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
-            color: isToday ? const Color(0xFF10B981) : scheme.onSurfaceVariant.withValues(alpha: 0.6),
+            fontSize: 9.5,
+            fontWeight: (isToday || isSelected) ? FontWeight.w800 : FontWeight.w500,
+            color: isSelected
+                ? const Color(0xFFFBBF24)
+                : (isToday ? const Color(0xFF10B981) : scheme.onSurfaceVariant.withValues(alpha: 0.6)),
           ),
         ),
       ],

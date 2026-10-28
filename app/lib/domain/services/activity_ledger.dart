@@ -135,6 +135,51 @@ class ActivityLedger {
     if (activeSeconds > 86400) activeSeconds = 86400;
   }
 
+  /// Manually add steps to today (e.g. treadmill, walking without phone, or manual log).
+  void addManualSteps(int count, {DateTime? at}) {
+    final now = at ?? DateTime.now();
+    _ensureDate(now);
+    if (count <= 0) return;
+    steps += count;
+    _hourlySteps[now.hour] += count;
+    final additionalSeconds = (count / 100 * 60).round();
+    activeSeconds = math.min(86400, activeSeconds + additionalSeconds);
+    activeSteps += count;
+    _history[date] = steps;
+    lastEventAt = now;
+  }
+
+  /// Set the exact step count for today.
+  void setStepsForToday(int newSteps, {DateTime? at}) {
+    final now = at ?? DateTime.now();
+    _ensureDate(now);
+    if (newSteps < 0) return;
+    final diff = newSteps - steps;
+    steps = newSteps;
+    if (diff > 0) {
+      _hourlySteps[now.hour] += diff;
+      final additionalSeconds = (diff / 100 * 60).round();
+      activeSeconds = math.min(86400, activeSeconds + additionalSeconds);
+      activeSteps += diff;
+    } else if (diff < 0) {
+      _hourlySteps[now.hour] = math.max(0, _hourlySteps[now.hour] + diff);
+    }
+    _history[date] = steps;
+    lastEventAt = now;
+  }
+
+  /// Reset/clear today's step count.
+  void clearTodaySteps({DateTime? at}) {
+    final now = at ?? DateTime.now();
+    _ensureDate(now);
+    steps = 0;
+    activeSeconds = 0;
+    activeSteps = 0;
+    _hourlySteps = List<int>.filled(24, 0);
+    _history[date] = 0;
+    lastEventAt = now;
+  }
+
   StepSnapshot snapshot(StepStatus status, DateTime now) {
     _ensureDate(now);
     final today = localDay(now);
