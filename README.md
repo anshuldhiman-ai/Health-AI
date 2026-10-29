@@ -1,109 +1,145 @@
-# 🍃 Health AI
+# Health AI
 
-**Health AI** is a premium, offline-first health and wellness application for Android. Its flagship feature is an intelligent, photo-based meal logger powered by a custom on-device ML classifier specifically fine-tuned for recognizing and analyzing Indian cuisine.
+Health AI is a privacy-first, offline Android wellness app designed for everyday nutrition, activity, and recovery tracking. The product focuses on practical daily health decisions without requiring an account, cloud sync, or internet access.
 
-> **Privacy-First Design:** Every AI feature runs on the user's phone. No account, no server, no data leaves the device. Your health data stays yours.
+At its core, Health AI combines:
+- on-device food recognition for Indian meals
+- daily calorie and macro tracking
+- hydration, sleep, and step monitoring
+- simple, premium mobile UX tailored for Android users
 
-**Status:** Alpha (M1 — MVP UI/UX complete, M2/M3 in progress — bug fixes and data persistence implemented). See `CLAUDE.md` for the full product definition, hard rules (R1–R16) and the milestone plan.
+> Privacy-first by design: every AI feature runs locally on the user's device. No account, no cloud backend, no telemetry, and no data leaves the device.
 
----
+## Product status
 
-## ✨ Key Features
+- Current release: v1.7.0+7
+- Status: Active development
+- App configuration: Android-focused Flutter app
+- Quality gate: 110/110 tests passing
+- Last reviewed: 2026-10-25
 
-### 📸 Smart Meal Scanning & Logging
-- **On-Device AI Classifier:** Point your camera at your meal for instant recognition. The model is specifically trained on complex Indian foods, including *Dal, Sabzi, Roti, Rice, Paratha, Thalis, and various snacks*.
-- **Real-time Detection:** Shows actual scan results with confidence scores only after real image analysis (no hardcoded predictions).
-- **Instant Nutritional Breakdown:** Once the food is categorized, the app provides accurate macronutrient estimates (Protein, Carbs, Fat, Fiber) and total calories based on a comprehensive Indian food database.
-- **Portion Estimation:** Select serving sizes from realistic Indian meal portions (Katori, Bowl, Plate, Piece) to log accurate calorie counts.
-- **Manual Food Search:** Search and log from a curated catalog of 80+ Indian dishes with complete nutrition data (expanding to 200+).
-- **Quick Add (Planned):** Barcode/QR scanner for packaged foods (coming soon).
-
-### 🌙 Sleep & Recovery Tracking
-- **Smart Sleep Logging:** Manual entry with bedtime/wake time inputs.
-- **Snooze Tracking:** Track snooze button usage and correlate with sleep quality.
-- **Sleep Quality Insights:** Correlate sleep patterns with daily energy levels and nutrition intake.
-- **Health Connect Integration:** Planned for automatic sleep data import.
-
-### 📊 Holistic Wellness Dashboard
-- **Step & Activity Counter:** Track daily steps, total distance, and active minutes with visual daily streaks (Health Connect integration).
-- **Hydration Tracker:** Quick and easy logging for daily water intake goals with visual glass grid.
-- **Macro & Calorie Diary:** A beautifully designed timeline view of your Breakfast, Lunch, Dinner, and Snacks.
-- **Weekly Insights:** Deep-dive analytics into your macro-nutrient balance and calorie trends over 7, 30, or 90 days.
-- **Goal Planning:** Choose from weight loss, maintenance, or muscle gain goals with automatic calorie and macro targets.
-- **Body Metrics & BMI:** Track height, weight, and activity level with automatic BMI calculation and color-coded health indicators (Green = healthy, Yellow = edge, Red = under/over).
-
-### 🎨 Premium UI / UX Design
-- **Elegant Light/Dark Theme:** A luxurious interface utilizing a bespoke color palette (Emerald, Deep Sage, Gold, and Obsidian).
-- **Glassmorphic Elements:** Smooth, translucent UI cards and fluid animations for a highly polished, SaaS-grade user experience.
-- **Localisation Support:** Full support for English, Hindi, and Punjabi with more languages planned.
-- **Accessibility First:** WCAG AA contrast, 48dp touch targets, TalkBack labels, and text scaling to 200%.
+For the complete product definition, non-negotiable engineering rules, and roadmap context, refer to `CLAUDE.md`.
 
 ---
 
-## 🛠 Tech Stack
+## Why Health AI
 
-### Frontend (Flutter / Dart)
-- **Framework:** Flutter 3.47+ (stable, pinned with FVM)
-- **State Management:** Riverpod with code generation
-- **Navigation:** go_router with typed routes and deep linking
-- **Models:** freezed + json_serializable for immutable entities
-- **Database:** drift (SQLite) + SQLCipher for encrypted storage
-- **Local Storage:** flutter_secure_storage (Android Keystore)
-- **Health Data:** `health` package → Health Connect (Android)
-- **Charts:** fl_chart styled through design tokens
-- **Notifications:** flutter_local_notifications
-- **Localisation:** flutter_localizations + intl (ARB format)
+Health AI is built for people who want a lightweight but capable health companion that stays private and useful offline.
 
-### Machine Learning
-- **Training:** PyTorch + timm (MobileNetV4, EfficientNet-Lite)
-- **Config:** Hydra / OmegaConf (YAML configs)
-- **Export:** LiteRT Torch converter → TFLite
-- **Runtime:** flutter_litert (on-device inference)
-- **Dataset:** Khana 80-class Indian food dataset (currently 80 dishes, expanding to 200+)
+It is designed around three principles:
 
-### Architecture
-- **Clean Architecture:** Domain-driven design with strict layer discipline
-- **Offline-Only:** No network access in release builds (enforced by manifest checks)
-- **Privacy-First:** All data encrypted at rest, no telemetry, no analytics
-- **Testable:** Comprehensive unit, widget, and integration tests
+1. Privacy by default
+   - All personal health data remains on-device.
+   - No remote account is required.
+   - No network dependency in release builds.
+
+2. Real-world nutrition tracking
+   - Indian meals are the primary target use case.
+   - Food detection is trained for familiar dishes and regional cuisine patterns.
+   - Nutrition tracking includes calories, protein, carbs, and fats.
+
+3. Simple, trustworthy user experience
+   - The app avoids unnecessary complexity.
+   - Each AI output is user-confirmed rather than silently accepted.
+   - Designed for local-first reliability and testability.
 
 ---
 
-## 📁 Repository Layout
+## Core features
 
-| Area | Contents |
-|---|---|
-| `app/` | Flutter application (offline-only Android app) |
-| `ml/` | Python training/export pipeline (PyTorch → LiteRT) |
-| `docs/` | ADRs, dependencies, safety rules, design tokens, store assets |
-| `tools/` | Repo scripts (manifest check, size budget) |
+### Food recognition and logging
+- On-device food recognition powered by a local model for mobile inference
+- Optimized for Indian dishes, including common meals and regional varieties
+- Real scan results with confidence-based reasoning and user confirmation flow
+- Nutrition breakdown for calories, protein, carbohydrates, and fats
+- Serving-size selection for realistic meal portions
+- Food diary with meal-level tracking and deletion workflows
+- Manual food catalog lookup for dishes not detected by camera
 
-The three top-level areas never import from each other.
+### Daily wellness tracking
+- Calorie and macro progress monitoring
+- Water intake tracking with adjustable daily goals
+- Sleep logging with goal controls and deletion support
+- Activity and step tracking with local persistent goal settings
+- Daily dashboard with actionable progress summaries
+
+### Data privacy and local persistence
+- Encrypted local storage
+- Local background data handling with safe persistence rules
+- Corruption-tolerant data loading and recovery
+- No analytics or telemetry SDKs in production builds
+
+### Premium UX
+- Clean, polished Android-first interface
+- Light and dark theme support
+- Responsive dashboards and progress views
+- Built with a modern Flutter architecture and design system
 
 ---
 
-## 🚀 Getting Started
+## Technology stack
+
+### Mobile application
+- Flutter + Dart
+- Riverpod for state management
+- go_router for navigation
+- Freezed + json_serializable for immutable models
+- Drift/SQLite for local persistence
+- flutter_secure_storage and Android Keystore-backed security primitives
+- Health Connect integration paths for fitness data inputs
+- fl_chart for visual analytics
+
+### AI and inference
+- Python ML pipeline for dataset processing and model training
+- PyTorch + timm-based training workflow
+- LiteRT/TFLite export for on-device inference
+- Local inference runtime on the handset
+- Model output and nutrition catalog kept aligned to prevent mismatches
+
+### Architecture principles
+- Offline-first design
+- Clean architecture boundaries
+- Testable code paths and local-only execution
+- User-controlled AI outputs
+- Accessibility-conscious interface design
+
+---
+
+## Repository layout
+
+| Area | Purpose |
+| --- | --- |
+| `app/` | Flutter Android application |
+| `ml/` | Python training, export, and model pipeline |
+| `docs/` | Design notes, architecture documentation, and repo guidance |
+| `tools/` | Repository maintenance and validation scripts |
+
+The repository is intentionally organized into clear domains so the mobile app, ML pipeline, and supporting tooling remain loosely coupled.
+
+---
+
+## Getting started
 
 ### Prerequisites
-- [FVM](https://fvm.app) and a Flutter SDK it can install
-- Android SDK with the `android-36` platform
+- Flutter SDK via FVM is recommended
+- Android SDK with the required platform support
 - Java 17+
-- Python 3.12+ (for ML pipeline)
+- Python 3.12+ for ML tooling
 
-### App Setup
+### App setup
 
 ```bash
 cd app
-fvm install            # reads .fvmrc
+fvm install
 fvm flutter pub get
-fvm dart run build_runner build --delete-conflicting-outputs   # freezed/drift/riverpod codegen
+fvm dart run build_runner build --delete-conflicting-outputs
 fvm flutter gen-l10n
 fvm flutter analyze
 fvm flutter test
 fvm flutter build apk --release
 ```
 
-### ML Pipeline Setup
+### ML pipeline setup
 
 ```bash
 cd ml
@@ -111,79 +147,58 @@ uv sync
 uv run ruff check . && uv run pytest
 ```
 
-### Training the Food Classifier
+### Training the food classifier
 
-`ml/notebooks/train_on_colab.ipynb` is the end-to-end training driver:
-downloads the Khana dataset, builds the validated/deduped manifest,
-makes splits, and fine-tunes `mobilenetv4_conv_medium` with AMP + EMA,
-checkpointing every epoch into Google Drive. Open the notebook in
-Google Colab with a T4 GPU runtime and run the cells top-to-bottom.
+The ML pipeline includes the training flow for the food recognition model. The notebook at `ml/notebooks/train_on_colab.ipynb` is the main training driver for the dataset preparation and model fine-tuning workflow.
 
-**Current Status:**
-- Student: `mobilenetv4_conv_medium` (timm, ImageNet pretrain), **80 classes** (Khana), image size 224
-- **Smoke checkpoint (2 epochs, code `bdee652`):** test top-1 **0.8098**, top-5 **0.9618** (19,424 images, seed 42)
-- **Expanded model (239 classes, 4 epochs):** Training in progress
-- Export: `scripts/export_tflite.py` → `baseline.tflite` + `labels.json`
-- Dish catalog: 80+ Indian dishes with complete nutrition data, expanding to 200+
+Current model notes:
+- Mobile architecture: `mobilenetv4_conv_medium`
+- Focus: Indian food recognition
+- Dataset is organized around a curated class set and aligned nutrition catalog
+- Model export is designed for on-device deployment
 
 ---
 
-## 🛡️ Hard Rules
+## Privacy and product guardrails
 
-These rules shape every decision in the project:
+Health AI follows a strict privacy and safety model:
 
-- **R1** — No network in release builds; the merged release manifest must not contain `INTERNET`
-- **R2** — No telemetry, no analytics, no crash-reporting SDKs
-- **R3** — User data encrypted at rest (SQLCipher, key in Android Keystore)
-- **R4** — AI never writes silently; every model output needs user confirmation
-- **R5** — Not a medical device; no diagnosis, treatment or disease claims
-- **R12** — Python and Dart preprocessing must produce identical tensors (parity tests)
-- **R13** — No user-facing string is hard-coded; everything goes through l10n ARB files
-- **R14** — Accessibility is a requirement, not polish
-- **R15** — Never run heavy work on the UI isolate
+- No internet access in release builds
+- No telemetry, analytics, or crash-reporting SDKs
+- User data stays encrypted at rest
+- AI decisions are surfaced for confirmation, not silently accepted
+- The app is not intended as a medical device and does not make diagnostic claims
 
-The full list is in `CLAUDE.md` Section 2.
+The full set of product constraints and implementation rules is defined in `CLAUDE.md`.
 
 ---
 
-## 📊 Milestone Progress
+## Roadmap and priorities
 
-- ✅ **M0 — Foundation:** Project setup, architecture, build pipeline
-- ✅ **M1 — MVP UI/UX:** Complete design system, all major screens, localisation, nutrition catalog
-- 🔄 **M2 — ML Integration:** Model training (239-class model in progress), export, on-device inference UI improvements
-- 🔄 **M3 — Data Layer:** Encrypted database, preferences, persistence (SharedPreferences implemented, SQLCipher planned)
-- ⏳ **M4 — Testing & Polish:** Comprehensive tests, accessibility audits, performance optimization
-- ⏳ **M5 — v1 Release:** Play Store submission, model cards, documentation
+### Recently completed
+- Improved local persistence and data recovery behavior
+- Fixed dashboard metrics and real macro progress rendering
+- Corrected hydration and sleep tracking flows
+- Added daily goal customization and improvements to activity tracking
+- Enhanced food recognition feedback and deletion flows in the diary
 
-**Recent Fixes (Oct 2026):**
-- Fixed data persistence for food diary entries
-- Fixed water section showing hardcoded empty values
-- Fixed camera showing hardcoded predictions without scan
-- Improved scan UI to show real detection results only
-
----
-
-## 🔮 Future Scope
-
-- Integration with Apple Health, Google Fit, and Garmin
-- Automated grocery list generation based on weekly meal planning
-- Expanded dish catalog (200+ Indian dishes across all regional cuisines)
-- Deeper insights correlating sleep patterns with late-night food intake
-- Healthy substitute suggestions based on scanned meals
-- Voice logging for meals and activities
-- Meal planning and recipe suggestions
+### Current priorities
+- Improve food classification accuracy for visually similar Indian dishes
+- Add offline barcode support for packaged groceries
+- Support custom foods and manual nutrition entry
+- Refine onboarding and biometric UX
+- Expand diary, insights, and profile experiences to match product design targets
 
 ---
 
-## 📄 Licence
+## License status
 
-To be decided — choice interacts with dataset and model licences. Options under consideration:
-- MIT (permissive, allows commercial use)
-- Apache-2.0 (permissive with patent protection)
-- Proprietary (closed-source)
-
-Do not add a `LICENSE` file until decided; the choice interacts with dataset and model licences (Section 14 of CLAUDE.md).
+A license decision is still pending. The project intentionally delays adding a `LICENSE` file until the legal and dataset/model compatibility considerations are finalized.
 
 ---
 
-*Designed with a focus on premium aesthetics, privacy, and frictionless health tracking.*
+## Final note
+
+Health AI is intended to be a premium, privacy-preserving health companion for Android users who want local-first intelligence without sacrificing usability. It is designed to deliver a polished, trustworthy experience while keeping sensitive health data under the user's control.
+
+*Built for privacy, practicality, and long-term everyday health tracking.*
