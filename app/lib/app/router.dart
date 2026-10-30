@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:app/design_system/tokens/tokens.dart';
-import 'package:app/l10n/app_localizations.dart';
 import 'package:app/domain/entities/meal.dart';
 import 'package:app/features/activity/presentation/activity_screen.dart';
 import 'package:app/features/diary/presentation/diary_screen.dart';

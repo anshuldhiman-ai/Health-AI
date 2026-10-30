@@ -275,7 +275,6 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   /// do next. Deliberately not an error - the photo was fine, it just
   /// wasn't a dish.
   Future<void> _showNotFoodDialog() async {
-    final l10n = AppLocalizations.of(context)!;
     final searchManually = await showModalBottomSheet<bool>(
       context: context,
       useRootNavigator: true,
@@ -283,7 +282,6 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
       isScrollControlled: true,
       builder: (sheetContext) {
         final scheme = Theme.of(sheetContext).colorScheme;
-        final isDark = Theme.of(sheetContext).brightness == Brightness.dark;
 
         return Container(
           decoration: BoxDecoration(

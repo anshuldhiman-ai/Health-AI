@@ -19,7 +19,7 @@ class SleepRecord {
     required this.wakeMinutes,
   });
 
-  factory SleepRecord.fromJson(Map json) {
+  factory SleepRecord.fromJson(Map<String, dynamic> json) {
     final date = json['date'];
     return SleepRecord(
       date: date is String ? date : '',
@@ -60,7 +60,7 @@ class SleepState {
   factory SleepState.empty() =>
       const SleepState(records: <String, SleepRecord>{});
 
-  factory SleepState.fromJson(Map json) {
+  factory SleepState.fromJson(Map<String, dynamic> json) {
     final records = <String, SleepRecord>{};
     final raw = json['records'];
     if (raw is Map) {

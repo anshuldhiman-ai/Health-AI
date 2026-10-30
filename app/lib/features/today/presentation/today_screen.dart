@@ -10,11 +10,9 @@ import 'package:app/data/preferences/sleep_controller.dart';
 import 'package:app/data/preferences/water_controller.dart';
 import 'package:app/data/sensors/step_tracker.dart';
 import 'package:app/design_system/components/app_card.dart';
-import 'package:app/design_system/components/brand_mark.dart';
 import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/macro.dart';
-import 'package:app/domain/entities/sleep_record.dart';
 import 'package:app/features/today/application/today_state.dart';
 
 /// Screen 2: Main Dashboard (Welcome Back) matching ref_ui_updated.png
@@ -35,7 +33,6 @@ class TodayScreen extends ConsumerWidget {
     final state = ref.watch(todayStateProvider);
     final metrics = ref.watch(bodyMetricsProvider);
     final c = context.appColors;
-    final scheme = Theme.of(context).colorScheme;
 
     final displayName = metrics.name.trim().isEmpty
         ? 'Anshul'

@@ -541,10 +541,9 @@ class _AccordionSectionState extends State<_AccordionSection> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.title, this.subtitle});
+  const _Header({required this.title});
 
   final String title;
-  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -567,14 +566,6 @@ class _Header extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.titleL.copyWith(color: scheme.onSurface),
               ),
-              if (subtitle != null)
-                Text(
-                  subtitle!,
-                  style: AppTypography.caption.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 11.5,
-                  ),
-                ),
             ],
           ),
         ),

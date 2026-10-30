@@ -244,7 +244,12 @@ class AppLocalStorage {
       if (Platform.environment.containsKey('FLUTTER_TEST')) return false;
     } catch (_) {}
     try {
-      return WidgetsBinding.instance != null;
+      // Reading `instance` throws when the Flutter binding was never
+      // initialised, which is how a pure-Dart test binary is detected.
+      // The value itself is not needed - the throw is the whole signal.
+      // ignore: unnecessary_statements
+      WidgetsBinding.instance;
+      return true;
     } catch (_) {
       return false;
     }
