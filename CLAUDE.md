@@ -3,7 +3,7 @@
 > Offline-first, privacy-first SaaS-grade fitness and nutrition app for Android, built with Flutter.
 > Every AI feature runs on the user's phone. No account, no server, no data leaves the device.
 
-- Status: v1.7.0+7 (Active development, release 1.7 compiled, 110/110 tests passing). Last reviewed: 2026-10-25.
+- Status: v1.9.2+11 (Active development, 179 tests passing, 7 golden tests skipped by default). Last reviewed: 2026-10-31.
 - App Name: Health AI
 - Owner: Anshul Dhiman. Solo developer. Prefer simple, robust, testable solutions over clever ones.
 - This file is read at the start of every session. Rules marked **MUST / NEVER** are not negotiable. If a task seems to require breaking one, stop and ask first.
@@ -40,6 +40,16 @@
   - Balanced food recognition thresholds (`_kFoodTop1Floor = 0.15`, `_kFoodTop3MassFloor = 0.48`) to eliminate false "Not a food item" rejections on real Indian dishes.
   - Added top-3 alternative candidate dish chips in `ScanResultSheet` allowing 1-tap correction if top guess is mistaken (e.g. kulfi vs sweet vs dish).
   - Added individual meal item viewing/deletion and meal clearing options to `DiaryScreen`.
+- **Step Tracker Data Honesty (v1.9.1)**:
+  - Confirmed the seven-day strip is real: tap any day pill to inspect that day's recorded steps, active time and distance, and return to today.
+  - Per-day history now stores **measured active seconds** alongside steps. The historical view no longer invents `steps / 100` minutes, which was fake data.
+  - Date-derived calories moved to a named `kKcalPerStepEstimate` constant and are shown as `≈ kcal` behind a visible "estimates, not measurements" note (Section 7.3).
+  - `ActivityLedger` is pure Dart again (no `DateTime.now()` in domain); the data layer injects the clock. First unit tests for reboot re-anchoring, midnight rollover, cross-midnight backlog, manual edits and JSON/legacy migration live in `test/domain/services/activity_ledger_test.dart`.
+- **Per-Day Hourly History (v1.9.2)**:
+  - Each of the seven retained days now stores its own 24 hour buckets, so tapping an earlier day in the strip replays that day's real hourly chart instead of an empty placeholder.
+  - Tapping any bar reads out that hour's step count; the busiest hour is highlighted with its time and steps (`peakHourOfDay`, pure domain).
+  - Days recorded before this build have steps but no hours and say so ("Hourly detail wasn't recorded for this day") rather than drawing a flat, invented chart. Days never observed read zero.
+  - Distance, measured active time and calories are shown for the selected day; distance and calories stay labelled as estimates in a single line (Section 7.3).
 
 ---
 

@@ -12,14 +12,54 @@ const int kDailyStepGoal = 8000;
 /// phone measured distance.
 const double kAverageStrideMeters = 0.762;
 
+/// Rough energy cost of one step, used only to show an *estimate* on the
+/// activity screen. Real burn depends on body mass, gradient and pace, so
+/// this is deliberately crude and must never be presented as a
+/// measurement or fed into the calorie budget (CLAUDE.md Section 7.3).
+const double kKcalPerStepEstimate = 0.04;
+
 enum StepStatus { live, permissionDenied, unsupported, unavailable }
 
 /// One day in the seven-day activity strip.
+///
+/// [steps], [activeSeconds] and [hourlySteps] are all measured: the sensor
+/// counted the steps, the ledger clocked the active intervals and filed
+/// each step into the hour it happened in. Nothing here is seeded or
+/// back-filled for a day the app never recorded.
 class DaySteps {
-  const DaySteps({required this.date, required this.steps});
+  const DaySteps({
+    required this.date,
+    required this.steps,
+    this.activeSeconds = 0,
+    this.hourlySteps = const <int>[],
+  });
 
   final DateTime date;
   final int steps;
+
+  /// Measured moving time for that day. Zero when the day was tracked
+  /// before this field existed, which the UI must not dress up as data.
+  final int activeSeconds;
+
+  /// Steps in each clock hour of that day (24 buckets, local time). A day
+  /// recorded before hourly detail was stored reads all zeroes; the UI
+  /// says so instead of drawing a flat, invented chart.
+  final List<int> hourlySteps;
+}
+
+/// The clock hour with the most steps, or null when the day holds no
+/// hourly detail or no movement at all.
+int? peakHourOfDay(List<int> hourlySteps) {
+  if (hourlySteps.length != 24) return null;
+  var bestSteps = 0;
+  var bestHour = -1;
+  for (var hour = 0; hour < 24; hour++) {
+    if (hourlySteps[hour] > bestSteps) {
+      bestSteps = hourlySteps[hour];
+      bestHour = hour;
+    }
+  }
+  return bestHour < 0 ? null : bestHour;
 }
 
 /// Immutable view of today's activity for the dashboard and detail

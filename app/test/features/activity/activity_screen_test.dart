@@ -94,19 +94,106 @@ void main() {
       // Verify today's real steps
       expect(find.text('5,000'), findsOneWidget);
 
-      // Tap on the first pill (oldest day in 7-day strip)
-      final streakPill = find.byType(GestureDetector).first;
-      await tester.tap(streakPill);
+      // Tap yesterday's pill in the seven-day strip. The key proves we hit
+      // the day chip and not the back button sitting earlier in the tree.
+      // The strip lives below the fold on the default test surface, so
+      // scroll it into view first or the tap silently misses.
+      final yesterday = now.subtract(const Duration(days: 1));
+      final pill = find.byKey(
+        ValueKey('steps-day-${yesterday.toIso8601String()}'),
+      );
+      await tester.scrollUntilVisible(
+        pill,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(pill);
       await tester.pumpAndSettle();
 
-      // Now either historical banner is visible or Back to Today is present
-      if (find.text('Back to Today').evaluate().isNotEmpty) {
-        await tester.tap(find.text('Back to Today'));
-        await tester.pumpAndSettle();
-        expect(find.text('5,000'), findsOneWidget);
-      }
+      // The screen switches to that day's recorded total, not today's.
+      expect(find.text('Viewing: Yesterday'), findsOneWidget);
+      expect(find.text('Back to Today'), findsOneWidget);
+      expect(find.text('2,500'), findsOneWidget);
+      expect(find.text('5,000'), findsNothing);
+      // These seeded days carry no hourly buckets, so the card must say
+      // that rather than draw a flat, invented chart.
+      expect(
+        find.textContaining('Hourly detail wasn\'t recorded'),
+        findsOneWidget,
+      );
+
+      await tester.ensureVisible(find.text('Back to Today'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Back to Today'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('5,000'), findsOneWidget);
+      expect(find.text('Viewing: Yesterday'), findsNothing);
     },
   );
+
+  testWidgets('a past day replays its own hourly chart and busiest hour', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
+    final yesterdayHours = List<int>.filled(24, 0);
+    yesterdayHours[9] = 300;
+    yesterdayHours[18] = 900;
+
+    final snapshot = StepSnapshot(
+      status: StepStatus.live,
+      steps: 5000,
+      distanceMeters: 5000 * 0.762,
+      activeSeconds: 2400,
+      hourlySteps: List<int>.filled(24, 0),
+      history: [
+        for (var i = 6; i >= 1; i--)
+          DaySteps(
+            date: now.subtract(Duration(days: i)),
+            steps: 2000,
+            hourlySteps: i == 1 ? yesterdayHours : const <int>[],
+          ),
+        DaySteps(date: now, steps: 5000, hourlySteps: List<int>.filled(24, 0)),
+      ],
+      updatedAt: now,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          stepTrackerProvider.overrideWith((ref) => Stream.value(snapshot)),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.dark(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ActivityScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final pill = find.byKey(
+      ValueKey('steps-day-${yesterday.toIso8601String()}'),
+    );
+    await tester.scrollUntilVisible(
+      pill,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(pill);
+    await tester.pumpAndSettle();
+
+    // The earlier day's real buckets drive the chart, and the busiest
+    // hour is named with its step count.
+    expect(find.text('Busiest hour'), findsOneWidget);
+    expect(find.text('6 PM'), findsOneWidget);
+    expect(find.text('900 steps'), findsOneWidget);
+    expect(find.text('Viewing: Yesterday'), findsOneWidget);
+  });
 
   testWidgets('ActivityScreen opens Log Steps sheet', (tester) async {
     final now = DateTime.now();

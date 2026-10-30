@@ -19,8 +19,10 @@ import 'package:app/l10n/app_localizations.dart';
 ///
 /// Visual & Functional Highlights:
 /// - 100% Real Live & Historical Data (No hardcoded sample numbers)
-/// - Interactive History: Tap any day in the 7-day strip to view that day's real steps,
-///   distance, active time, and calories!
+/// - Interactive History: tap any day in the 7-day strip to replay that
+///   day's own hourly chart, distance, measured active time and calories
+/// - Tap any bar in the chart to read that hour's step count; the busiest
+///   hour is highlighted with its time and steps
 /// - Manual Step Logging: "+ Log Steps" button to add or set steps (treadmill/manual walks)
 /// - Semicircular / Horseshoe gradient arc gauge (emerald -> lime -> gold) with end knob
 /// - Hourly Activity Analytics Card with real 24h hourly activity & 3 metrics
@@ -143,10 +145,15 @@ class _LiveActivityState extends ConsumerState<_LiveActivity> {
       1.0,
     );
     final distanceKm = displaySteps * kAverageStrideMeters / 1000;
-    final activeMinutes = isViewingHistory
-        ? (displaySteps / 100).round()
-        : (widget.snapshot.activeSeconds ~/ 60);
-    final calories = (displaySteps * 0.04).round();
+    // Active time is the ledger's measured moving time for that day — no
+    // longer derived from a step count, which invented numbers for days
+    // the app had actually recorded.
+    final activeSeconds = isViewingHistory
+        ? _selectedDay!.activeSeconds
+        : widget.snapshot.activeSeconds;
+    final activeMinutes = activeSeconds ~/ 60;
+    // Displayed as an estimate on the card; never treated as measured.
+    final calories = (displaySteps * kKcalPerStepEstimate).round();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -221,15 +228,21 @@ class _LiveActivityState extends ConsumerState<_LiveActivity> {
 
         // 2. Middle Activity Analytics Card (Hourly Activity + Distance, Time, Calories)
         _ActivityAnalyticsCard(
+          // The selected day's own hours, not today's, so an earlier day
+          // draws its real chart instead of an empty placeholder.
           hourlySteps: isViewingHistory
-              ? const []
+              ? _selectedDay!.hourlySteps
               : widget.snapshot.hourlySteps,
+          displaySteps: displaySteps,
           distanceKm: distanceKm,
           activeMinutes: activeMinutes,
           calories: calories,
           isLiveActive:
               !isViewingHistory && widget.snapshot.displayCadence > 40,
           isViewingHistory: isViewingHistory,
+          dayLabel: isViewingHistory
+              ? _formatDayLabel(_selectedDay!.date)
+              : null,
         ),
         const SizedBox(height: 18),
 
@@ -850,31 +863,79 @@ class _HorseshoePainter extends CustomPainter {
       old.progress != progress || old.isDark != isDark;
 }
 
+/// "6 PM" for clock hour 18. Presentation-only formatting.
+String _formatHourLabel(int hour) {
+  final isAm = hour < 12;
+  final display = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+  return '$display ${isAm ? 'AM' : 'PM'}';
+}
+
 /// Middle Activity Analytics Card (Hourly Bars + 3-column stats)
-class _ActivityAnalyticsCard extends StatelessWidget {
+///
+/// The chart is a real hour-by-hour record for whichever day is on
+/// screen, today or an earlier one. When a day was tracked before hourly
+/// detail existed, the card says so instead of drawing a flat line.
+class _ActivityAnalyticsCard extends StatefulWidget {
   const _ActivityAnalyticsCard({
     required this.hourlySteps,
+    required this.displaySteps,
     required this.distanceKm,
     required this.activeMinutes,
     required this.calories,
     required this.isLiveActive,
     required this.isViewingHistory,
+    this.dayLabel,
   });
 
   final List<int> hourlySteps;
+  final int displaySteps;
   final double distanceKm;
   final int activeMinutes;
   final int calories;
   final bool isLiveActive;
   final bool isViewingHistory;
+  final String? dayLabel;
+
+  @override
+  State<_ActivityAnalyticsCard> createState() => _ActivityAnalyticsCardState();
+}
+
+class _ActivityAnalyticsCardState extends State<_ActivityAnalyticsCard> {
+  /// Hour the user tapped. Null means "follow the busiest hour".
+  int? _tappedHour;
+
+  @override
+  void didUpdateWidget(covariant _ActivityAnalyticsCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // A tapped hour belongs to the day it was tapped on; switching days
+    // must not carry the selection across.
+    if (oldWidget.dayLabel != widget.dayLabel ||
+        oldWidget.isViewingHistory != widget.isViewingHistory) {
+      _tappedHour = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final hasHourlyData = hourlySteps.any((v) => v > 0);
+    final hourlySteps = widget.hourlySteps;
+    final hasHourlyData =
+        hourlySteps.length == 24 && hourlySteps.any((v) => v > 0);
     final maxVal = hourlySteps.fold<int>(1, (m, v) => v > m ? v : m);
+    final peakHour = peakHourOfDay(hourlySteps);
+    final shownHour = hasHourlyData ? (_tappedHour ?? peakHour) : null;
+    final isPeakShown = shownHour != null && shownHour == peakHour;
+    // Active time only exists from the day the ledger started clocking
+    // moving intervals. A stepped-but-unclocked earlier day shows a dash
+    // rather than a confident "0 mins".
+    final activeLabel =
+        widget.isViewingHistory &&
+            widget.activeMinutes == 0 &&
+            widget.displaySteps > 0
+        ? '—'
+        : '${widget.activeMinutes} mins';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
@@ -896,52 +957,59 @@ class _ActivityAnalyticsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header: Status indicator dot + Active / Idle / Historical
+          // Header: which day, plus live / idle state for today
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isViewingHistory ? 'Activity Summary' : 'Hourly Activity',
+                'Hourly Activity',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: scheme.onSurface,
                 ),
               ),
-              Row(
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isLiveActive
-                          ? const Color(0xFF10B981)
-                          : (isViewingHistory
-                                ? const Color(0xFF38BDF8)
-                                : const Color(0xFF64748B)),
-                      boxShadow: [
-                        if (isLiveActive)
-                          BoxShadow(
-                            color: const Color(0xFF10B981)
-                                .withValues(alpha: 0.5),
-                            blurRadius: 4,
-                          ),
-                      ],
+              Flexible(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: widget.isViewingHistory
+                            ? const Color(0xFF38BDF8)
+                            : (widget.isLiveActive
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFF64748B)),
+                        boxShadow: [
+                          if (widget.isLiveActive && !widget.isViewingHistory)
+                            BoxShadow(
+                              color: const Color(0xFF10B981)
+                                  .withValues(alpha: 0.5),
+                              blurRadius: 4,
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    isViewingHistory
-                        ? 'Archive'
-                        : (isLiveActive ? 'Active' : 'Idle'),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurfaceVariant,
+                    const SizedBox(width: 5),
+                    Flexible(
+                      child: Text(
+                        widget.isViewingHistory
+                            ? (widget.dayLabel ?? 'Earlier day')
+                            : (widget.isLiveActive ? 'Active' : 'Idle'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -1025,36 +1093,59 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                 ),
 
                 // Vertical Bars or Empty State
-                if (hasHourlyData && !isViewingHistory)
+                if (hasHourlyData)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        for (var i = 0; i < 24; i++)
+                        for (var hour = 0; hour < 24; hour++)
                           Expanded(
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: FractionallySizedBox(
-                                heightFactor: (hourlySteps[i] / maxVal).clamp(
-                                  0.04,
-                                  1.0,
-                                ),
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 1.0,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(2.5),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        const Color(0xFF047857),
-                                        const Color(0xFF10B981),
-                                        if (hourlySteps[i] > maxVal * 0.6)
-                                          const Color(0xFFFBBF24),
-                                      ],
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
+                            child: Semantics(
+                              button: true,
+                              label:
+                                  '${_formatHourLabel(hour)}, '
+                                  '${formatCount(hourlySteps[hour])} steps',
+                              excludeSemantics: true,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => setState(() => _tappedHour = hour),
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: FractionallySizedBox(
+                                    heightFactor: (hourlySteps[hour] / maxVal)
+                                        .clamp(0.04, 1.0),
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 1.0,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          2.5,
+                                        ),
+                                        gradient: LinearGradient(
+                                          colors: hour == shownHour
+                                              ? const [
+                                                  Color(0xFFF59E0B),
+                                                  Color(0xFFFBBF24),
+                                                ]
+                                              : const [
+                                                  Color(0xFF047857),
+                                                  Color(0xFF10B981),
+                                                ],
+                                          begin: Alignment.bottomCenter,
+                                          end: Alignment.topCenter,
+                                        ),
+                                        boxShadow: hour == shownHour
+                                            ? [
+                                                BoxShadow(
+                                                  color: const Color(0xFFFBBF24)
+                                                      .withValues(alpha: 0.35),
+                                                  blurRadius: 6,
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1069,9 +1160,15 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 36),
                       child: Text(
-                        isViewingHistory
-                            ? 'Daily total recorded: ${formatCount(calories * 25)} steps'
-                            : '0 hourly steps yet today • Walk with your phone or tap Log Steps',
+                        widget.isViewingHistory
+                            ? (widget.displaySteps > 0
+                                  ? 'Hourly detail wasn\'t recorded for this '
+                                        'day. It finished with '
+                                        '${formatCount(widget.displaySteps)} '
+                                        'steps.'
+                                  : 'No activity was recorded on this day.')
+                            : 'No steps recorded yet today • Walk with your '
+                                  'phone, or use Log Steps',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 11,
@@ -1129,6 +1226,100 @@ class _ActivityAnalyticsCard extends StatelessWidget {
               ],
             ),
           ),
+
+          // The busiest hour of the selected day, or the hour the user
+          // tapped. This is the "when did I move" answer the chart implies.
+          if (shownHour != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.bolt_rounded,
+                    size: 14,
+                    color: Color(0xFFF59E0B),
+                  ),
+                  const SizedBox(width: 6),
+                  // Flexible children ellipsise at a 200% font scale
+                  // instead of overflowing the row.
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _formatHourLabel(shownHour),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: scheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '  ·  ',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            '${formatCount(hourlySteps[shownHour])} steps',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (isPeakShown)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFBBF24).withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Busiest hour',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? const Color(0xFFFBBF24)
+                              : const Color(0xFFB45309),
+                        ),
+                      ),
+                    )
+                  else
+                    Text(
+                      'Tap a bar',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
 
           Divider(
@@ -1154,7 +1345,7 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${distanceKm.toStringAsFixed(1)} km',
+                      '${widget.distanceKm.toStringAsFixed(1)} km',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -1184,7 +1375,7 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '$activeMinutes mins',
+                      activeLabel,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -1214,7 +1405,7 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '$calories kcal',
+                      '${widget.calories} kcal',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -1226,6 +1417,18 @@ class _ActivityAnalyticsCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+
+          // One quiet line, in place of the reference's silence, because
+          // distance and calories are derived from a step count and must
+          // never read as measurements (CLAUDE.md Section 7.3).
+          Text(
+            'Distance and calories are estimates from your step count.',
+            style: TextStyle(
+              fontSize: 10,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
           ),
         ],
       ),
@@ -1372,6 +1575,9 @@ class _HabitStreakCard extends ConsumerWidget {
                   children: [
                     for (var i = 0; i < days.length; i++)
                       GestureDetector(
+                        key: ValueKey(
+                          'steps-day-${days[i].date.toIso8601String()}',
+                        ),
                         onTap: () => onDaySelected(days[i]),
                         behavior: HitTestBehavior.opaque,
                         child: _DayStreakPill(

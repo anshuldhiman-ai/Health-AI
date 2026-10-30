@@ -208,24 +208,27 @@ String stepTileLabel(AsyncValue<StepSnapshot> value) {
 
 Future<void> addManualSteps(WidgetRef ref, int delta) async {
   final store = ref.read(activityStoreProvider);
-  final ledger = await store.load(DateTime.now());
-  ledger.addManualSteps(delta);
+  final now = DateTime.now();
+  final ledger = await store.load(now);
+  ledger.addManualSteps(delta, at: now);
   await store.save(ledger);
   ref.invalidate(stepTrackerProvider);
 }
 
 Future<void> setTodaySteps(WidgetRef ref, int steps) async {
   final store = ref.read(activityStoreProvider);
-  final ledger = await store.load(DateTime.now());
-  ledger.setStepsForToday(steps);
+  final now = DateTime.now();
+  final ledger = await store.load(now);
+  ledger.setStepsForToday(steps, at: now);
   await store.save(ledger);
   ref.invalidate(stepTrackerProvider);
 }
 
 Future<void> clearTodaySteps(WidgetRef ref) async {
   final store = ref.read(activityStoreProvider);
-  final ledger = await store.load(DateTime.now());
-  ledger.clearTodaySteps();
+  final now = DateTime.now();
+  final ledger = await store.load(now);
+  ledger.clearTodaySteps(at: now);
   await store.save(ledger);
   ref.invalidate(stepTrackerProvider);
 }
