@@ -3,6 +3,7 @@
 
 import json
 from pathlib import Path
+
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -24,6 +25,7 @@ ROLES = [
     {"id": 10, "name": "other_food"},
 ]
 
+
 # Mapping rules from raw class name to (role, group, measure_mode, default_serving_g)
 def classify_dish(name):
     # Condiments
@@ -37,7 +39,15 @@ def classify_dish(name):
         return "flat_bread", "paratha", "piece", 80
     if name in ["amritsari kulcha"]:
         return "flat_bread", "naan_kulcha", "piece", 90
-    if name in ["appam", "idiyappam", "neer dosa", "set dosa", "masala dosa", "rava dosa", "uttapam"]:
+    if name in [
+        "appam",
+        "idiyappam",
+        "neer dosa",
+        "set dosa",
+        "masala dosa",
+        "rava dosa",
+        "uttapam",
+    ]:
         return "flat_bread", "dosa_cheela", "piece", 90
     if name in ["besan cheela"]:
         return "flat_bread", "dosa_cheela", "piece", 75
@@ -65,19 +75,43 @@ def classify_dish(name):
         return "gravy_curry", "chicken_curry", "volume", 180
     if name in ["fish curry", "maach jhol"]:
         return "gravy_curry", "fish_curry", "volume", 180
-    if name in ["palak paneer", "paneer butter masala", "paneer masala", "kadai paneer", "navratan korma", "kofta"]:
+    if name in [
+        "palak paneer",
+        "paneer butter masala",
+        "paneer masala",
+        "kadai paneer",
+        "navratan korma",
+        "kofta",
+    ]:
         return "gravy_curry", "paneer_gravy", "volume", 160
     if name in ["misal pav", "pav bhaji"]:
         return "gravy_curry", "street_curry", "volume", 180
 
     # Dry Sabzi
-    if name in ["aloo gobi", "aloo matar", "aloo methi", "aloo shimla mirch", "dum aloo", "canned potatoes", "chilli potato"]:
+    if name in [
+        "aloo gobi",
+        "aloo matar",
+        "aloo methi",
+        "aloo shimla mirch",
+        "dum aloo",
+        "canned potatoes",
+        "chilli potato",
+    ]:
         return "dry_sabzi", "dry_potato_sabzi", "volume", 140
     if name in ["baingan bharta", "karela bharta", "stuffed karela"]:
         return "dry_sabzi", "dry_gourd_eggplant", "volume", 130
     if name in ["bhindi masala"]:
         return "dry_sabzi", "dry_green_sabzi", "volume", 120
-    if name in ["cabbage", "capsicum", "cauliflower", "peas", "spinach", "shelled soy bean", "sprouts", "patrode"]:
+    if name in [
+        "cabbage",
+        "capsicum",
+        "cauliflower",
+        "peas",
+        "spinach",
+        "shelled soy bean",
+        "sprouts",
+        "patrode",
+    ]:
         return "dry_sabzi", "dry_vegetable_sabzi", "volume", 120
 
     # Mounded Carbs
@@ -95,7 +129,16 @@ def classify_dish(name):
         return "mounded_carb", "porridge_oats", "volume", 180
 
     # Salad Raw
-    if name in ["beetroot", "carrots", "cucumber", "lettuce", "onion", "radish", "tomato", "turnip"]:
+    if name in [
+        "beetroot",
+        "carrots",
+        "cucumber",
+        "lettuce",
+        "onion",
+        "radish",
+        "tomato",
+        "turnip",
+    ]:
         return "salad_raw", "raw_vegetable_salad", "volume", 75
     if name in ["corn", "sweet potatoes"]:
         return "salad_raw", "boiled_salad_tuber", "volume", 100
@@ -113,13 +156,34 @@ def classify_dish(name):
         return "protein_piece", "veg_kebab_piece", "piece", 40
 
     # Fruits
-    if name in ["apple", "banana", "grape", "kiwi", "lemon", "mango", "orange", "pear", "pineapple", "pomegranate", "watermelon"]:
+    if name in [
+        "apple",
+        "banana",
+        "grape",
+        "kiwi",
+        "lemon",
+        "mango",
+        "orange",
+        "pear",
+        "pineapple",
+        "pomegranate",
+        "watermelon",
+    ]:
         return "other_food", "fruit_raw", "piece", 120
 
     # Chaat & Snacks
     if name in ["bhel puri", "paani puri", "pani puri", "papdi chaat", "sev puri", "raj kachori"]:
         return "other_food", "chaat", "piece", 100
-    if name in ["samosa", "kachori", "aloo tikki", "onion pakoda", "pakode", "sabudana vada", "medu vada", "vada pav"]:
+    if name in [
+        "samosa",
+        "kachori",
+        "aloo tikki",
+        "onion pakoda",
+        "pakode",
+        "sabudana vada",
+        "medu vada",
+        "vada pav",
+    ]:
         return "other_food", "fried_snack", "piece", 50
     if name in ["banana chips", "chivda", "murukku", "popcorn", "shankarpali"]:
         return "other_food", "dry_crunchy_snack", "volume", 40
@@ -129,7 +193,19 @@ def classify_dish(name):
         return "other_food", "dumpling_momo", "piece", 30
     if name in ["kaathi rolls", "kathi roll", "spring rolls"]:
         return "other_food", "rolls_wraps", "piece", 120
-    if name in ["burger", "veggie burger", "hot dogs", "sandwich", "grilled sandwich", "taco", "pizza", "margherita pizza", "paneer pizza", "chicken pizza", "pepperoni pizza"]:
+    if name in [
+        "burger",
+        "veggie burger",
+        "hot dogs",
+        "sandwich",
+        "grilled sandwich",
+        "taco",
+        "pizza",
+        "margherita pizza",
+        "paneer pizza",
+        "chicken pizza",
+        "pepperoni pizza",
+    ]:
         return "other_food", "western_fastfood", "piece", 150
     if name in ["litti chokha", "daal baati churma"]:
         return "other_food", "traditional_regional_meal", "piece", 200
@@ -138,24 +214,87 @@ def classify_dish(name):
 
     # Sweets & Mithai
     if name in [
-        "adhirasam", "anarsa", "ariselu", "balushahi", "bandar laddu", "besan laddu", "boondi", "boondi laddu",
-        "chikki", "peanut chikki", "dharwad pedha", "gavvalu", "ghevar", "gujhia", "gujiya", "gulab jamun",
-        "imarti", "jalebi", "kajjikaya", "kaju katli", "kakinada khaja", "kalakand", "ledikeni", "lyangcha",
-        "malapua", "malpua", "modak", "mysore pak", "peda", "pithe", "poornalu", "pootharekulu", "rasgulla",
-        "sandesh", "sohan halwa", "sohan papdi", "sutar feni"
+        "adhirasam",
+        "anarsa",
+        "ariselu",
+        "balushahi",
+        "bandar laddu",
+        "besan laddu",
+        "boondi",
+        "boondi laddu",
+        "chikki",
+        "peanut chikki",
+        "dharwad pedha",
+        "gavvalu",
+        "ghevar",
+        "gujhia",
+        "gujiya",
+        "gulab jamun",
+        "imarti",
+        "jalebi",
+        "kajjikaya",
+        "kaju katli",
+        "kakinada khaja",
+        "kalakand",
+        "ledikeni",
+        "lyangcha",
+        "malapua",
+        "malpua",
+        "modak",
+        "mysore pak",
+        "peda",
+        "pithe",
+        "poornalu",
+        "pootharekulu",
+        "rasgulla",
+        "sandesh",
+        "sohan halwa",
+        "sohan papdi",
+        "sutar feni",
     ]:
         return "other_food", "mithai_traditional", "piece", 40
 
     if name in [
-        "basundi", "chak hao kheer", "cham cham", "chhena kheeri", "doodhpak", "falooda", "kheer", "phirni",
-        "rabri", "ras malai", "sheer khurma", "sheer korma", "shrikhand", "mishti doi", "misti doi", "kulfi"
+        "basundi",
+        "chak hao kheer",
+        "cham cham",
+        "chhena kheeri",
+        "doodhpak",
+        "falooda",
+        "kheer",
+        "phirni",
+        "rabri",
+        "ras malai",
+        "sheer khurma",
+        "sheer korma",
+        "shrikhand",
+        "mishti doi",
+        "misti doi",
+        "kulfi",
     ]:
         return "other_food", "milk_dessert", "volume", 100
 
-    if name in ["gajar ka halwa", "moong dal halwa", "sheera", "double ka meetha", "khubani ka meetha", "qubani ka meetha"]:
+    if name in [
+        "gajar ka halwa",
+        "moong dal halwa",
+        "sheera",
+        "double ka meetha",
+        "khubani ka meetha",
+        "qubani ka meetha",
+    ]:
         return "other_food", "halwa_pudding", "volume", 100
 
-    if name in ["apple pie", "brownie", "cake", "doughnut", "ice cream", "muffin", "pan cake", "tiramisu", "waffle"]:
+    if name in [
+        "apple pie",
+        "brownie",
+        "cake",
+        "doughnut",
+        "ice cream",
+        "muffin",
+        "pan cake",
+        "tiramisu",
+        "waffle",
+    ]:
         return "other_food", "western_dessert", "piece", 80
 
     # Beverages
@@ -165,8 +304,9 @@ def classify_dish(name):
     # Fallback
     return "other_food", "miscellaneous_food", "volume", 100
 
+
 def main():
-    with open(CLASSES_PATH, "r", encoding="utf-8") as f:
+    with open(CLASSES_PATH, encoding="utf-8") as f:
         classes = json.load(f)
 
     # Collect groups and dishes
@@ -177,7 +317,7 @@ def main():
         role, group, measure_mode, default_g = classify_dish(c)
         dish_id = c.replace(" ", "_").replace("-", "_")
         en_name = " ".join(word.capitalize() for word in c.split())
-        
+
         if group not in groups_dict:
             groups_dict[group] = {
                 "group_id": group,
@@ -185,46 +325,52 @@ def main():
                 "name": group.replace("_", " ").title(),
                 "generic_dish_id": f"generic_{group}",
             }
-            
-        dishes.append({
-            "dish_id": dish_id,
-            "raw_name": c,
-            "names": {
-                "en": en_name,
-                "hi": en_name, # Baseline placeholder for hi
-            },
-            "taxonomy": {
-                "role": role,
-                "group": group,
-                "is_generic": False,
-            },
-            "measure": {
-                "mode": measure_mode,
-                "serving_default_g": default_g,
+
+        dishes.append(
+            {
+                "dish_id": dish_id,
+                "raw_name": c,
+                "names": {
+                    "en": en_name,
+                    "hi": en_name,  # Baseline placeholder for hi
+                },
+                "taxonomy": {
+                    "role": role,
+                    "group": group,
+                    "is_generic": False,
+                },
+                "measure": {
+                    "mode": measure_mode,
+                    "serving_default_g": default_g,
+                },
             }
-        })
+        )
 
     # Add exactly one generic dish for each group
     generic_dishes = []
     for g_id, g_info in sorted(groups_dict.items()):
         gen_dish_id = f"generic_{g_id}"
-        generic_dishes.append({
-            "dish_id": gen_dish_id,
-            "raw_name": f"Generic {g_info['name']}",
-            "names": {
-                "en": f"Generic {g_info['name']}",
-                "hi": f"सामान्य {g_info['name']}",
-            },
-            "taxonomy": {
-                "role": g_info["role"],
-                "group": g_id,
-                "is_generic": True,
-            },
-            "measure": {
-                "mode": "volume" if g_info["role"] in ["gravy_curry", "dry_sabzi", "mounded_carb"] else "piece",
-                "serving_default_g": 150,
+        generic_dishes.append(
+            {
+                "dish_id": gen_dish_id,
+                "raw_name": f"Generic {g_info['name']}",
+                "names": {
+                    "en": f"Generic {g_info['name']}",
+                    "hi": f"सामान्य {g_info['name']}",
+                },
+                "taxonomy": {
+                    "role": g_info["role"],
+                    "group": g_id,
+                    "is_generic": True,
+                },
+                "measure": {
+                    "mode": "volume"
+                    if g_info["role"] in ["gravy_curry", "dry_sabzi", "mounded_carb"]
+                    else "piece",
+                    "serving_default_g": 150,
+                },
             }
-        })
+        )
 
     all_dishes = dishes + generic_dishes
 
@@ -239,7 +385,7 @@ def main():
             "catalog_dishes_count": len(dishes),
             "generic_fallbacks_count": len(generic_dishes),
             "total_dishes_count": len(all_dishes),
-        }
+        },
     }
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -251,6 +397,7 @@ def main():
     print(f"Total groups: {len(groups_dict)}")
     print(f"Catalog dishes: {len(dishes)}")
     print(f"Generic fallbacks: {len(generic_dishes)}")
+
 
 if __name__ == "__main__":
     main()

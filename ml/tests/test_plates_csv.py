@@ -24,6 +24,7 @@ REQUIRED_COLUMNS = [
     "notes",
 ]
 
+
 def test_plates_csv_schema():
     assert CSV_PATH.exists(), f"Missing {CSV_PATH}"
     with open(CSV_PATH, encoding="utf-8") as f:
@@ -36,6 +37,15 @@ def test_plates_csv_schema():
             assert float(r["net_mass_g"]) > 0
             assert float(r["plate_diameter_cm"]) > 0
             assert r["role"] in [
-                "background", "plate_tray", "bowl", "mounded_carb", "flat_bread",
-                "gravy_curry", "dry_sabzi", "salad_raw", "condiment", "protein_piece", "other_food"
+                "background",
+                "plate_tray",
+                "bowl",
+                "mounded_carb",
+                "flat_bread",
+                "gravy_curry",
+                "dry_sabzi",
+                "salad_raw",
+                "condiment",
+                "protein_piece",
+                "other_food",
             ]

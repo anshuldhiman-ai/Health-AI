@@ -2,9 +2,13 @@
 
 import json
 from pathlib import Path
-from ml_pipeline.mass.reference import bowl_volume, mound_volume, piece_mass, estimate_quantiles
 
-FIXTURES_PATH = Path(__file__).resolve().parents[2] / "app" / "test" / "fixtures" / "mass_vectors.json"
+from ml_pipeline.mass.reference import bowl_volume, estimate_quantiles, mound_volume, piece_mass
+
+FIXTURES_PATH = (
+    Path(__file__).resolve().parents[2] / "app" / "test" / "fixtures" / "mass_vectors.json"
+)
+
 
 def test_mass_vectors_parity_python():
     with open(FIXTURES_PATH, encoding="utf-8") as f:
@@ -20,7 +24,9 @@ def test_mass_vectors_parity_python():
             )
             assert abs(vol - vec["expected_volume_ml"]) / vec["expected_volume_ml"] <= 1e-6
             mass_phys = vol * vec["density_g_per_ml"]
-            assert abs(mass_phys - vec["expected_mass_phys_g"]) / vec["expected_mass_phys_g"] <= 1e-6
+            assert (
+                abs(mass_phys - vec["expected_mass_phys_g"]) / vec["expected_mass_phys_g"] <= 1e-6
+            )
 
             p10, p50, p90 = estimate_quantiles(
                 mass_phys_g=mass_phys,

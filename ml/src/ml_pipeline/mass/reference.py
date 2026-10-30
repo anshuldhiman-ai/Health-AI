@@ -5,7 +5,7 @@ Both must pass app/test/fixtures/mass_vectors.json with relative error <= 1e-6.
 """
 
 import math
-from typing import Dict, Any, Tuple
+
 
 def bowl_volume(surface_area_cm2: float, rim_radius_cm: float, depth_cm: float) -> float:
     """Calculates spherical-cap bowl volume in ml (cm³)."""
@@ -14,23 +14,25 @@ def bowl_volume(surface_area_cm2: float, rim_radius_cm: float, depth_cm: float) 
 
     # R = (a_c² + d_c²) / (2·d_c)
     sphere_r = (rim_radius_cm**2 + depth_cm**2) / (2.0 * depth_cm)
-    
+
     # r_s = sqrt(A / pi), clamped <= rim_radius
     raw_rs = math.sqrt(surface_area_cm2 / math.pi)
     rs = min(raw_rs, rim_radius_cm)
-    
+
     # h = R - sqrt(R² - r_s²)
     under = max(0.0, sphere_r**2 - rs**2)
     h = sphere_r - math.sqrt(under)
-    
+
     # V = pi * h² * (3R - h) / 3
     return (math.pi * h**2 * (3.0 * sphere_r - h)) / 3.0
+
 
 def mound_volume(area_cm2: float, effective_height_cm: float) -> float:
     """Calculates food mound volume on flat plate in ml (cm³)."""
     if area_cm2 <= 0.0 or effective_height_cm <= 0.0:
         return 0.0
     return area_cm2 * effective_height_cm
+
 
 def piece_mass(
     count: int,
@@ -54,13 +56,14 @@ def piece_mass(
 
     return count * unit_mass_g * scale
 
+
 def estimate_quantiles(
     mass_phys_g: float,
     q10: float = -0.25,
     q50: float = 0.0,
     q90: float = 0.25,
     calibration_factor: float = 1.0,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """Applies calibration factor and returns (P10, P50, P90) mass ranges."""
     base = mass_phys_g * calibration_factor
     p10 = base * math.exp(q10)

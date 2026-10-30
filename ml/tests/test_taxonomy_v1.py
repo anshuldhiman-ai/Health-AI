@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -22,9 +23,11 @@ EXPECTED_ROLES = [
     (10, "other_food"),
 ]
 
+
 def load_taxonomy():
     with open(TAXONOMY_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f)
+
 
 def test_roles_contract():
     data = load_taxonomy()
@@ -34,6 +37,7 @@ def test_roles_contract():
         assert roles[idx]["id"] == expected_id
         assert roles[idx]["name"] == expected_name
 
+
 def test_all_239_classes_present():
     data = load_taxonomy()
     with open(CLASSES_PATH, encoding="utf-8") as f:
@@ -42,20 +46,24 @@ def test_all_239_classes_present():
 
     catalog_dishes = [d for d in data["dishes"] if not d["taxonomy"]["is_generic"]]
     assert len(catalog_dishes) == 239, f"Expected 239 catalog dishes, got {len(catalog_dishes)}"
-    
+
     catalog_raw_names = {d["raw_name"] for d in catalog_dishes}
     missing = set(classes) - catalog_raw_names
     assert not missing, f"Missing classes in taxonomy: {missing}"
+
 
 def test_generic_fallbacks_per_group():
     data = load_taxonomy()
     groups = {g["group_id"] for g in data["groups"]}
     generics = [d for d in data["dishes"] if d["taxonomy"]["is_generic"]]
-    
-    assert len(generics) == len(groups), f"Each of the {len(groups)} groups must have 1 generic record"
+
+    assert len(generics) == len(groups), (
+        f"Each of the {len(groups)} groups must have 1 generic record"
+    )
     generic_groups = [d["taxonomy"]["group"] for d in generics]
     assert len(generic_groups) == len(set(generic_groups)), "Duplicate generic records for a group"
     assert set(generic_groups) == groups
+
 
 def test_unique_snake_case_dish_ids():
     data = load_taxonomy()
@@ -64,6 +72,7 @@ def test_unique_snake_case_dish_ids():
     for did in dish_ids:
         assert did == did.lower(), f"{did} must be lower case"
         assert did.replace("_", "").isalnum(), f"{did} must be alphanumeric snake_case"
+
 
 def test_all_dishes_have_valid_roles():
     data = load_taxonomy()
