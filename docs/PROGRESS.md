@@ -79,13 +79,19 @@
 ---
 
 ### Phase 5 — Geometry, mass, nutrition engine (Dart, test-first; no data needed)
-- [ ] **T5.0** `container_profiles.json` from owner's measured utensils (`PLACEHOLDER` defaults for generic katori: rim Ø 10 cm, depth 4 cm ≈ 190 ml).
-- [ ] **T5.1** `plate_geometry_calculator.dart`: ellipse RANSAC + LSQ, 4-pt homography, scale/tilt/area. Tests: synthetic ellipses at known tilt 0–40° with pixel noise ⇒ **scale error ≤ 1.5 %, tilt error ≤ 2°**; partial plate (60 % visible) ⇒ graceful `Failure`; circular plate edge case.
-- [ ] **T5.2** `volumetric_math.dart`: bowl-cap, mound/layer, piece. Property tests: units, monotonic in area/fill, `r_s > a_c` clamped, hand-computed examples.
-- [ ] **T5.3** `mass_estimator.dart`: priors (§6.2), calibration lookup, Monte-Carlo totals with shared scale error; Python reference + `mass_vectors.json` parity.
-- [ ] **T5.4** `nutrition_calculator.dart`: kcal/macros ranges from catalog + variant; Atwater sanity test.
+- [x] **T5.0** `container_profiles.json` from owner's measured utensils (`PLACEHOLDER` defaults for generic katori: rim Ø 10 cm, depth 4 cm ≈ 190 ml).
+  * `T5.0 completed: app/assets/models/container_profiles.json — 3 round plates + a 32x24 cm tray + 2 katoris, all defaults marked PLACEHOLDER(T5.0) until the owner measures the real utensils`
+- [x] **T5.1** `plate_geometry_calculator.dart`: ellipse RANSAC + LSQ, 4-pt homography, scale/tilt/area. Tests: synthetic ellipses at known tilt 0–40° with pixel noise ⇒ **scale error ≤ 1.5 %, tilt error ≤ 2°**; partial plate (60 % visible) ⇒ graceful `Failure`; circular plate edge case.
+  * `T5.1 completed: round-plate ellipse RANSAC+LSQ and rectangular-tray DLT homography (metric area via PlateGeometry.areaCm2FromPolygon); evidence test/domain/services/plate_geometry_calculator_test.dart — 12 tests (tilt 15/25/35° within 2°, scale within 1.5 %, partial contour Err, perspective area 128 cm2 to 1e-6, degenerate corners Err)`
+- [x] **T5.2** `volumetric_math.dart`: bowl-cap, mound/layer, piece. Property tests: units, monotonic in area/fill, `r_s > a_c` clamped, hand-computed examples.
+  * `T5.2 completed: evidence test/domain/services/volumetric_math_test.dart (hand-computed a_c=5, d_c=4 ⇒ R=5.125, full bowl 190.6 ml; clamping and monotonicity)`
+- [x] **T5.3** `mass_estimator.dart`: priors (§6.2), calibration lookup, Monte-Carlo totals with shared scale error; Python reference + `mass_vectors.json` parity.
+  * `T5.3 completed: mass_estimator.dart (role priors, calibration factor, P10/P50/P90) + ml/src/ml_pipeline/mass/reference.py + shared app/test/fixtures/mass_vectors.json (relative error <= 1e-6 on both sides); the meal-total Monte-Carlo with the shared plate-scale term lives in NutritionCalculator.calculateMealTotal`
+- [x] **T5.4** `nutrition_calculator.dart`: kcal/macros ranges from catalog + variant; Atwater sanity test.
+  * `T5.4 completed: evidence test/domain/services/nutrition_calculator_test.dart (variant fat deltas, range scaling, Atwater tolerance)`
 - [ ] **T5.5** `capture_tilt_service.dart` (accelerometer via `sensors_plus`) + fusion rule §6.1; fake sensor for tests.
-- **Gate G5**: all above green, **≥ 90 % line coverage** on these files; `check_placeholders.sh` lists only calibration placeholders.
+  * `T5.5 partial: fusion rule (8° window, 25° HUD warning), FakeAccelerometerSource and tests are done; the sensors_plus adapter is NOT wired — a new dependency needs owner approval (CLAUDE.md R16), so this task stays open`
+- **Gate G5**: all above green, **≥ 90 % line coverage** on these files; `check_placeholders.sh` lists only calibration placeholders. (Blocked on T5.5: sensors_plus approval.)
 
 ---
 
