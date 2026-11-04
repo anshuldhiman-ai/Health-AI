@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:app/app/app.dart';
 import 'package:app/app/router.dart';
 import 'package:app/data/preferences/theme_mode_controller.dart';
+import 'package:app/data/sensors/step_tracker.dart';
+import 'package:app/domain/entities/activity_snapshot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +24,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  final runGoldens = Platform.environment['RUN_UI_GOLDENS'] == '1';
+  final runGoldens = true;
 
   setUpAll(() async {
     // Real font, or every glyph renders as a filled box. The app's own
@@ -83,6 +85,7 @@ void main() {
     WidgetTester tester,
     String route, {
     ThemeMode themeMode = ThemeMode.light,
+    List<Override> overrides = const [],
   }) async {
     tester.view.physicalSize = const Size(1179, 2556);
     tester.view.devicePixelRatio = 3.0;
@@ -90,7 +93,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [initialThemeModeProvider.overrideWithValue(themeMode)],
+        overrides: [
+          initialThemeModeProvider.overrideWithValue(themeMode),
+          ...overrides,
+        ],
         child: const App(),
       ),
     );
@@ -135,5 +141,38 @@ void main() {
   testWidgets('today in dark mode', (tester) async {
     await open(tester, '/today', themeMode: ThemeMode.dark);
     await shoot(tester, 'today_dark');
+  }, skip: !runGoldens);
+
+  testWidgets('activity in dark mode', (tester) async {
+    final now = DateTime.now();
+    final snapshot = StepSnapshot(
+      status: StepStatus.live,
+      steps: 7842,
+      distanceMeters: 5200,
+      activeSeconds: 4500,
+      hourlySteps: [
+        120, 80, 40, 20, 10, 50, 180, 320, 540, 420, 390, 610,
+        780, 650, 510, 890, 1100, 1240, 680, 450, 320, 210, 140, 80,
+      ],
+      history: [
+        for (var i = 6; i >= 0; i--)
+          DaySteps(
+            date: now.subtract(Duration(days: i)),
+            steps: 4000 + i * 600,
+          ),
+      ],
+      updatedAt: now,
+    );
+
+    await open(
+      tester,
+      '/activity',
+      themeMode: ThemeMode.dark,
+      overrides: [
+        stepTrackerProvider.overrideWith((ref) => Stream.value(snapshot)),
+        
+      ],
+    );
+    await shoot(tester, 'activity');
   }, skip: !runGoldens);
 }
