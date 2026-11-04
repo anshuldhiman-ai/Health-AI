@@ -74,4 +74,11 @@ flutter {
 dependencies {
     // Core library desugaring (see compileOptions above).
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+
+    // Background step capture (CLAUDE.md 6.6): the hardware step counter
+    // keeps counting while the app is dead, but a Dart listener cannot
+    // run then. A periodic worker samples the cumulative counter and
+    // stores timestamped readings locally. WorkManager is on-device
+    // scheduling only — it adds no network permission and no telemetry.
+    implementation("androidx.work:work-runtime-ktx:2.10.5")
 }

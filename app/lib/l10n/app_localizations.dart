@@ -1120,6 +1120,240 @@ abstract class AppLocalizations {
   /// **'Distance uses an average 0.76 m stride. Active time counts walking intervals only; your phone counts steps while it is with you.'**
   String get activityPrivacyNote;
 
+  /// No description provided for @activityStepTracker.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Tracker'**
+  String get activityStepTracker;
+
+  /// No description provided for @activityTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep moving, stay healthy!'**
+  String get activityTagline;
+
+  /// No description provided for @activityLogSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Steps'**
+  String get activityLogSteps;
+
+  /// No description provided for @activityStepsUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'steps'**
+  String get activityStepsUnit;
+
+  /// No description provided for @activityDailyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Goal'**
+  String get activityDailyGoal;
+
+  /// No description provided for @activityCaloriesBurned.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories Burned'**
+  String get activityCaloriesBurned;
+
+  /// No description provided for @activityKcalUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get activityKcalUnit;
+
+  /// No description provided for @activityChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Activity'**
+  String get activityChartTitle;
+
+  /// No description provided for @activityPeriodDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get activityPeriodDay;
+
+  /// No description provided for @activityPeriodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get activityPeriodWeek;
+
+  /// No description provided for @activityDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get activityDistance;
+
+  /// No description provided for @activityActiveTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Active time'**
+  String get activityActiveTime;
+
+  /// No description provided for @activityCadence.
+  ///
+  /// In en, this message translates to:
+  /// **'Cadence'**
+  String get activityCadence;
+
+  /// No description provided for @activityCadenceUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} spm'**
+  String activityCadenceUnit(String value);
+
+  /// No description provided for @activityStepsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} steps'**
+  String activityStepsCount(String count);
+
+  /// No description provided for @activityBusiestHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Busiest hour'**
+  String get activityBusiestHour;
+
+  /// No description provided for @activityNoHourlyDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly detail was not recorded for this day.'**
+  String get activityNoHourlyDetail;
+
+  /// No description provided for @activityReconciledNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes {count} steps counted while the app was not running. The hour-by-hour split of that gap is an estimate.'**
+  String activityReconciledNote(String count);
+
+  /// No description provided for @activityViewingDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing: {day}'**
+  String activityViewingDay(String day);
+
+  /// No description provided for @activityBackToToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to today'**
+  String get activityBackToToday;
+
+  /// No description provided for @activityHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity history'**
+  String get activityHistoryTitle;
+
+  /// No description provided for @activityHistoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a day to see its recorded steps and hourly chart.'**
+  String get activityHistoryHint;
+
+  /// No description provided for @activityLogActivitySteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Log activity steps'**
+  String get activityLogActivitySteps;
+
+  /// No description provided for @activityManualSheetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add steps from walking, a treadmill or outdoor exercise. These are stored as a manual entry.'**
+  String get activityManualSheetBody;
+
+  /// No description provided for @activityCustomStepCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom step count'**
+  String get activityCustomStepCount;
+
+  /// No description provided for @activityCustomStepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 1500'**
+  String get activityCustomStepHint;
+
+  /// No description provided for @activityAddSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Add steps'**
+  String get activityAddSteps;
+
+  /// No description provided for @activityStepsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} steps'**
+  String activityStepsAdded(String count);
+
+  /// No description provided for @activityOnTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on track!'**
+  String get activityOnTrack;
+
+  /// No description provided for @activityPermissionHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow activity access'**
+  String get activityPermissionHeading;
+
+  /// No description provided for @activityPermissionReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Health AI reads your phone\'s built-in step sensor to record your daily movement. It stays on this device.'**
+  String get activityPermissionReason;
+
+  /// No description provided for @activityGrantPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access'**
+  String get activityGrantPermission;
+
+  /// No description provided for @activityNoDaysRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No days recorded yet.'**
+  String get activityNoDaysRecorded;
+
+  /// No description provided for @activityNoStepsRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No steps recorded for this day.'**
+  String get activityNoStepsRecorded;
+
+  /// No description provided for @activitySevenDayHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'7-day history'**
+  String get activitySevenDayHistory;
+
+  /// No description provided for @activityStepsLeftToGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {count} steps left to reach your goal.'**
+  String activityStepsLeftToGoal(String count);
+
+  /// No description provided for @activityGoalReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You reached your daily step goal.'**
+  String get activityGoalReached;
+
+  /// No description provided for @activityDayToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get activityDayToday;
+
+  /// No description provided for @activityDayYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get activityDayYesterday;
+
   /// No description provided for @waterTitle.
   ///
   /// In en, this message translates to:

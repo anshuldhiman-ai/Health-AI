@@ -24,7 +24,11 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  final runGoldens = true;
+  // Off by default: the PNGs are a visual baseline for humans, and the
+  // seeded snapshots use DateTime.now(), so byte comparisons would break
+  // as the suite runs across midnight. Run them on demand with
+  // `RUN_UI_GOLDENS=1 flutter test test/ui_screens_test.dart`.
+  final runGoldens = Platform.environment['RUN_UI_GOLDENS'] == '1';
 
   setUpAll(() async {
     // Real font, or every glyph renders as a filled box. The app's own
@@ -151,8 +155,30 @@ void main() {
       distanceMeters: 5200,
       activeSeconds: 4500,
       hourlySteps: [
-        120, 80, 40, 20, 10, 50, 180, 320, 540, 420, 390, 610,
-        780, 650, 510, 890, 1100, 1240, 680, 450, 320, 210, 140, 80,
+        120,
+        80,
+        40,
+        20,
+        10,
+        50,
+        180,
+        320,
+        540,
+        420,
+        390,
+        610,
+        780,
+        650,
+        510,
+        890,
+        1100,
+        1240,
+        680,
+        450,
+        320,
+        210,
+        140,
+        80,
       ],
       history: [
         for (var i = 6; i >= 0; i--)
@@ -170,7 +196,6 @@ void main() {
       themeMode: ThemeMode.dark,
       overrides: [
         stepTrackerProvider.overrideWith((ref) => Stream.value(snapshot)),
-        
       ],
     );
     await shoot(tester, 'activity');

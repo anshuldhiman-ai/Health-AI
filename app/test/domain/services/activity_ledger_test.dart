@@ -97,7 +97,7 @@ void main() {
       expect(yesterdayEntry.steps, 2000);
     });
 
-    test('steps walked while the app was closed are not credited to today', () {
+    test('a closed-app backlog is credited to the days it actually spans', () {
       final ledger = ActivityLedger.empty(yesterday);
       ledger.record(sensorSteps: 5000, at: yesterday);
       ledger.record(
@@ -106,22 +106,27 @@ void main() {
       );
       expect(ledger.steps, 1000);
 
-      // App closed overnight; the sensor kept counting to 22000.
+      // App closed overnight; the sensor kept counting to 22000 by 09:00.
       final nextMorning = DateTime(2026, 10, 20, 9);
       ledger.syncTo(nextMorning);
       ledger.record(sensorSteps: 22000, at: nextMorning);
 
-      expect(
-        ledger.steps,
-        0,
-        reason: 'unobserved steps have no honest day to belong to',
-      );
+      // 16000 steps spread over 12.5 h from 20:30 to 09:00: 3.5 h on the
+      // 19th, 9 h on the 20th. The total is exact; only the split is
+      // time-proportional.
+      expect(ledger.steps, 11520);
+      expect(ledger.reconciledSteps, 11520);
+
+      final history = ledger.snapshot(StepStatus.live, nextMorning).history;
+      final day19 = history.firstWhere((d) => d.date.day == 19);
+      expect(day19.steps, 1000 + 4480);
+      expect(day19.reconciledSteps, 4480);
 
       ledger.record(
         sensorSteps: 22120,
         at: nextMorning.add(const Duration(minutes: 4)),
       );
-      expect(ledger.steps, 120);
+      expect(ledger.steps, 11640);
     });
 
     test('history keeps seven days and drops anything older', () {
@@ -130,11 +135,7 @@ void main() {
       for (var day = 1; day <= 12; day++) {
         final at = DateTime(2026, 10, day, 12);
         ledger.syncTo(at);
-        ledger.record(sensorSteps: day * 1000, at: at);
-        ledger.record(
-          sensorSteps: (day * 1000) + 500,
-          at: at.add(const Duration(minutes: 5)),
-        );
+        ledger.addManualSteps(500, at: at);
       }
 
       final history = ledger
@@ -198,13 +199,20 @@ void main() {
   });
 
   group('ActivityLedger hourly history', () {
-    test('keeps a finished day\'s hourly buckets after the rollover', () {
+    test('files each delta into the hours it spans, not the arrival hour', () {
       final ledger = ActivityLedger.empty(noon);
-      ledger.record(sensorSteps: 1000, at: noon); // anchor
+      ledger.record(sensorSteps: 1000, at: noon); // anchor at 12:00
       ledger.record(sensorSteps: 1200, at: noon.add(const Duration(hours: 1)));
       ledger.record(sensorSteps: 1600, at: noon.add(const Duration(hours: 2)));
-      expect(ledger.hourlySteps[13], 200);
-      expect(ledger.hourlySteps[14], 400);
+
+      // The 12:00 -> 13:00 window is hour 12; 13:00 -> 14:00 is hour 13.
+      expect(ledger.hourlySteps[12], 200);
+      expect(ledger.hourlySteps[13], 400);
+      expect(
+        ledger.hourlySteps.fold<int>(0, (sum, value) => sum + value),
+        600,
+        reason: 'the buckets must sum to the measured total',
+      );
 
       final nextDay = DateTime(2026, 10, 21, 9);
       ledger.syncTo(nextDay);
@@ -213,14 +221,14 @@ void main() {
       final day20 = history.firstWhere((d) => d.date.day == 20);
 
       expect(day20.hourlySteps, hasLength(24));
-      expect(day20.hourlySteps[13], 200);
-      expect(day20.hourlySteps[14], 400);
+      expect(day20.hourlySteps[12], 200);
+      expect(day20.hourlySteps[13], 400);
       expect(
         day20.hourlySteps[9],
         0,
         reason: 'hours the app was not tracking stay empty',
       );
-      expect(peakHourOfDay(day20.hourlySteps), 14);
+      expect(peakHourOfDay(day20.hourlySteps), 13);
     });
 
     test('today carries its own hourly buckets in the snapshot', () {
@@ -230,8 +238,12 @@ void main() {
 
       final today = ledger.snapshot(StepStatus.live, noon).history.last;
 
-      expect(today.hourlySteps[15], 300);
-      expect(peakHourOfDay(today.hourlySteps), 15);
+      // 300 steps over 12:00 -> 15:00 is 100 in each of hours 12, 13, 14.
+      expect(today.hourlySteps[12], 100);
+      expect(today.hourlySteps[13], 100);
+      expect(today.hourlySteps[14], 100);
+      expect(today.hourlySteps[15], 0);
+      expect(peakHourOfDay(today.hourlySteps), 12);
     });
 
     test('hourly buckets survive a JSON round-trip per day', () {
@@ -248,7 +260,10 @@ void main() {
       final history = restored.snapshot(StepStatus.live, nextDay).history;
       final day20 = history.firstWhere((d) => d.date.day == 20);
 
-      expect(day20.hourlySteps[17], 250);
+      // 250 steps over 12:00 -> 17:00 lands 50 in each of hours 12..16.
+      expect(day20.hourlySteps[12], 50);
+      expect(day20.hourlySteps[16], 50);
+      expect(day20.hourlySteps.fold<int>(0, (sum, value) => sum + value), 250);
     });
 
     test('a legacy day has no invented hours', () {
@@ -266,6 +281,84 @@ void main() {
       expect(day19.steps, 6100);
       expect(day19.hourlySteps.every((v) => v == 0), isTrue);
       expect(peakHourOfDay(day19.hourlySteps), isNull);
+    });
+  });
+
+  group('ActivityLedger background backlog', () {
+    test('a sample older than the cursor is ignored, not counted twice', () {
+      final ledger = ActivityLedger.empty(noon);
+      ledger.record(sensorSteps: 1000, at: noon);
+      ledger.record(
+        sensorSteps: 1400,
+        at: noon.add(const Duration(minutes: 10)),
+      );
+      expect(ledger.steps, 400);
+
+      // The drain replays the same reading after the live event covered it.
+      ledger.record(
+        sensorSteps: 1400,
+        at: noon.add(const Duration(minutes: 5)),
+      );
+
+      expect(ledger.steps, 400, reason: 'same movement, counted once');
+      expect(ledger.lastEventAt, noon.add(const Duration(minutes: 10)));
+    });
+
+    test('a stale backlog sample does not drag today backwards', () {
+      final ledger = ActivityLedger.empty(noon);
+      ledger.record(sensorSteps: 500, at: noon);
+      ledger.record(sensorSteps: 900, at: noon.add(const Duration(minutes: 5)));
+      expect(ledger.steps, 400);
+
+      // A sample captured three days ago. Today's totals must survive.
+      ledger.record(sensorSteps: 800, at: DateTime(2026, 10, 17, 10));
+
+      expect(ledger.date, '2026-10-20');
+      expect(ledger.steps, 400);
+    });
+
+    test('a backlog split at midnight lands on both days', () {
+      final ledger = ActivityLedger.empty(DateTime(2026, 10, 20, 23));
+      ledger.record(sensorSteps: 0, at: DateTime(2026, 10, 20, 23));
+      // 600 steps over 23:00 -> 01:00: 300 before midnight, 300 after.
+      ledger.record(sensorSteps: 600, at: DateTime(2026, 10, 21, 1));
+
+      expect(ledger.steps, 300);
+      expect(ledger.date, '2026-10-21');
+      expect(ledger.hourlySteps[0], 300);
+
+      final history = ledger
+          .snapshot(StepStatus.live, DateTime(2026, 10, 21, 1))
+          .history;
+      final day20 = history.firstWhere((d) => d.date.day == 20);
+      expect(day20.steps, 300);
+      expect(day20.hourlySteps[23], 300);
+    });
+
+    test('a short live gap is not flagged as reconciled', () {
+      final ledger = ActivityLedger.empty(noon);
+      ledger.record(sensorSteps: 0, at: noon);
+      ledger.record(
+        sensorSteps: 500,
+        at: noon.add(const Duration(minutes: 20)),
+      );
+
+      expect(ledger.steps, 500);
+      expect(ledger.reconciledSteps, 0);
+    });
+
+    test('a long gap is flagged and its steps still add up exactly', () {
+      final ledger = ActivityLedger.empty(noon);
+      ledger.record(sensorSteps: 0, at: noon);
+      ledger.record(sensorSteps: 7777, at: noon.add(const Duration(hours: 6)));
+
+      expect(ledger.steps, 7777);
+      expect(ledger.reconciledSteps, 7777);
+      expect(
+        ledger.hourlySteps.fold<int>(0, (sum, value) => sum + value),
+        7777,
+        reason: 'largest-remainder split must not lose or invent steps',
+      );
     });
   });
 

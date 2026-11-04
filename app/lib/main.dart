@@ -9,6 +9,7 @@ import 'package:app/data/preferences/body_metrics_controller.dart';
 import 'package:app/data/preferences/sleep_controller.dart';
 import 'package:app/data/preferences/theme_mode_controller.dart';
 import 'package:app/data/preferences/water_controller.dart';
+import 'package:app/data/sensors/step_background.dart';
 import 'package:app/domain/entities/hydration.dart';
 import 'package:app/domain/entities/nutrition_targets.dart';
 import 'package:app/app/router.dart';
@@ -41,6 +42,10 @@ Future<void> main() async {
 /// be async and gated on a minimal splash once the data layer exists.
 Future<void> bootstrap() async {
   try {
+    // Register the background step-capture job even if the user never
+    // opens the Activity screen. The worker no-ops until the activity
+    // permission is granted; it is idempotent across launches.
+    unawaited(const StepBackgroundCollector().schedule());
     final loaded = await Future.wait<Object>([
       _guard(loadSavedThemeMode, ThemeMode.system, 'theme'),
       _guard(loadSavedGoalKind, GoalKind.lose, 'goal'),

@@ -3,7 +3,7 @@
 > Offline-first, privacy-first SaaS-grade fitness and nutrition app for Android, built with Flutter.
 > Every AI feature runs on the user's phone. No account, no server, no data leaves the device.
 
-- Status: v1.9.2+11 (Active development, 179 tests passing, 7 golden tests skipped by default). Last reviewed: 2026-10-31.
+- Status: v1.9.3+12 (Active development, 184 tests passing, 8 golden tests skipped by default). Last reviewed: 2026-11-04.
 - App Name: Health AI
 - Owner: Anshul Dhiman. Solo developer. Prefer simple, robust, testable solutions over clever ones.
 - This file is read at the start of every session. Rules marked **MUST / NEVER** are not negotiable. If a task seems to require breaking one, stop and ask first.
@@ -50,6 +50,15 @@
   - Tapping any bar reads out that hour's step count; the busiest hour is highlighted with its time and steps (`peakHourOfDay`, pure domain).
   - Days recorded before this build have steps but no hours and say so ("Hourly detail wasn't recorded for this day") rather than drawing a flat, invented chart. Days never observed read zero.
   - Distance, measured active time and calories are shown for the selected day; distance and calories stay labelled as estimates in a single line (Section 7.3).
+- **Offline 24/7 Step Capture (v1.9.3, ADR 0009)**:
+  - **The last fabricated data in the step tracker is gone.** The 16-bar "activity curve" was generated from hardcoded weights, active time fell back to `steps / 100` minutes, and a "stairs" metric was derived from nothing. Bars now come only from recorded buckets, active time is `—` when nothing was measured, and the third summary metric is **cadence** (measured from event timing) or `—`. Twelve user-facing strings in this screen were moved into ARB (R13).
+  - **Steps are captured with the app closed.** A `WorkManager` job (`health_ai_step_capture`, 15 min, Kotlin) reads the hardware `TYPE_STEP_COUNTER` and appends `{timestamp, steps, elapsedRealtime}` to an app-private SharedPreferences ring buffer (8-day retention). The Dart side drains it on next launch and folds it into the ledger.
+  - **The ledger apportions a backlog across the hours and days it spans** (largest-remainder integer split, so buckets sum exactly to the measured delta) instead of dumping it into the launch hour. The sensor cursor survives midnight so a reading that straddles the boundary is split rather than dropped.
+  - **Stale and duplicate samples are ignored** via a persisted cursor, which also survives the process being killed between drain and save — no double counting.
+  - Gaps longer than two hours are flagged as `reconciledSteps`, and the chart says so in plain words: the daily total is measured, only its placement inside the gap is an estimate.
+  - **New permissions to review (R16, ADR 0009):** WorkManager contributes `WAKE_LOCK`, `RECEIVE_BOOT_COMPLETED` and `FOREGROUND_SERVICE`. All three were verified in the **merged release** manifest, added to the `tools/check_manifest.sh` allow-list, and none reaches the network. No foreground service is ever started.
+  - **Honest limits, documented rather than hidden:** the 15-minute cadence is best-effort (Doze and OEM battery managers can defer it), a user *Force stop* suspends background work until the next launch, and a reboot resets the hardware counter so the last pre-reboot interval is unrecoverable.
+  - **Not yet verified on a physical device** — no Android device or emulator is available in this environment. The killed/backgrounded/reboot acceptance criteria still need a real-device pass before release (Section 12.4).
 
 ---
 
@@ -480,8 +489,9 @@ Required manifest hardening:
 
 ### 7.3 Steps and activity
 
-- **Primary:** read steps from **Health Connect**. It aggregates and de-duplicates sources, and works with any wearable the user already owns. Handle all three states: available, not installed (Android 9 to 13 may need the Health Connect app), unsupported.
-- **Fallback:** hardware `TYPE_STEP_COUNTER` via platform channel. Pitfalls to handle explicitly and cover with unit tests: the counter is **cumulative since boot and resets on reboot**; store a baseline and boot-time delta; handle midnight rollover and time-zone/DST changes; permission denial (`ACTIVITY_RECOGNITION`); the sensor missing on some low-end devices.
+- **Shipped source (v1.9.3):** the hardware `TYPE_STEP_COUNTER`, sampled live while the app is alive and every ~15 minutes by a `WorkManager` job while it is not (ADR 0009). One ledger merges both sources; no network, no foreground service. Pitfalls handled and unit-tested: the counter is **cumulative since boot and resets on reboot** (a backwards `SystemClock.elapsedRealtime()` re-anchors instead of subtracting), midnight rollover (the cursor survives so a straddling reading is split), duplicate/stale samples (a persisted cursor discards them), permission denial (`ACTIVITY_RECOGNITION`), and the sensor missing on some low-end devices.
+- **Health Connect** remains the right primary source for a later milestone — it aggregates and de-duplicates sources and works with any wearable the user already owns. It is not wired up yet because it needs Health Connect read permissions, a Play health-data declaration, and device testing. Handle all three states when it lands: available, not installed (Android 9 to 13 may need the Health Connect app), unsupported.
+- **Never fabricate movement.** An hour with no recorded steps draws no bar; a day the app never observed reads zero; a metric that was not measured reads `—`. A backlog recovered from a gap longer than two hours is split proportionally across the hours it spans and flagged in the UI — the total is measured, only the placement inside the gap is an estimate. State the unavoidable limits in the copy: a *Force stop* suspends background work until the next launch, Doze/OEM battery managers can defer the 15-minute job, and a reboot loses the last pre-reboot interval.
 - Never claim precise "calories burned" from steps. Label as an estimate and keep it out of the calorie budget unless the user opts in.
 
 ### 7.4 Sleep

@@ -571,6 +571,139 @@ class AppLocalizationsEn extends AppLocalizations {
       'Distance uses an average 0.76 m stride. Active time counts walking intervals only; your phone counts steps while it is with you.';
 
   @override
+  String get activityStepTracker => 'Step Tracker';
+
+  @override
+  String get activityTagline => 'Keep moving, stay healthy!';
+
+  @override
+  String get activityLogSteps => 'Log Steps';
+
+  @override
+  String get activityStepsUnit => 'steps';
+
+  @override
+  String get activityDailyGoal => 'Daily Goal';
+
+  @override
+  String get activityCaloriesBurned => 'Calories Burned';
+
+  @override
+  String get activityKcalUnit => 'kcal';
+
+  @override
+  String get activityChartTitle => 'Step Activity';
+
+  @override
+  String get activityPeriodDay => 'Day';
+
+  @override
+  String get activityPeriodWeek => 'Week';
+
+  @override
+  String get activityDistance => 'Distance';
+
+  @override
+  String get activityActiveTime => 'Active time';
+
+  @override
+  String get activityCadence => 'Cadence';
+
+  @override
+  String activityCadenceUnit(String value) {
+    return '$value spm';
+  }
+
+  @override
+  String activityStepsCount(String count) {
+    return '$count steps';
+  }
+
+  @override
+  String get activityBusiestHour => 'Busiest hour';
+
+  @override
+  String get activityNoHourlyDetail =>
+      'Hourly detail was not recorded for this day.';
+
+  @override
+  String activityReconciledNote(String count) {
+    return 'Includes $count steps counted while the app was not running. The hour-by-hour split of that gap is an estimate.';
+  }
+
+  @override
+  String activityViewingDay(String day) {
+    return 'Viewing: $day';
+  }
+
+  @override
+  String get activityBackToToday => 'Back to today';
+
+  @override
+  String get activityHistoryTitle => 'Activity history';
+
+  @override
+  String get activityHistoryHint =>
+      'Select a day to see its recorded steps and hourly chart.';
+
+  @override
+  String get activityLogActivitySteps => 'Log activity steps';
+
+  @override
+  String get activityManualSheetBody =>
+      'Add steps from walking, a treadmill or outdoor exercise. These are stored as a manual entry.';
+
+  @override
+  String get activityCustomStepCount => 'Custom step count';
+
+  @override
+  String get activityCustomStepHint => 'e.g. 1500';
+
+  @override
+  String get activityAddSteps => 'Add steps';
+
+  @override
+  String activityStepsAdded(String count) {
+    return 'Added $count steps';
+  }
+
+  @override
+  String get activityOnTrack => 'You\'re on track!';
+
+  @override
+  String get activityPermissionHeading => 'Allow activity access';
+
+  @override
+  String get activityPermissionReason =>
+      'Health AI reads your phone\'s built-in step sensor to record your daily movement. It stays on this device.';
+
+  @override
+  String get activityGrantPermission => 'Allow access';
+
+  @override
+  String get activityNoDaysRecorded => 'No days recorded yet.';
+
+  @override
+  String get activityNoStepsRecorded => 'No steps recorded for this day.';
+
+  @override
+  String get activitySevenDayHistory => '7-day history';
+
+  @override
+  String activityStepsLeftToGoal(String count) {
+    return 'Only $count steps left to reach your goal.';
+  }
+
+  @override
+  String get activityGoalReached => 'You reached your daily step goal.';
+
+  @override
+  String get activityDayToday => 'Today';
+
+  @override
+  String get activityDayYesterday => 'Yesterday';
+
+  @override
   String get waterTitle => 'Water';
 
   @override

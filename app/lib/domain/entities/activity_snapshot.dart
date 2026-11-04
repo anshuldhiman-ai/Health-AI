@@ -20,6 +20,25 @@ const double kKcalPerStepEstimate = 0.04;
 
 enum StepStatus { live, permissionDenied, unsupported, unavailable }
 
+/// One cumulative reading from the platform step counter.
+///
+/// The hardware counter counts since boot, so a reading is only useful
+/// as a pair: the difference between two readings is the movement
+/// between their timestamps. [elapsedMillis] is the device's
+/// `SystemClock.elapsedRealtime()` at capture time, used to detect a
+/// reboot (which resets the counter).
+class StepReading {
+  const StepReading({
+    required this.at,
+    required this.sensorSteps,
+    this.elapsedMillis,
+  });
+
+  final DateTime at;
+  final int sensorSteps;
+  final int? elapsedMillis;
+}
+
 /// One day in the seven-day activity strip.
 ///
 /// [steps], [activeSeconds] and [hourlySteps] are all measured: the sensor
@@ -32,6 +51,7 @@ class DaySteps {
     required this.steps,
     this.activeSeconds = 0,
     this.hourlySteps = const <int>[],
+    this.reconciledSteps = 0,
   });
 
   final DateTime date;
@@ -45,6 +65,11 @@ class DaySteps {
   /// recorded before hourly detail was stored reads all zeroes; the UI
   /// says so instead of drawing a flat, invented chart.
   final List<int> hourlySteps;
+
+  /// Steps recovered from a sensor backlog (the app was not running).
+  /// Their daily total is real; the hour they are filed under is a
+  /// time-proportional estimate, so the UI can say so.
+  final int reconciledSteps;
 }
 
 /// The clock hour with the most steps, or null when the day holds no
@@ -74,6 +99,7 @@ class StepSnapshot {
     this.averageCadenceSpm = 0,
     this.hourlySteps = const <int>[],
     this.history = const <DaySteps>[],
+    this.reconciledSteps = 0,
     this.updatedAt,
   });
 
@@ -93,6 +119,11 @@ class StepSnapshot {
 
   /// Today plus the six preceding days, oldest first.
   final List<DaySteps> history;
+
+  /// Steps among [steps] that came from a backlog sensor reading rather
+  /// than a live stream event. The total is measured; their hour split is
+  /// an estimate.
+  final int reconciledSteps;
 
   final DateTime? updatedAt;
 

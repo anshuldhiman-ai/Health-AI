@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:app/core/format/count_format.dart';
 import 'package:app/data/local_storage.dart';
+import 'package:app/data/sensors/step_background.dart';
 import 'package:app/domain/entities/activity_snapshot.dart';
 import 'package:app/domain/services/activity_ledger.dart';
 import 'package:app/domain/services/local_date.dart';
@@ -16,6 +16,11 @@ import 'package:app/domain/services/local_date.dart';
 /// Sensor step tracking: the phone's built-in step counter
 /// (TYPE_STEP_COUNTER on Android, CMPedometer on iOS). Read-only —
 /// no network, no account.
+///
+/// Two sources feed one ledger:
+/// - the live stream while the app is alive (per-step, exact timestamps);
+/// - timestamped background samples captured by the Kotlin WorkManager
+///   job while the app was closed (about every 15 minutes).
 ///
 /// The ledger keeps today's steps separately from the cumulative sensor
 /// reading, so a reboot or an OEM counter reset does not erase movement.
@@ -76,76 +81,155 @@ final activityStoreProvider = Provider<ActivityStore>(
   (ref) => const ActivityStore(),
 );
 
-final stepTrackerProvider = StreamProvider<StepSnapshot>((ref) async* {
-  final store = ref.watch(activityStoreProvider);
-  final ledger = await store.load(DateTime.now());
-  yield ledger.snapshot(StepStatus.live, DateTime.now());
+final stepBackgroundCollectorProvider = Provider<StepBackgroundCollector>(
+  (ref) => const StepBackgroundCollector(),
+);
 
-  if (!Platform.isAndroid && !Platform.isIOS) {
-    yield ledger.snapshot(StepStatus.unsupported, DateTime.now());
-    return;
-  }
+final stepTrackerProvider = StreamProvider<StepSnapshot>((ref) {
+  final session = _StepTrackerSession();
+  ref.onDispose(session.dispose);
+  unawaited(session.start());
+  return session.stream;
+});
 
-  if (Platform.isAndroid) {
+/// One live tracking session: owns the ledger while the provider is
+/// mounted, merges background readings, and publishes snapshots.
+class _StepTrackerSession {
+  final _controller = StreamController<StepSnapshot>();
+  final _store = const ActivityStore();
+  final _collector = const StepBackgroundCollector();
+
+  ActivityLedger? _ledger;
+  StreamSubscription<StepCount>? _pedometer;
+  Timer? _poll;
+  bool _saving = false;
+  bool _saveAgain = false;
+  bool _disposed = false;
+  DateTime _lastSave = DateTime.now().subtract(const Duration(minutes: 1));
+
+  Stream<StepSnapshot> get stream => _controller.stream;
+
+  Future<void> start() async {
     try {
-      final status = await Permission.activityRecognition.status;
-      if (!status.isGranted) {
-        final requestStatus = await Permission.activityRecognition.request();
-        if (!requestStatus.isGranted) {
-          yield ledger.snapshot(StepStatus.permissionDenied, DateTime.now());
+      final now = DateTime.now();
+      final ledger = await _store.load(now);
+      _ledger = ledger;
+      if (_disposed) return;
+
+      // Background samples captured while this process was dead are the
+      // first thing folded in: they carry the hours the live stream missed.
+      await _mergeBackground(ledger);
+      if (_disposed) return;
+      _emit(StepStatus.live);
+
+      // Register the periodic capture job on every launch. The worker is a
+      // no-op until the activity permission is granted.
+      unawaited(_collector.schedule());
+
+      if (!Platform.isAndroid && !Platform.isIOS) {
+        _emit(StepStatus.unsupported);
+        return;
+      }
+
+      if (Platform.isAndroid) {
+        try {
+          final status = await Permission.activityRecognition.status;
+          if (!status.isGranted) {
+            final requestStatus = await Permission.activityRecognition
+                .request();
+            if (!requestStatus.isGranted) {
+              _emit(StepStatus.permissionDenied);
+              return;
+            }
+          }
+        } catch (_) {
+          _emit(StepStatus.unavailable);
           return;
         }
       }
+
+      // Capture an instantaneous reading so a launch does not have to wait
+      // for the first step event before the backlog is settled.
+      await _mergeBackground(ledger, collectNow: true);
+      if (_disposed) return;
+
+      _pedometer = Pedometer.stepCountStream.listen(
+        (event) => _onStep(event, ledger),
+        onError: (Object _) => _emit(_fallbackStatus(ledger)),
+        cancelOnError: false,
+      );
+
+      // While the app is alive the worker may still deliver samples (for
+      // example after a long background pause). Fold them in periodically.
+      _poll = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) => unawaited(_mergeBackground(ledger)),
+      );
     } catch (_) {
-      yield ledger.snapshot(StepStatus.unavailable, DateTime.now());
-      return;
+      if (!_disposed) _emit(StepStatus.unavailable);
     }
   }
 
-  var saving = false;
-  var saveAgain = false;
-  Future<void> save() async {
-    if (saving) {
-      saveAgain = true;
+  void _onStep(StepCount event, ActivityLedger ledger) {
+    ledger.record(sensorSteps: event.steps, at: event.timeStamp);
+    _emit(StepStatus.live);
+    final now = DateTime.now();
+    if (now.difference(_lastSave) >= const Duration(seconds: 15)) {
+      _lastSave = now;
+      unawaited(_save(ledger));
+    }
+  }
+
+  Future<void> _mergeBackground(
+    ActivityLedger ledger, {
+    bool collectNow = false,
+  }) async {
+    final readings = collectNow
+        ? await _collector.collectNow()
+        : await _collector.drain();
+    if (_disposed || readings.isEmpty) return;
+    for (final reading in readings) {
+      ledger.record(
+        sensorSteps: reading.sensorSteps,
+        at: reading.at,
+        elapsedMillis: reading.elapsedMillis,
+      );
+    }
+    await _save(ledger);
+    if (!_disposed) _emit(StepStatus.live);
+  }
+
+  StepStatus _fallbackStatus(ActivityLedger ledger) =>
+      ledger.steps > 0 ? StepStatus.live : StepStatus.unavailable;
+
+  void _emit(StepStatus status) {
+    if (_disposed) return;
+    final ledger = _ledger;
+    if (ledger == null) return;
+    _controller.add(ledger.snapshot(status, DateTime.now()));
+  }
+
+  Future<void> _save(ActivityLedger ledger) async {
+    if (_disposed) return;
+    if (_saving) {
+      _saveAgain = true;
       return;
     }
-    saving = true;
+    _saving = true;
     do {
-      saveAgain = false;
-      await store.save(ledger);
-    } while (saveAgain);
-    saving = false;
+      _saveAgain = false;
+      await _store.save(ledger);
+    } while (_saveAgain && !_disposed);
+    _saving = false;
   }
 
-  var lastSave = DateTime.now().subtract(const Duration(minutes: 1));
-  try {
-    await for (final event in Pedometer.stepCountStream) {
-      final at = event.timeStamp;
-      ledger.record(sensorSteps: event.steps, at: at);
-      final now = DateTime.now();
-      yield ledger.snapshot(StepStatus.live, now);
-      if (now.difference(lastSave) >= const Duration(seconds: 15)) {
-        lastSave = now;
-        unawaited(save());
-      }
-    }
-  } on MissingPluginException {
-    yield ledger.snapshot(
-      ledger.steps > 0 ? StepStatus.live : StepStatus.unavailable,
-      DateTime.now(),
-    );
-  } on PlatformException {
-    yield ledger.snapshot(
-      ledger.steps > 0 ? StepStatus.live : StepStatus.unavailable,
-      DateTime.now(),
-    );
-  } catch (_) {
-    yield ledger.snapshot(
-      ledger.steps > 0 ? StepStatus.live : StepStatus.unavailable,
-      DateTime.now(),
-    );
+  void dispose() {
+    _disposed = true;
+    _poll?.cancel();
+    unawaited(_pedometer?.cancel());
+    unawaited(_controller.close());
   }
-});
+}
 
 /// Ask Android for activity-recognition access. Returns true when the
 /// sensor can now be started. iOS handles motion permission itself.

@@ -32,6 +32,10 @@ Apache-2.0, MPL), size impact, and that it makes **no network calls**.
 | `local_auth` | Optional biometric app lock | BSD-3 | Google-maintained | None | small | ☐ |
 | `flutter_localizations` + `intl` | l10n (ARB) | BSD-3 / BSD-3 | Google / Dart team | None | small | ☐ |
 | `cupertino_icons` | Cupertino icon font (referenced by the Flutter framework itself) | BSD-3 | Google / Dart team | None | ~0.3 MB font | 2026-10-21 |
+| `pedometer` | Live step-counter stream (`TYPE_STEP_COUNTER`) for the activity screen | MIT (check) | check pub.dev | None | small | 2026-11-04 |
+| `permission_handler` | Runtime `ACTIVITY_RECOGNITION` / notification prompts | MIT (check) | check pub.dev | None | small | 2026-11-04 |
+| `shared_preferences` | Non-sensitive local prefs (goal, theme, step ledger) | BSD-3 | Google / Flutter team | None | small | 2026-11-04 |
+| `androidx.work:work-runtime-ktx` (Gradle, not pub) | Periodic background sampling of the hardware step counter (ADR 0009) | Apache-2.0 | Google / AndroidX | None — contributes WAKE_LOCK, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE only | ~0.4 MB | 2026-11-04 |
 | `mocktail` | Test mocks | MIT | check pub.dev | None | dev only | ☐ |
 | `golden_toolkit` | Golden tests | MIT | check pub.dev | None | dev only | ☐ |
 

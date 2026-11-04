@@ -69,6 +69,17 @@ ALLOWED=(
   android.permission.USE_BIOMETRIC
   # Health Connect permissions are requested via a separate API, not
   # manifest permissions; the health package handles them at runtime.
+  #
+  # The three below are contributed by androidx.work (ADR 0009, offline
+  # background step capture). None of them reaches the network:
+  # - WAKE_LOCK: hold the CPU briefly while the worker reads the sensor;
+  # - RECEIVE_BOOT_COMPLETED: let the platform reschedule the job;
+  # - FOREGROUND_SERVICE: declared by work-runtime; the foreground
+  #   service it guards is disabled by default and never started here
+  #   (see `enable_system_foreground_service_default`).
+  android.permission.WAKE_LOCK
+  android.permission.RECEIVE_BOOT_COMPLETED
+  android.permission.FOREGROUND_SERVICE
 )
 
 FAILED=0

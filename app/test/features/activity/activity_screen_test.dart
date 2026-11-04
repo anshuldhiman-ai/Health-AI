@@ -113,19 +113,19 @@ void main() {
 
       // The screen switches to that day's recorded total, not today's.
       expect(find.text('Viewing: Yesterday'), findsOneWidget);
-      expect(find.text('Back to Today'), findsOneWidget);
+      expect(find.text('Back to today'), findsOneWidget);
       expect(find.text('2,500'), findsOneWidget);
       expect(find.text('5,000'), findsNothing);
       // These seeded days carry no hourly buckets, so the card must say
       // that rather than draw a flat, invented chart.
       expect(
-        find.textContaining('Hourly detail wasn\'t recorded'),
+        find.textContaining('Hourly detail was not recorded'),
         findsOneWidget,
       );
 
-      await tester.ensureVisible(find.text('Back to Today'));
+      await tester.ensureVisible(find.text('Back to today'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Back to Today'));
+      await tester.tap(find.text('Back to today'));
       await tester.pumpAndSettle();
 
       expect(find.text('5,000'), findsOneWidget);
@@ -188,9 +188,16 @@ void main() {
     await tester.pumpAndSettle();
 
     // The earlier day's real buckets drive the chart, and the busiest
-    // hour is named with its step count.
+    // hour is named with its step count. The hour label is scoped to the
+    // busiest-hour row: the x-axis carries the same "6 PM" marker.
     expect(find.text('Busiest hour'), findsOneWidget);
-    expect(find.text('6 PM'), findsOneWidget);
+    final busiestRow = find
+        .ancestor(of: find.text('Busiest hour'), matching: find.byType(Row))
+        .first;
+    expect(
+      find.descendant(of: busiestRow, matching: find.text('6 PM')),
+      findsOneWidget,
+    );
     expect(find.text('900 steps'), findsOneWidget);
     expect(find.text('Viewing: Yesterday'), findsOneWidget);
   });
@@ -228,8 +235,8 @@ void main() {
     await tester.tap(find.text('Log Steps'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Log Activity Steps'), findsOneWidget);
-    expect(find.text('Add Steps'), findsOneWidget);
+    expect(find.text('Log activity steps'), findsOneWidget);
+    expect(find.text('Add steps'), findsOneWidget);
     expect(find.text('+1000'), findsOneWidget);
   });
 }

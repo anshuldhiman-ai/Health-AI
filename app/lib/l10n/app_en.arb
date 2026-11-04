@@ -231,6 +231,45 @@
   "activityUnavailableBody": "The step sensor is not responding right now. Try again or check activity permission.",
   "activityRefresh": "Try again",
   "activityPrivacyNote": "Distance uses an average 0.76 m stride. Active time counts walking intervals only; your phone counts steps while it is with you.",
+  "activityStepTracker": "Step Tracker",
+  "activityTagline": "Keep moving, stay healthy!",
+  "activityLogSteps": "Log Steps",
+  "activityStepsUnit": "steps",
+  "activityDailyGoal": "Daily Goal",
+  "activityCaloriesBurned": "Calories Burned",
+  "activityKcalUnit": "kcal",
+  "activityChartTitle": "Step Activity",
+  "activityPeriodDay": "Day",
+  "activityPeriodWeek": "Week",
+  "activityDistance": "Distance",
+  "activityActiveTime": "Active time",
+  "activityCadence": "Cadence",
+  "activityCadenceUnit": "{value} spm",
+  "activityStepsCount": "{count} steps",
+  "activityBusiestHour": "Busiest hour",
+  "activityNoHourlyDetail": "Hourly detail was not recorded for this day.",
+  "activityReconciledNote": "Includes {count} steps counted while the app was not running. The hour-by-hour split of that gap is an estimate.",
+  "activityViewingDay": "Viewing: {day}",
+  "activityBackToToday": "Back to today",
+  "activityHistoryTitle": "Activity history",
+  "activityHistoryHint": "Select a day to see its recorded steps and hourly chart.",
+  "activityLogActivitySteps": "Log activity steps",
+  "activityManualSheetBody": "Add steps from walking, a treadmill or outdoor exercise. These are stored as a manual entry.",
+  "activityCustomStepCount": "Custom step count",
+  "activityCustomStepHint": "e.g. 1500",
+  "activityAddSteps": "Add steps",
+  "activityStepsAdded": "Added {count} steps",
+  "activityOnTrack": "You're on track!",
+  "activityPermissionHeading": "Allow activity access",
+  "activityPermissionReason": "Health AI reads your phone's built-in step sensor to record your daily movement. It stays on this device.",
+  "activityGrantPermission": "Allow access",
+  "activityNoDaysRecorded": "No days recorded yet.",
+  "activityNoStepsRecorded": "No steps recorded for this day.",
+  "activitySevenDayHistory": "7-day history",
+  "activityStepsLeftToGoal": "Only {count} steps left to reach your goal.",
+  "activityGoalReached": "You reached your daily step goal.",
+  "activityDayToday": "Today",
+  "activityDayYesterday": "Yesterday",
   "waterTitle": "Water",
   "waterSubtitle": "A glass at a time.",
   "waterIntake": "Water intake",
@@ -414,6 +453,48 @@
   "@kcalOverShort": {
     "placeholders": {
       "over": {
+        "type": "String"
+      }
+    }
+  },
+  "@activityCadenceUnit": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@activityStepsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "@activityReconciledNote": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "@activityViewingDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "@activityStepsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "@activityStepsLeftToGoal": {
+    "placeholders": {
+      "count": {
         "type": "String"
       }
     }

@@ -15,11 +15,19 @@ import 'package:app/domain/services/local_date.dart';
 /// and the hourly buckets are all measured while the day was being
 /// tracked; a day the app never saw stays absent rather than estimated.
 class _DayTotals {
-  _DayTotals({this.steps = 0, this.activeSeconds = 0, List<int>? hourly})
-    : hourly = hourly ?? List<int>.filled(24, 0);
+  _DayTotals({
+    this.steps = 0,
+    this.activeSeconds = 0,
+    this.reconciledSteps = 0,
+    List<int>? hourly,
+  }) : hourly = hourly ?? List<int>.filled(24, 0);
 
   int steps;
   int activeSeconds;
+
+  /// Steps recovered from a backlog reading (the app was not running).
+  /// The total is measured; the hour split is time-proportional.
+  int reconciledSteps;
 
   /// Steps per clock hour. While the day is live this is the same list the
   /// ledger is writing into, so the history entry tracks the buckets as
@@ -30,8 +38,18 @@ class _DayTotals {
   Map<String, dynamic> toJson() => {
     'steps': steps,
     'active': activeSeconds,
+    'reconciled': reconciledSteps,
     'hourly': hourly,
   };
+}
+
+/// One measured interval share: the steps in a clock hour of a local day.
+class _HourSlice {
+  const _HourSlice(this.dateKey, this.hour, this.milliseconds);
+
+  final String dateKey;
+  final int hour;
+  final int milliseconds;
 }
 
 class ActivityLedger {
@@ -41,10 +59,12 @@ class ActivityLedger {
     this.activeSeconds = 0,
     this.activeSteps = 0,
     this.cadenceSpm = 0,
+    this.reconciledSteps = 0,
     List<int>? hourlySteps,
     Map<String, _DayTotals>? history,
     this.lastEventAt,
     this.lastSensor,
+    this.lastElapsedMillis,
   }) : _hourlySteps = _normaliseHourly(hourlySteps),
        _history = {...?history} {
     _syncHistoryEntry();
@@ -74,6 +94,7 @@ class ActivityLedger {
           history[key] = _DayTotals(
             steps: (value['steps'] as num?)?.toInt() ?? 0,
             activeSeconds: (value['active'] as num?)?.toInt() ?? 0,
+            reconciledSteps: (value['reconciled'] as num?)?.toInt() ?? 0,
             hourly: rawHourly is List && rawHourly.length == 24
                 ? [
                     for (final hour in rawHourly)
@@ -101,12 +122,14 @@ class ActivityLedger {
       activeSeconds: (json['activeSeconds'] as num?)?.toInt() ?? 0,
       activeSteps: (json['activeSteps'] as num?)?.toInt() ?? 0,
       cadenceSpm: (json['cadenceSpm'] as num?)?.toDouble() ?? 0,
+      reconciledSteps: (json['reconciledSteps'] as num?)?.toInt() ?? 0,
       hourlySteps: hourly,
       history: history,
       lastEventAt: rawLast is num
           ? DateTime.fromMillisecondsSinceEpoch(rawLast.toInt())
           : null,
       lastSensor: (json['lastSensor'] as num?)?.toInt(),
+      lastElapsedMillis: (json['lastElapsed'] as num?)?.toInt(),
     );
   }
 
@@ -115,10 +138,16 @@ class ActivityLedger {
   int activeSeconds;
   int activeSteps;
   double cadenceSpm;
+  int reconciledSteps;
   List<int> _hourlySteps;
   final Map<String, _DayTotals> _history;
   DateTime? lastEventAt;
   int? lastSensor;
+
+  /// `SystemClock.elapsedRealtime()` of the last reading. It moves
+  /// backwards only when the device rebooted, which resets the hardware
+  /// counter; that is how a reset is told apart from a stale reading.
+  int? lastElapsedMillis;
   int? _legacyAnchor;
 
   List<int> get hourlySteps => List.unmodifiable(_hourlySteps);
@@ -134,27 +163,56 @@ class ActivityLedger {
 
   /// Record one cumulative sensor reading. [at] is the event timestamp
   /// when the platform supplies one, otherwise the receive time.
-  void record({required int sensorSteps, required DateTime at}) {
-    _ensureDate(at);
+  ///
+  /// Readings may arrive from the live stream or, after the app was
+  /// closed, from timestamped background samples. The delta between two
+  /// readings is apportioned across the clock hours and local days it
+  /// spans, so movement taken while the app was dead is neither lost nor
+  /// dumped into the hour the app reopened.
+  void record({
+    required int sensorSteps,
+    required DateTime at,
+    int? elapsedMillis,
+  }) {
+    // The ledger's `date` is *today*, and it only ever moves forward. A
+    // background sample captured days ago is folded into that day's
+    // history instead of dragging "today" back with it. ISO date keys
+    // compare correctly as strings.
+    if (date.isEmpty || localDateKey(at).compareTo(date) >= 0) _ensureDate(at);
     if (sensorSteps < 0) return;
 
     final previousSensor = lastSensor;
+    final previousAt = lastEventAt;
+    final previousElapsed = lastElapsedMillis;
+
     if (previousSensor == null) {
       final anchor = _legacyAnchor;
       if (anchor != null && sensorSteps >= anchor) {
-        steps = math.max(0, sensorSteps - anchor);
+        _addSteps(dateKey: date, hour: at.hour, steps: sensorSteps - anchor);
       }
       lastSensor = sensorSteps;
+      lastElapsedMillis = elapsedMillis;
       lastEventAt = at;
-      _legacyAnchor = null;
       _syncHistoryEntry();
       return;
     }
 
-    // Sensor reset (reboot, OEM counter reset): re-anchor without losing
-    // the steps accumulated earlier today.
-    if (sensorSteps < previousSensor) {
+    // A reading older than the cursor is a duplicate or a late delivery
+    // (for example a background sample already covered by richer live
+    // events). Ignoring it prevents double counting.
+    if (previousAt != null && at.isBefore(previousAt)) return;
+
+    // Sensor reset: reboot (elapsedRealtime went backwards), OEM counter
+    // reset, or a decreasing value. Re-anchor; steps between the last
+    // reading and the reset are not recoverable.
+    final rebooted =
+        (elapsedMillis != null &&
+            previousElapsed != null &&
+            elapsedMillis < previousElapsed) ||
+        sensorSteps < previousSensor;
+    if (rebooted) {
       lastSensor = sensorSteps;
+      lastElapsedMillis = elapsedMillis;
       lastEventAt = at;
       _syncHistoryEntry();
       return;
@@ -163,14 +221,21 @@ class ActivityLedger {
     final delta = sensorSteps - previousSensor;
     if (delta <= 0) {
       lastSensor = sensorSteps;
+      lastElapsedMillis = elapsedMillis;
+      lastEventAt = at;
       _syncHistoryEntry();
       return;
     }
 
-    steps += delta;
-    _hourlySteps[at.hour] += delta;
-    _accumulateMovement(delta: delta, at: at);
+    if (previousAt == null || !at.isAfter(previousAt)) {
+      _addSteps(dateKey: localDateKey(at), hour: at.hour, steps: delta);
+    } else {
+      _attributeDelta(delta, from: previousAt, to: at);
+      _accumulateMovement(delta: delta, from: previousAt, to: at);
+    }
+
     lastSensor = sensorSteps;
+    lastElapsedMillis = elapsedMillis;
     lastEventAt = at;
     _syncHistoryEntry();
     if (activeSeconds > 86400) activeSeconds = 86400;
@@ -181,8 +246,7 @@ class ActivityLedger {
     final now = at;
     _ensureDate(now);
     if (count <= 0) return;
-    steps += count;
-    _hourlySteps[now.hour] += count;
+    _addSteps(dateKey: date, hour: now.hour, steps: count);
     final additionalSeconds = (count / 100 * 60).round();
     activeSeconds = math.min(86400, activeSeconds + additionalSeconds);
     activeSteps += count;
@@ -204,6 +268,7 @@ class ActivityLedger {
       activeSteps += diff;
     } else if (diff < 0) {
       _hourlySteps[now.hour] = math.max(0, _hourlySteps[now.hour] + diff);
+      reconciledSteps = math.min(reconciledSteps, newSteps);
     }
     _syncHistoryEntry();
     lastEventAt = now;
@@ -216,6 +281,7 @@ class ActivityLedger {
     steps = 0;
     activeSeconds = 0;
     activeSteps = 0;
+    reconciledSteps = 0;
     _hourlySteps = List<int>.filled(24, 0);
     _syncHistoryEntry();
     lastEventAt = now;
@@ -244,6 +310,9 @@ class ActivityLedger {
             hourlySteps: List<int>.unmodifiable(
               i == 0 ? _hourlySteps : (recorded?.hourly ?? const <int>[]),
             ),
+            reconciledSteps: i == 0
+                ? reconciledSteps
+                : (recorded?.reconciledSteps ?? 0),
           );
         }(),
     ];
@@ -259,6 +328,7 @@ class ActivityLedger {
       averageCadenceSpm: average,
       hourlySteps: List.unmodifiable(_hourlySteps),
       history: days,
+      reconciledSteps: reconciledSteps,
       updatedAt: lastEventAt,
     );
   }
@@ -269,12 +339,14 @@ class ActivityLedger {
     'activeSeconds': activeSeconds,
     'activeSteps': activeSteps,
     'cadenceSpm': cadenceSpm,
+    'reconciledSteps': reconciledSteps,
     'hourly': _hourlySteps,
     'history': {
       for (final entry in _history.entries) entry.key: entry.value.toJson(),
     },
     'lastEventAt': lastEventAt?.millisecondsSinceEpoch,
     'lastSensor': lastSensor,
+    'lastElapsed': lastElapsedMillis,
   };
 
   /// Mirror today's running totals into the seven-day history map. Every
@@ -284,14 +356,112 @@ class ActivityLedger {
     _history[date] = _DayTotals(
       steps: steps,
       activeSeconds: activeSeconds,
+      reconciledSteps: reconciledSteps,
       hourly: _hourlySteps,
     );
   }
 
-  void _accumulateMovement({required int delta, required DateTime at}) {
-    final previous = lastEventAt;
-    if (previous == null) return;
-    final elapsedMs = at.difference(previous).inMilliseconds;
+  /// Split [delta] across every clock hour and local day between [from]
+  /// and [to], in proportion to the time spent in each. The steps are
+  /// measured; only their placement inside the gap is an estimate, so the
+  /// day is flagged as reconciled when the gap is longer than two hours.
+  void _attributeDelta(
+    int delta, {
+    required DateTime from,
+    required DateTime to,
+  }) {
+    if (delta <= 0) return;
+    if (!to.isAfter(from)) {
+      _addSteps(dateKey: localDateKey(to), hour: to.hour, steps: delta);
+      return;
+    }
+
+    final reconciled = to.difference(from) > const Duration(hours: 2);
+    final slices = <_HourSlice>[];
+    var cursor = from;
+    while (cursor.isBefore(to)) {
+      final hourStart = DateTime(
+        cursor.year,
+        cursor.month,
+        cursor.day,
+        cursor.hour,
+      );
+      var hourEnd = hourStart.add(const Duration(hours: 1));
+      if (hourEnd.isAfter(to)) hourEnd = to;
+      final milliseconds = hourEnd.difference(cursor).inMilliseconds;
+      if (milliseconds > 0) {
+        slices.add(_HourSlice(localDateKey(cursor), cursor.hour, milliseconds));
+      }
+      cursor = hourEnd;
+    }
+    if (slices.isEmpty) {
+      _addSteps(dateKey: localDateKey(to), hour: to.hour, steps: delta);
+      return;
+    }
+
+    final totalMs = slices.fold<int>(
+      0,
+      (sum, slice) => sum + slice.milliseconds,
+    );
+    // Largest-remainder apportionment keeps the hourly buckets summing to
+    // exactly [delta] (no steps invented or lost to rounding).
+    final shares = <int>[];
+    final remainders = <int>[];
+    var assigned = 0;
+    for (final slice in slices) {
+      final numerator = delta * slice.milliseconds;
+      final share = numerator ~/ totalMs;
+      shares.add(share);
+      remainders.add(numerator % totalMs);
+      assigned += share;
+    }
+    var leftover = delta - assigned;
+    final order = List<int>.generate(slices.length, (i) => i)
+      ..sort((a, b) => remainders[b].compareTo(remainders[a]));
+    for (var i = 0; leftover > 0; i++, leftover--) {
+      shares[order[i % order.length]]++;
+    }
+
+    for (var i = 0; i < slices.length; i++) {
+      if (shares[i] == 0) continue;
+      _addSteps(
+        dateKey: slices[i].dateKey,
+        hour: slices[i].hour,
+        steps: shares[i],
+        reconciled: reconciled,
+      );
+    }
+  }
+
+  /// Add steps to a day's total and its hour bucket. The live day uses the
+  /// scalar fields; any other day is updated inside the history map.
+  void _addSteps({
+    required String dateKey,
+    required int hour,
+    required int steps,
+    bool reconciled = false,
+  }) {
+    if (steps <= 0) return;
+    final bucket = hour.clamp(0, 23);
+    if (dateKey == date) {
+      this.steps += steps;
+      _hourlySteps[bucket] += steps;
+      if (reconciled) reconciledSteps += steps;
+      _syncHistoryEntry();
+      return;
+    }
+    final totals = _history.putIfAbsent(dateKey, () => _DayTotals());
+    totals.steps += steps;
+    totals.hourly[bucket] += steps;
+    if (reconciled) totals.reconciledSteps += steps;
+  }
+
+  void _accumulateMovement({
+    required int delta,
+    required DateTime from,
+    required DateTime to,
+  }) {
+    final elapsedMs = to.difference(from).inMilliseconds;
     if (elapsedMs <= 0 || elapsedMs > 180000) return;
 
     final minutes = elapsedMs / 60000;
@@ -317,10 +487,11 @@ class ActivityLedger {
     // Bank the day we are leaving, hourly buckets included. The new day
     // gets a fresh list, so the finished day keeps exactly the hours it
     // was observed in.
-    if (steps > 0 || activeSeconds > 0) {
+    if (steps > 0 || activeSeconds > 0 || reconciledSteps > 0) {
       _history[date] = _DayTotals(
         steps: steps,
         activeSeconds: activeSeconds,
+        reconciledSteps: reconciledSteps,
         hourly: _hourlySteps,
       );
     }
@@ -329,13 +500,11 @@ class ActivityLedger {
     activeSeconds = 0;
     activeSteps = 0;
     cadenceSpm = 0;
+    reconciledSteps = 0;
     _hourlySteps = List<int>.filled(24, 0);
-    lastEventAt = null;
-    // Dropping the sensor anchor makes the first reading of the new day
-    // an anchor rather than a delta. Steps taken while the app was closed
-    // cannot be attributed to a day we did not observe, and crediting the
-    // whole backlog to today would inflate it.
-    lastSensor = null;
+    // The sensor cursor deliberately survives midnight. A reading that
+    // arrives after the rollover spans both days and is split across
+    // them, instead of being dropped or dumped entirely into today.
     _legacyAnchor = null;
     _history[key] = _DayTotals();
     _pruneHistory(localDay(now));

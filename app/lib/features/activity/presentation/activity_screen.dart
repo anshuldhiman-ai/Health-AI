@@ -4,13 +4,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'package:app/core/format/count_format.dart';
-import 'package:app/data/preferences/sleep_controller.dart';
-import 'package:app/data/preferences/water_controller.dart';
 import 'package:app/data/sensors/step_tracker.dart';
 import 'package:app/design_system/components/app_toast.dart';
-import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/activity_snapshot.dart';
 import 'package:app/l10n/app_localizations.dart';
 
@@ -181,8 +179,10 @@ class _StepTrackerBody extends ConsumerStatefulWidget {
 
 class _StepTrackerBodyState extends ConsumerState<_StepTrackerBody> {
   DaySteps? _selectedDay;
-  String _chartPeriod = 'Day'; // 'Day', 'Week', 'Month'
-  int _selectedBarIndex = 11; // Default highlighted bar (~6 PM)
+  String _chartPeriod = 'Day'; // 'Day' or 'Week'
+  // No default bar: the chart highlights the current hour/day, computed
+  // from real data, rather than an arbitrary 6 PM placeholder.
+  int? _selectedBarIndex;
 
   static String _formatDayLabel(DateTime day) {
     final now = DateTime.now();
@@ -242,6 +242,7 @@ class _StepTrackerBodyState extends ConsumerState<_StepTrackerBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final stepGoal = ref.watch(stepGoalProvider);
     final isViewingHistory = _selectedDay != null;
 
@@ -256,12 +257,14 @@ class _StepTrackerBodyState extends ConsumerState<_StepTrackerBody> {
     final activeSeconds = isViewingHistory
         ? _selectedDay!.activeSeconds
         : widget.snapshot.activeSeconds;
-    final activeMinutes = activeSeconds > 0
-        ? activeSeconds ~/ 60
-        : (displaySteps > 0 ? (displaySteps / 100).round() : 0);
+    // Measured walking time only. A day the app never watched reads "—"
+    // instead of a step-derived guess (Section 7.3: estimates are never
+    // dressed up as measurements).
+    final activeMinutes = activeSeconds ~/ 60;
+    final measuredActive = activeSeconds > 0;
 
     final calories = (displaySteps * kKcalPerStepEstimate).round();
-    final floors = (displaySteps * 0.00153).round();
+    final cadence = isViewingHistory ? 0 : widget.snapshot.displayCadence;
     final remainingSteps = math.max(0, effectiveGoal - displaySteps);
 
     final activeHourly = isViewingHistory
@@ -301,7 +304,9 @@ class _StepTrackerBodyState extends ConsumerState<_StepTrackerBody> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Viewing: ${_formatDayLabel(_selectedDay!.date)}',
+                        l10n.activityViewingDay(
+                          _formatDayLabel(_selectedDay!.date),
+                        ),
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -321,9 +326,9 @@ class _StepTrackerBodyState extends ConsumerState<_StepTrackerBody> {
                         color: const Color(0xFF00D6A0),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'Back to Today',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.activityBackToToday,
+                        style: const TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFF00241E),
@@ -350,19 +355,27 @@ class _StepTrackerBodyState extends ConsumerState<_StepTrackerBody> {
           _ActivitySummaryCard(
             distanceKm: distanceKm,
             activeMinutes: activeMinutes,
-            floors: floors,
+            measuredActive: measuredActive,
+            cadenceSpm: cadence,
           ),
           const SizedBox(height: 16),
 
           // D. Step Activity Chart Card
           _StepActivityChartCard(
             hourlySteps: activeHourly,
+            history: widget.snapshot.history,
             displaySteps: displaySteps,
             chartPeriod: _chartPeriod,
             selectedBarIndex: _selectedBarIndex,
-            onPeriodChanged: (p) => setState(() => _chartPeriod = p),
+            onPeriodChanged: (p) => setState(() {
+              _chartPeriod = p;
+              _selectedBarIndex = null;
+            }),
             onBarSelected: (idx) => setState(() => _selectedBarIndex = idx),
             isViewingHistory: isViewingHistory,
+            reconciledSteps: isViewingHistory
+                ? (_selectedDay?.reconciledSteps ?? 0)
+                : widget.snapshot.reconciledSteps,
           ),
           const SizedBox(height: 16),
 
@@ -404,6 +417,7 @@ class _Header extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         // Back navigation button
@@ -424,20 +438,20 @@ class _Header extends ConsumerWidget {
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Text(
-                'Step Tracker',
-                style: TextStyle(
+                l10n.activityStepTracker,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
-                'Keep moving, stay healthy!',
-                style: TextStyle(
+                l10n.activityTagline,
+                style: const TextStyle(
                   color: Color(0xFFA7BDB8),
                   fontSize: 12.5,
                   fontWeight: FontWeight.w500,
@@ -455,9 +469,9 @@ class _Header extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6),
             visualDensity: VisualDensity.compact,
           ),
-          child: const Text(
-            'Log Steps',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          child: Text(
+            l10n.activityLogSteps,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(width: 4),
@@ -529,6 +543,7 @@ class _HeroProgressSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 220,
       child: Stack(
@@ -594,9 +609,9 @@ class _HeroProgressSection extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 2),
-                              const Text(
-                                'steps',
-                                style: TextStyle(
+                              Text(
+                                l10n.activityStepsUnit,
+                                style: const TextStyle(
                                   color: Color(0xFFA7BDB8),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
@@ -649,9 +664,9 @@ class _HeroProgressSection extends StatelessWidget {
                       // Stat 1: Daily Goal
                       _StatRow(
                         iconWidget: const _TargetIconBadge(),
-                        title: 'Daily Goal',
+                        title: l10n.activityDailyGoal,
                         value: formatCount(goalSteps),
-                        unit: 'steps',
+                        unit: l10n.activityStepsUnit,
                       ),
                       const SizedBox(height: 16),
 
@@ -671,9 +686,9 @@ class _HeroProgressSection extends StatelessWidget {
                             size: 20,
                           ),
                         ),
-                        title: 'Calories Burned',
+                        title: l10n.activityCaloriesBurned,
                         value: formatCount(calories),
-                        unit: 'kcal',
+                        unit: l10n.activityKcalUnit,
                       ),
                     ],
                   ),
@@ -759,18 +774,27 @@ class _ActivitySummaryCard extends StatelessWidget {
   const _ActivitySummaryCard({
     required this.distanceKm,
     required this.activeMinutes,
-    required this.floors,
+    required this.measuredActive,
+    required this.cadenceSpm,
   });
 
   final double distanceKm;
   final int activeMinutes;
-  final int floors;
+
+  /// False when no walking interval was measured (for example a day the
+  /// app only saw through 15-minute background samples). The card then
+  /// shows an em dash instead of inventing time from the step count.
+  final bool measuredActive;
+  final int cadenceSpm;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final hours = activeMinutes ~/ 60;
     final mins = activeMinutes % 60;
-    final timeStr = hours > 0 ? '${hours}h ${mins}m' : '${mins}m';
+    final timeStr = !measuredActive
+        ? '—'
+        : (hours > 0 ? '${hours}h ${mins}m' : '${mins}m');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -788,13 +812,13 @@ class _ActivitySummaryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Distance
+          // Distance (an estimate: average stride × measured steps)
           Expanded(
             child: _SummaryMetric(
               icon: Icons.location_on_rounded,
               value: distanceKm.toStringAsFixed(1),
               unit: 'km',
-              label: 'Distance',
+              label: l10n.activityDistance,
             ),
           ),
 
@@ -805,13 +829,13 @@ class _ActivitySummaryCard extends StatelessWidget {
             color: const Color(0xFF133E38).withValues(alpha: 0.8),
           ),
 
-          // Active Time
+          // Active Time (measured walking intervals only)
           Expanded(
             child: _SummaryMetric(
               icon: Icons.access_time_rounded,
               value: timeStr,
               unit: '',
-              label: 'Active Time',
+              label: l10n.activityActiveTime,
             ),
           ),
 
@@ -822,13 +846,14 @@ class _ActivitySummaryCard extends StatelessWidget {
             color: const Color(0xFF133E38).withValues(alpha: 0.8),
           ),
 
-          // Stairs
+          // Cadence is measured from event timing; stairs are not
+          // available from the step counter, so they are not shown.
           Expanded(
             child: _SummaryMetric(
-              iconWidget: const _StairsIcon(),
-              value: floors.toString(),
-              unit: 'floors',
-              label: 'Stairs',
+              icon: Icons.speed_rounded,
+              value: cadenceSpm > 0 ? '$cadenceSpm' : '—',
+              unit: cadenceSpm > 0 ? 'spm' : '',
+              label: l10n.activityCadence,
             ),
           ),
         ],
@@ -839,15 +864,13 @@ class _ActivitySummaryCard extends StatelessWidget {
 
 class _SummaryMetric extends StatelessWidget {
   const _SummaryMetric({
-    this.icon,
-    this.iconWidget,
+    required this.icon,
     required this.value,
     required this.unit,
     required this.label,
   });
 
-  final IconData? icon;
-  final Widget? iconWidget;
+  final IconData icon;
   final String value;
   final String unit;
   final String label;
@@ -857,7 +880,7 @@ class _SummaryMetric extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        iconWidget ?? Icon(icon, color: const Color(0xFF00D6A0), size: 21),
+        Icon(icon, color: const Color(0xFF00D6A0), size: 21),
         const SizedBox(height: 7),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -907,34 +930,80 @@ class _SummaryMetric extends StatelessWidget {
 class _StepActivityChartCard extends StatelessWidget {
   const _StepActivityChartCard({
     required this.hourlySteps,
+    required this.history,
     required this.displaySteps,
     required this.chartPeriod,
     required this.selectedBarIndex,
     required this.onPeriodChanged,
     required this.onBarSelected,
     required this.isViewingHistory,
+    required this.reconciledSteps,
   });
 
   final List<int> hourlySteps;
+  final List<DaySteps> history;
   final int displaySteps;
   final String chartPeriod;
-  final int selectedBarIndex;
+  final int? selectedBarIndex;
   final ValueChanged<String> onPeriodChanged;
   final ValueChanged<int> onBarSelected;
   final bool isViewingHistory;
+  final int reconciledSteps;
+
+  bool get _isWeek => chartPeriod == 'Week';
+
+  /// Bars come only from recorded data. There is no generated curve: a
+  /// day with no steps draws no bars, and an unrecorded hour is zero.
+  List<_ChartBar> _barsFor(Locale locale) {
+    if (_isWeek) {
+      return [
+        for (final day in history)
+          _ChartBar(
+            label: _weekdayLabel(day.date, locale),
+            detail: '${day.date.day}/${day.date.month}',
+            steps: day.steps,
+          ),
+      ];
+    }
+    final hourly = hourlySteps.length == 24
+        ? hourlySteps
+        : List<int>.filled(24, 0);
+    return [
+      for (var hour = 0; hour < 24; hour++)
+        _ChartBar(
+          label: _hourLabel(hour, locale),
+          detail: _hourLabel(hour, locale),
+          steps: hourly[hour],
+        ),
+    ];
+  }
+
+  int get _defaultIndex {
+    if (_isWeek) return math.max(0, history.length - 1);
+    if (isViewingHistory) {
+      final peak = peakHourOfDay(hourlySteps);
+      if (peak != null) return peak;
+    }
+    return DateTime.now().hour;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Generate 16 vertical bars matching the reference
-    final barCounts = _generateChartValues(hourlySteps, displaySteps);
-    final maxStep = barCounts.reduce(math.max);
+    final l10n = AppLocalizations.of(context)!;
+    final bars = _barsFor(Localizations.localeOf(context));
+    final maxStep = bars.fold<int>(
+      0,
+      (value, bar) => math.max(value, bar.steps),
+    );
     final effectiveMax = math.max(1500, (maxStep * 1.15).round());
-
-    final selectedValue =
-        barCounts[selectedBarIndex.clamp(0, barCounts.length - 1)];
-
+    final selected = (selectedBarIndex ?? _defaultIndex).clamp(
+      0,
+      bars.length - 1,
+    );
+    final selectedValue = bars[selected].steps;
     final bestHour = peakHourOfDay(hourlySteps);
-    final hasRealHourly = hourlySteps.any((s) => s > 0);
+    final hasRealHourly =
+        hourlySteps.length == 24 && hourlySteps.any((s) => s > 0);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -966,9 +1035,9 @@ class _StepActivityChartCard extends StatelessWidget {
                     size: 22,
                   ),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Step Activity',
-                    style: TextStyle(
+                  Text(
+                    l10n.activityChartTitle,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16.5,
                       fontWeight: FontWeight.w800,
@@ -993,19 +1062,14 @@ class _StepActivityChartCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _PeriodToggleItem(
-                      label: 'Day',
+                      label: l10n.activityPeriodDay,
                       active: chartPeriod == 'Day',
                       onTap: () => onPeriodChanged('Day'),
                     ),
                     _PeriodToggleItem(
-                      label: 'Week',
+                      label: l10n.activityPeriodWeek,
                       active: chartPeriod == 'Week',
                       onTap: () => onPeriodChanged('Week'),
-                    ),
-                    _PeriodToggleItem(
-                      label: 'Month',
-                      active: chartPeriod == 'Month',
-                      onTap: () => onPeriodChanged('Month'),
                     ),
                   ],
                 ),
@@ -1014,13 +1078,31 @@ class _StepActivityChartCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // If viewing history with no hourly detail, show the honest fallback text
-          if (isViewingHistory && !hasRealHourly) ...[
+          // If viewing history with no hourly detail, show the honest fallback text.
+          // The Week view does not need hourly buckets: it plots real day
+          // totals from the seven-day history.
+          if (!_isWeek && isViewingHistory && !hasRealHourly) ...[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Center(
                 child: Text(
-                  'Hourly detail wasn\'t recorded for this day.',
+                  l10n.activityNoHourlyDetail,
+                  style: const TextStyle(
+                    color: Color(0xFFA7BDB8),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ] else if (displaySteps <= 0) ...[
+            // Nothing recorded for this day. An empty chart states that
+            // plainly instead of drawing an invented curve.
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text(
+                  l10n.activityNoStepsRecorded,
                   style: const TextStyle(
                     color: Color(0xFFA7BDB8),
                     fontSize: 13,
@@ -1036,15 +1118,20 @@ class _StepActivityChartCard extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Horizontal Grid Lines & Y-axis labels (1.5k, 1k, 500, 0)
+                  // Horizontal grid lines, labelled from the real maximum of this
+                  // chart rather than a fixed 1.5k scale.
                   Positioned.fill(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        _ChartGridRow(label: '1.5k'),
-                        _ChartGridRow(label: '1k'),
-                        _ChartGridRow(label: '500'),
-                        _ChartGridRow(label: '0'),
+                      children: [
+                        _ChartGridRow(label: _axisLabel(effectiveMax)),
+                        _ChartGridRow(
+                          label: _axisLabel((effectiveMax * 2 / 3).round()),
+                        ),
+                        _ChartGridRow(
+                          label: _axisLabel((effectiveMax / 3).round()),
+                        ),
+                        const _ChartGridRow(label: '0'),
                       ],
                     ),
                   ),
@@ -1057,13 +1144,15 @@ class _StepActivityChartCard extends StatelessWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: List.generate(barCounts.length, (idx) {
-                          final step = barCounts[idx];
-                          final barRatio = (step / effectiveMax).clamp(
-                            0.06,
-                            0.94,
-                          );
-                          final isSelected = idx == selectedBarIndex;
+                        children: List.generate(bars.length, (idx) {
+                          final step = bars[idx].steps;
+                          // A zero hour draws no bar. The old build used a
+                          // minimum height, which made an empty day look
+                          // like measured movement.
+                          final barRatio = step <= 0
+                              ? 0.0
+                              : (step / effectiveMax).clamp(0.06, 0.94);
+                          final isSelected = idx == selected;
 
                           return Expanded(
                             child: GestureDetector(
@@ -1071,8 +1160,8 @@ class _StepActivityChartCard extends StatelessWidget {
                               onTap: () => onBarSelected(idx),
                               child: Container(
                                 alignment: Alignment.bottomCenter,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 2.2,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: _isWeek ? 6.0 : 1.4,
                                 ),
                                 child: Stack(
                                   clipBehavior: Clip.none,
@@ -1082,7 +1171,7 @@ class _StepActivityChartCard extends StatelessWidget {
                                     FractionallySizedBox(
                                       heightFactor: barRatio,
                                       child: Container(
-                                        width: 10,
+                                        width: _isWeek ? 18 : 6,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(
                                             5,
@@ -1149,17 +1238,8 @@ class _StepActivityChartCard extends StatelessWidget {
 
                   // Floating Tooltip above the selected bar
                   Positioned(
-                    left: _calculateTooltipLeft(
-                      selectedBarIndex,
-                      barCounts.length,
-                    ),
-                    top: _calculateTooltipTop(
-                      barCounts[selectedBarIndex.clamp(
-                        0,
-                        barCounts.length - 1,
-                      )],
-                      effectiveMax,
-                    ),
+                    left: _calculateTooltipLeft(selected, bars.length),
+                    top: _calculateTooltipTop(selectedValue, effectiveMax),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -1181,7 +1261,8 @@ class _StepActivityChartCard extends StatelessWidget {
                         ],
                       ),
                       child: Text(
-                        '${formatCount(selectedValue)} steps',
+                        '${bars[selected].detail} · '
+                        '${l10n.activityStepsCount(formatCount(selectedValue))}',
                         style: const TextStyle(
                           color: Color(0xFF00D6A0),
                           fontSize: 12,
@@ -1195,53 +1276,35 @@ class _StepActivityChartCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // Time X-Axis labels: 12AM, 6AM, 12PM, 6PM, 12AM
+            // X-axis labels: five time markers for a day, one per bar for a
+            // week. Both are derived from the same data the bars use.
             Padding(
               padding: const EdgeInsets.only(left: 36, right: 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    '12AM',
-                    style: TextStyle(
-                      color: Color(0xFF7E9D97),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    '6AM',
-                    style: TextStyle(
-                      color: Color(0xFF7E9D97),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    '12PM',
-                    style: TextStyle(
-                      color: Color(0xFF7E9D97),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    '6PM',
-                    style: TextStyle(
-                      color: Color(0xFF7E9D97),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    '12AM',
-                    style: TextStyle(
-                      color: Color(0xFF7E9D97),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+                children: _isWeek
+                    ? [
+                        for (final bar in bars)
+                          Text(
+                            bar.label,
+                            style: const TextStyle(
+                              color: Color(0xFF7E9D97),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                      ]
+                    : [
+                        for (final hour in const [0, 6, 12, 18, 0])
+                          Text(
+                            _hourLabel(hour, Localizations.localeOf(context)),
+                            style: const TextStyle(
+                              color: Color(0xFF7E9D97),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                      ],
               ),
             ),
 
@@ -1250,9 +1313,9 @@ class _StepActivityChartCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  const Text(
-                    'Busiest hour',
-                    style: TextStyle(
+                  Text(
+                    l10n.activityBusiestHour,
+                    style: const TextStyle(
                       color: Color(0xFFA7BDB8),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -1260,7 +1323,7 @@ class _StepActivityChartCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    _hourLabel(bestHour),
+                    _hourLabel(bestHour, Localizations.localeOf(context)),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -1269,11 +1332,40 @@ class _StepActivityChartCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '${hourlySteps[bestHour]} steps',
+                    l10n.activityStepsCount(formatCount(hourlySteps[bestHour])),
                     style: const TextStyle(
                       color: Color(0xFF00D6A0),
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            // Steps recovered from a gap longer than two hours (the app was
+            // not running). Said plainly rather than hidden, because the
+            // hour-by-hour split of a long gap is an interpolation.
+            if (reconciledSteps > 0) ...[
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 13,
+                    color: Color(0xFF7E9D97),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l10n.activityReconciledNote(formatCount(reconciledSteps)),
+                      style: const TextStyle(
+                        color: Color(0xFF7E9D97),
+                        fontSize: 11,
+                        height: 1.35,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
@@ -1285,11 +1377,47 @@ class _StepActivityChartCard extends StatelessWidget {
     );
   }
 
-  static String _hourLabel(int hour) {
-    if (hour == 0) return '12 AM';
-    if (hour < 12) return '$hour AM';
-    if (hour == 12) return '12 PM';
-    return '${hour - 12} PM';
+  /// Clock label for a chart hour, formatted by `intl` for the active
+  /// locale so a 24-hour locale reads "18" rather than "6 PM".
+  ///
+  /// Falls back to a compact fixed form if the locale's date symbols are
+  /// not loaded: a missing translation table must never crash a chart.
+  static String _hourLabel(int hour, Locale locale) {
+    try {
+      final label = DateFormat(
+        'j',
+        locale.toLanguageTag(),
+      ).format(DateTime(2000, 1, 1, hour));
+      // CLDR separates the hour from AM/PM with U+202F (narrow no-break
+      // space). It looks identical but breaks search, so normalise it to
+      // an ordinary space and keep the label greppable.
+      return label.replaceAll(' ', ' ').replaceAll(' ', ' ');
+    } catch (_) {
+      if (hour == 0) return '12 AM';
+      if (hour < 12) return '$hour AM';
+      if (hour == 12) return '12 PM';
+      return '${hour - 12} PM';
+    }
+  }
+
+  /// Compact Y-axis label: 1200 -> "1.2k". Values stay readable at the
+  /// 32 px width the grid gutter allows.
+  static String _axisLabel(int value) {
+    if (value < 1000) return '$value';
+    final thousands = value / 1000;
+    return thousands >= 10
+        ? '${thousands.round()}k'
+        : '${thousands.toStringAsFixed(1)}k';
+  }
+
+  /// Weekday abbreviation for a history bar, localised by `intl`, with a
+  /// numeric fallback so a missing locale table cannot crash the chart.
+  static String _weekdayLabel(DateTime date, Locale locale) {
+    try {
+      return DateFormat.E(locale.toLanguageTag()).format(date);
+    } catch (_) {
+      return '${date.day}/${date.month}';
+    }
   }
 
   double _calculateTooltipLeft(int index, int total) {
@@ -1304,41 +1432,20 @@ class _StepActivityChartCard extends StatelessWidget {
     final barTop = 180 - (ratio * 160);
     return (barTop - 34).clamp(0.0, 130.0);
   }
+}
 
-  List<int> _generateChartValues(List<int> hourly, int totalSteps) {
-    // 16 bars representing intervals across 24h
-    if (hourly.length == 24 && hourly.any((s) => s > 0)) {
-      final sampled = <int>[];
-      for (var i = 0; i < 16; i++) {
-        final hour = ((i / 15) * 23).round();
-        sampled.add(hourly[hour]);
-      }
-      return sampled;
-    }
+/// One column of the activity chart. Labels come from the data itself, so
+/// a day view is labelled by hour and a week view by weekday.
+class _ChartBar {
+  const _ChartBar({
+    required this.label,
+    required this.detail,
+    required this.steps,
+  });
 
-    // Realistic proportional curve peaking in morning & 6 PM (matching step.png)
-    final weights = [
-      0.15,
-      0.22,
-      0.40,
-      0.65,
-      0.35,
-      0.55,
-      0.90,
-      0.75,
-      0.48,
-      0.60,
-      1.25,
-      0.92,
-      0.50,
-      0.42,
-      0.62,
-      0.28,
-    ];
-
-    final baseScale = totalSteps > 0 ? (totalSteps / 10.0) : 1000.0;
-    return weights.map((w) => (w * baseScale).round()).toList();
-  }
+  final String label;
+  final String detail;
+  final int steps;
 }
 
 class _ChartGridRow extends StatelessWidget {
@@ -1419,6 +1526,7 @@ class _GoalProgressCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       decoration: BoxDecoration(
@@ -1458,9 +1566,9 @@ class _GoalProgressCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'You\'re on track!',
-                  style: TextStyle(
+                Text(
+                  l10n.activityOnTrack,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 15.5,
                     fontWeight: FontWeight.w800,
@@ -1470,8 +1578,10 @@ class _GoalProgressCard extends ConsumerWidget {
                 const SizedBox(height: 3),
                 Text(
                   remainingSteps > 0
-                      ? 'Only ${formatCount(remainingSteps)} steps left to reach your goal.'
-                      : 'You reached your daily step goal! 🎉',
+                      ? l10n.activityStepsLeftToGoal(
+                          formatCount(remainingSteps),
+                        )
+                      : l10n.activityGoalReached,
                   style: const TextStyle(
                     color: Color(0xFFA7BDB8),
                     fontSize: 12.5,
@@ -1530,8 +1640,9 @@ class _HistoryDayStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (history.isEmpty) return const SizedBox.shrink();
 
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
     final now = DateTime.now();
-    const weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1543,9 +1654,9 @@ class _HistoryDayStrip extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '7-Day History',
-            style: TextStyle(
+          Text(
+            l10n.activitySevenDayHistory,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -1593,7 +1704,10 @@ class _HistoryDayStrip extends ConsumerWidget {
                     child: Column(
                       children: [
                         Text(
-                          weekdays[day.date.weekday - 1],
+                          DateFormat.E(locale.toLanguageTag())
+                              .format(day.date)
+                              .characters
+                              .first,
                           style: TextStyle(
                             color: isSelected
                                 ? const Color(0xFF00241E)
@@ -1635,6 +1749,7 @@ class _FloatingBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       top: false,
       child: Padding(
@@ -1674,7 +1789,7 @@ class _FloatingBottomNavBar extends StatelessWidget {
                         // Home (Active)
                         _NavItem(
                           icon: Icons.home_rounded,
-                          label: 'Home',
+                          label: l10n.todayTab,
                           active: true,
                           onTap: () => context.go('/today'),
                         ),
@@ -1682,7 +1797,7 @@ class _FloatingBottomNavBar extends StatelessWidget {
                         // Diary
                         _NavItem(
                           icon: Icons.menu_book_rounded,
-                          label: 'Diary',
+                          label: l10n.diaryTab,
                           active: false,
                           onTap: () => context.go('/diary'),
                         ),
@@ -1693,7 +1808,7 @@ class _FloatingBottomNavBar extends StatelessWidget {
                         // Insights
                         _NavItem(
                           icon: Icons.bar_chart_rounded,
-                          label: 'Insights',
+                          label: l10n.insightsTab,
                           active: false,
                           onTap: () => context.go('/insights'),
                         ),
@@ -1701,7 +1816,7 @@ class _FloatingBottomNavBar extends StatelessWidget {
                         // Profile
                         _NavItem(
                           icon: Icons.person_outline_rounded,
-                          label: 'Profile',
+                          label: l10n.profileTab,
                           active: false,
                           onTap: () => context.go('/profile'),
                         ),
@@ -2060,69 +2175,6 @@ class _TargetIconBadge extends StatelessWidget {
   }
 }
 
-/// Custom Stairs Icon with upward diagonal arrow.
-class _StairsIcon extends StatelessWidget {
-  const _StairsIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 22,
-      height: 21,
-      child: CustomPaint(painter: _StairsPainter()),
-    );
-  }
-}
-
-class _StairsPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF00D6A0)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    // Steps line
-    final stepsPath = Path()
-      ..moveTo(2, size.height - 2)
-      ..lineTo(8, size.height - 2)
-      ..lineTo(8, size.height - 8)
-      ..lineTo(14, size.height - 8)
-      ..lineTo(14, size.height - 14)
-      ..lineTo(20, size.height - 14);
-
-    canvas.drawPath(stepsPath, paint);
-
-    // Upward arrow on top-right
-    final arrowPaint = Paint()
-      ..color = const Color(0xFF00D6A0)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(
-      Offset(size.width * 0.45, size.height * 0.45),
-      Offset(size.width * 0.85, 2),
-      arrowPaint,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.60, 2),
-      Offset(size.width * 0.85, 2),
-      arrowPaint,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.85, size.height * 0.35),
-      Offset(size.width * 0.85, 2),
-      arrowPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
 /// Organic leaf silhouette background painter.
 class _LeafSilhouettePainter extends CustomPainter {
   @override
@@ -2165,6 +2217,7 @@ class _CalendarHistorySheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
 
     return Padding(
@@ -2181,9 +2234,9 @@ class _CalendarHistorySheet extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Activity History & Calendar',
-                style: TextStyle(
+              Text(
+                l10n.activityHistoryTitle,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -2212,16 +2265,16 @@ class _CalendarHistorySheet extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 13),
             ),
             icon: const Icon(Icons.add_rounded, size: 20),
-            label: const Text(
-              'Log Steps',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+            label: Text(
+              l10n.activityLogSteps,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
             ),
           ),
           const SizedBox(height: 16),
 
-          const Text(
-            'Select a day to view its recorded steps and activity chart:',
-            style: TextStyle(
+          Text(
+            l10n.activityHistoryHint,
+            style: const TextStyle(
               color: Color(0xFFA7BDB8),
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -2289,7 +2342,7 @@ class _CalendarHistorySheet extends ConsumerWidget {
                     ),
                   ),
                   trailing: Text(
-                    '${formatCount(day.steps)} steps',
+                    l10n.activityStepsCount(formatCount(day.steps)),
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
@@ -2307,6 +2360,7 @@ class _CalendarHistorySheet extends ConsumerWidget {
 }
 
 Future<void> _showLogStepsModal(BuildContext context, WidgetRef ref) async {
+  final l10n = AppLocalizations.of(context)!;
   final controller = TextEditingController();
   var selectedQuick = 1000;
 
@@ -2335,9 +2389,9 @@ Future<void> _showLogStepsModal(BuildContext context, WidgetRef ref) async {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Log Activity Steps',
-                        style: TextStyle(
+                      Text(
+                        l10n.activityLogActivitySteps,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -2350,9 +2404,12 @@ Future<void> _showLogStepsModal(BuildContext context, WidgetRef ref) async {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Manually add steps from walking, treadmill, or outdoor exercise.',
-                    style: TextStyle(fontSize: 13, color: Color(0xFFA7BDB8)),
+                  Text(
+                    l10n.activityManualSheetBody,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFFA7BDB8),
+                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -2409,9 +2466,9 @@ Future<void> _showLogStepsModal(BuildContext context, WidgetRef ref) async {
                       fontWeight: FontWeight.w700,
                     ),
                     decoration: InputDecoration(
-                      labelText: 'Custom Step Count',
+                      labelText: l10n.activityCustomStepCount,
                       labelStyle: const TextStyle(color: Color(0xFFA7BDB8)),
-                      hintText: 'e.g. 1500',
+                      hintText: l10n.activityCustomStepHint,
                       hintStyle: const TextStyle(color: Colors.white30),
                       filled: true,
                       fillColor: const Color(0xFF072B26),
@@ -2447,7 +2504,9 @@ Future<void> _showLogStepsModal(BuildContext context, WidgetRef ref) async {
                           Navigator.of(sheetCtx).pop();
                           AppToast.show(
                             ScaffoldMessenger.of(context),
-                            message: 'Added +${formatCount(input)} steps!',
+                            message: l10n.activityStepsAdded(
+                              formatCount(input),
+                            ),
                           );
                         }
                       }
@@ -2460,9 +2519,9 @@ Future<void> _showLogStepsModal(BuildContext context, WidgetRef ref) async {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'Add Steps',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.activityAddSteps,
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
@@ -2489,6 +2548,7 @@ class _PermissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -2504,19 +2564,19 @@ class _PermissionCard extends StatelessWidget {
             size: 40,
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Physical Activity Access Needed',
-            style: TextStyle(
+          Text(
+            l10n.activityPermissionHeading,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Health AI uses your phone\'s internal step sensor to track your daily movement 100% offline.',
+          Text(
+            l10n.activityPermissionReason,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFFA7BDB8), fontSize: 13),
+            style: const TextStyle(color: Color(0xFFA7BDB8), fontSize: 13),
           ),
           const SizedBox(height: 18),
           ElevatedButton(
@@ -2531,9 +2591,9 @@ class _PermissionCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text(
-              'Grant Permission',
-              style: TextStyle(fontWeight: FontWeight.w800),
+            child: Text(
+              l10n.activityGrantPermission,
+              style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
         ],
