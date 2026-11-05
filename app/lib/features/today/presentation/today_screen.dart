@@ -3,28 +3,26 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'package:app/core/format/count_format.dart';
 import 'package:app/data/preferences/body_metrics_controller.dart';
 import 'package:app/data/preferences/sleep_controller.dart';
 import 'package:app/data/preferences/water_controller.dart';
 import 'package:app/data/sensors/step_tracker.dart';
-import 'package:app/design_system/components/app_card.dart';
-import 'package:app/design_system/theme/app_theme.dart';
 import 'package:app/design_system/tokens/tokens.dart';
+import 'package:app/domain/entities/activity_snapshot.dart';
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/features/today/application/today_state.dart';
 
-/// Screen 2: Main Dashboard (Welcome Back) matching ref_ui_updated.png
+/// Screen: Main Dashboard (Today) elevated to the premium dark fitness visual
+/// language specified in step.png.
 ///
-/// Features:
-/// - Header: "Good morning, [Name]" with circular avatar
-/// - Three prominent circular progress indicators side-by-side for
-///   Calories Remaining, Current Calories (hero ring), and Active Kcal.
-/// - Inline micro-trends entry point
-/// - Quick Stats Row: 4 sleek cards for Steps, Water (Liters), Sleep duration, Active Cal
-/// - Prominent AI Nutrition Coach / Scan Meal card
-/// - Daily Highlights carousel with micro-visualizations & macronutrient balances
+/// Visual Palette:
+/// - Background: Deep black-green #001C19 with ambient radial teal glow
+/// - Surfaces: Dark emerald glassmorphic #072521 with hairline #103F38 borders
+/// - Highlights: Neon mint #00D6A0, secondary emerald #19B88A, accent gold #FFC247
+/// - Typography: White #FFFFFF bold values, soft teal-gray #A7BDB8 labels
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -32,53 +30,105 @@ class TodayScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(todayStateProvider);
     final metrics = ref.watch(bodyMetricsProvider);
-    final c = context.appColors;
 
     final displayName = metrics.name.trim().isEmpty
         ? 'Anshul'
         : metrics.name.trim();
 
     return Scaffold(
-      backgroundColor: c.canvas,
-      body: Container(
-        decoration: BoxDecoration(color: c.canvas),
-        child: SafeArea(
-          bottom: false,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              16,
-              AppSpacing.screenPadding,
-              120, // Clear floating bottom nav bar & scan button
+      backgroundColor: const Color(0xFF001C19),
+      body: Stack(
+        children: [
+          // 1. Ambient background radial gradient glow
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0.7, -0.65),
+                  radius: 1.1,
+                  colors: [
+                    Color(0xFF013B32),
+                    Color(0xFF00221E),
+                    Color(0xFF001714),
+                  ],
+                  stops: [0.0, 0.45, 1.0],
+                ),
+              ),
             ),
-            children: [
-              _HeaderSection(name: displayName),
-              const SizedBox(height: 18),
-
-              // Top Section: Calories Ring & Real Macros Intake (Protein, Carbs, Fat)
-              _CaloriesAndMacrosCard(state: state),
-              const SizedBox(height: 18),
-
-              // Quick Stats Row: Steps, Water, Sleep (Active Cal removed)
-              const _QuickStatsGrid(),
-              const SizedBox(height: 18),
-
-              // Prominent AI Nutrition Coach Chatbot Entry Card
-              const _AiNutritionCoachCard(),
-              const SizedBox(height: 20),
-
-              // Daily Highlights Section
-              _DailyHighlightsSection(state: state),
-            ],
           ),
-        ),
+
+          // 2. Subtle organic leaf background accent at top-left
+          Positioned(
+            top: -30,
+            left: -40,
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: 0.10,
+                child: CustomPaint(
+                  size: const Size(180, 220),
+                  painter: _LeafSilhouettePainter(),
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Subtle organic leaf background accent at bottom-right
+          Positioned(
+            bottom: 110,
+            right: -30,
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: 0.08,
+                child: Transform.rotate(
+                  angle: 2.4,
+                  child: CustomPaint(
+                    size: const Size(160, 200),
+                    painter: _LeafSilhouettePainter(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 4. Main Scrollable Dashboard Content
+          SafeArea(
+            bottom: false,
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                16,
+                AppSpacing.screenPadding,
+                130, // Clear floating bottom nav bar & raised scan button
+              ),
+              children: [
+                _HeaderSection(name: displayName),
+                const SizedBox(height: 18),
+
+                // Top Hero Section: Calories Ring & Real Macronutrient Breakdown
+                _CaloriesAndMacrosCard(state: state),
+                const SizedBox(height: 18),
+
+                // Quick Stats Row: Steps, Water, Sleep
+                const _QuickStatsGrid(),
+                const SizedBox(height: 18),
+
+                // Prominent AI Nutrition Scanner / Quick Food Log Card
+                const _AiNutritionCoachCard(),
+                const SizedBox(height: 20),
+
+                // Daily Highlights Section
+                _DailyHighlightsSection(state: state),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Header matching ref_ui_updated.png:
-/// "Good morning," subtitle, "[Name]" bold title, right avatar
+/// Header with dynamic time-of-day greeting, bold white user name, date pill, and avatar.
 class _HeaderSection extends StatelessWidget {
   const _HeaderSection({required this.name});
 
@@ -86,8 +136,19 @@ class _HeaderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning,'
+        : hour < 17
+            ? 'Good afternoon,'
+            : 'Good evening,';
+    final greetingIcon = hour < 12
+        ? Icons.wb_sunny_rounded
+        : hour < 17
+            ? Icons.sunny
+            : Icons.nights_stay_rounded;
+
+    final dateFormatted = DateFormat('EEE, d MMM').format(DateTime.now());
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -96,66 +157,102 @@ class _HeaderSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Good morning,',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: scheme.onSurfaceVariant,
-                  letterSpacing: -0.2,
-                ),
+              Row(
+                children: [
+                  Icon(greetingIcon, size: 14, color: const Color(0xFFFFC247)),
+                  const SizedBox(width: 5),
+                  Text(
+                    greeting,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFA7BDB8),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 2),
               Text(
                 name,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
-                  color: scheme.onSurface,
+                  color: Colors.white,
                   letterSpacing: -0.6,
                 ),
               ),
             ],
           ),
         ),
+
+        // Date pill badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: const Color(0xFF072521),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF104038)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.calendar_today_rounded,
+                size: 13,
+                color: Color(0xFF00D6A0),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                dateFormatted,
+                style: const TextStyle(
+                  color: Color(0xFFA7BDB8),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+
+        // Avatar with emerald/mint halo ring
         Semantics(
           button: true,
           label: 'Account and Profile',
           child: GestureDetector(
             onTap: () => context.push('/profile'),
             child: Container(
-              width: 46,
-              height: 46,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [colors.accent, colors.primary],
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF00E5A3), Color(0xFF0F5A3C)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 border: Border.all(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? colors.gold
-                      : Colors.white,
-                  width: 2.5,
+                  color: const Color(0xFF00E5A3).withValues(alpha: 0.6),
+                  width: 2.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: colors.primary.withValues(alpha: 0.25),
+                    color: const Color(0xFF00E5A3).withValues(alpha: 0.25),
                     blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
               child: ClipOval(
                 child: Container(
-                  color: colors.primaryWash,
+                  color: const Color(0xFF012924),
                   child: Center(
                     child: Text(
                       name.characters.first.toUpperCase(),
-                      style: TextStyle(
-                        color: colors.primary,
-                        fontSize: 18,
+                      style: const TextStyle(
+                        color: Color(0xFF00E5A3),
+                        fontSize: 17,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -170,21 +267,22 @@ class _HeaderSection extends StatelessWidget {
   }
 }
 
-/// Calories & Real Macronutrient Breakdown Card
-class _CaloriesAndMacrosCard extends StatelessWidget {
+/// Calories & Real Macronutrient Breakdown Card with central hero ring.
+class _CaloriesAndMacrosCard extends ConsumerWidget {
   const _CaloriesAndMacrosCard({required this.state});
 
   final TodayState state;
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
+  Widget build(BuildContext context, WidgetRef ref) {
     final consumed = state.caloriesConsumed;
     final target = state.caloriesTarget > 0 ? state.caloriesTarget : 2000;
     final remaining = math.max(0, target - consumed);
     final progressRatio = (consumed / target).clamp(0.0, 1.0);
+
+    final stepSnapshot = ref.watch(stepTrackerProvider).valueOrNull;
+    final burnedKcal =
+        ((stepSnapshot?.steps ?? 0) * kKcalPerStepEstimate).round();
 
     final protein = state.macros.firstWhere(
       (m) => m.kind == MacroKind.protein,
@@ -201,9 +299,20 @@ class _CaloriesAndMacrosCard extends StatelessWidget {
       orElse: () => const MacroLine(kind: MacroKind.fat, value: 0, target: 60),
     );
 
-    return AppCard(
-      radius: 24,
+    return Container(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF072521),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF104038), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00110E).withValues(alpha: 0.5),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           Row(
@@ -214,70 +323,92 @@ class _CaloriesAndMacrosCard extends StatelessWidget {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    'Remaining',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.hourglass_top_rounded,
+                        size: 13,
+                        color: Color(0xFFFFC247),
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Remaining',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFA7BDB8),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   Text(
                     formatCount(remaining),
-                    style: TextStyle(
-                      fontSize: 20,
+                    style: const TextStyle(
+                      fontSize: 21,
                       fontWeight: FontWeight.w800,
-                      color: colors.gold,
+                      color: Color(0xFFFFC247),
                       letterSpacing: -0.4,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'kcal left',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
-                      color: scheme.onSurfaceVariant,
+                      color: Color(0xFFA7BDB8),
                     ),
                   ),
                 ],
               ),
 
-              // Center: Calories consumed / target hero ring
+              // Center: Calories consumed / target hero circular ring
               _CenterHeroCircularIndicator(
                 consumed: consumed,
                 target: target,
                 progress: progressRatio,
               ),
 
-              // Right: Calories Eaten
+              // Right: Calories Burned from steps
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    'Eaten',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.local_fire_department_rounded,
+                        size: 13,
+                        color: Color(0xFFFF8A65),
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Burned',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFA7BDB8),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    formatCount(consumed),
-                    style: TextStyle(
-                      fontSize: 20,
+                    formatCount(burnedKcal),
+                    style: const TextStyle(
+                      fontSize: 21,
                       fontWeight: FontWeight.w800,
-                      color: colors.primary,
+                      color: Color(0xFFFF8A65),
                       letterSpacing: -0.4,
                     ),
                   ),
-                  Text(
-                    'of ${formatCount(target)}',
+                  const Text(
+                    'active kcal',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
-                      color: scheme.onSurfaceVariant,
+                      color: Color(0xFFA7BDB8),
                     ),
                   ),
                 ],
@@ -285,7 +416,7 @@ class _CaloriesAndMacrosCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          Divider(height: 1, color: scheme.outlineVariant),
+          const Divider(height: 1, color: Color(0xFF104038)),
           const SizedBox(height: 14),
 
           // 3 Real Macronutrient Progress Bars (Protein, Carbs, Fat)
@@ -297,7 +428,7 @@ class _CaloriesAndMacrosCard extends StatelessWidget {
                   grams: '${protein.value}g',
                   percentage: '${(protein.ratio * 100).toInt()}%',
                   ratio: protein.ratio,
-                  color: colors.macroProtein,
+                  color: const Color(0xFF00D6A0),
                   onTap: () => context.push('/macro-breakdown?kind=protein'),
                 ),
               ),
@@ -308,7 +439,7 @@ class _CaloriesAndMacrosCard extends StatelessWidget {
                   grams: '${carbs.value}g',
                   percentage: '${(carbs.ratio * 100).toInt()}%',
                   ratio: carbs.ratio,
-                  color: colors.macroCarbs,
+                  color: const Color(0xFFFFC247),
                   onTap: () => context.push('/macro-breakdown?kind=carbs'),
                 ),
               ),
@@ -319,7 +450,7 @@ class _CaloriesAndMacrosCard extends StatelessWidget {
                   grams: '${fat.value}g',
                   percentage: '${(fat.ratio * 100).toInt()}%',
                   ratio: fat.ratio,
-                  color: colors.macroFat,
+                  color: const Color(0xFF19B88A),
                   onTap: () => context.push('/macro-breakdown?kind=fat'),
                 ),
               ),
@@ -350,20 +481,17 @@ class _MacroProgressItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            color: colors.primaryWash.withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: scheme.outlineVariant, width: 0.8),
+            color: const Color(0xFF062A25),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFF104038), width: 1.0),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,15 +504,21 @@ class _MacroProgressItem extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: color,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.5),
+                          blurRadius: 4,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 5),
                   Text(
                     label,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: scheme.onSurfaceVariant,
+                      color: Color(0xFFA7BDB8),
                     ),
                   ),
                 ],
@@ -395,10 +529,10 @@ class _MacroProgressItem extends StatelessWidget {
                 children: [
                   Text(
                     grams,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800,
-                      color: scheme.onSurface,
+                      color: Colors.white,
                     ),
                   ),
                   Text(
@@ -417,7 +551,7 @@ class _MacroProgressItem extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: ratio.clamp(0.0, 1.0),
                   minHeight: 4,
-                  backgroundColor: color.withValues(alpha: 0.15),
+                  backgroundColor: const Color(0xFF021B17),
                   valueColor: AlwaysStoppedAnimation<Color>(color),
                 ),
               ),
@@ -442,52 +576,58 @@ class _CenterHeroCircularIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
     return SizedBox(
-      width: 124,
-      height: 124,
+      width: 126,
+      height: 126,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          CustomPaint(
-            size: const Size(124, 124),
-            painter: _ArcProgressPainter(
-              progress: progress,
-              strokeWidth: 10,
-              trackColor: scheme.outlineVariant,
-              progressColor: colors.primary,
-              gradientColors: [colors.accent, colors.primary],
+          // Inner dark depth circle
+          Container(
+            width: 98,
+            height: 98,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFF031E1B),
             ),
           ),
+
+          // Illuminated mint circular arc
+          CustomPaint(
+            size: const Size(126, 126),
+            painter: _ArcProgressPainter(
+              progress: progress,
+              strokeWidth: 9.5,
+              trackColor: const Color(0xFF0A332C),
+              progressColor: const Color(0xFF00D6A0),
+              gradientColors: const [Color(0xFF00F0A8), Color(0xFF00D6A0)],
+            ),
+          ),
+
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Calories',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onSurfaceVariant,
-                ),
+              const Icon(
+                Icons.restaurant_rounded,
+                size: 15,
+                color: Color(0xFF00D6A0),
               ),
               const SizedBox(height: 2),
               Text(
                 formatCount(consumed),
-                style: TextStyle(
-                  fontSize: 22,
+                style: const TextStyle(
+                  fontSize: 21,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.6,
-                  color: scheme.onSurface,
+                  color: Colors.white,
                 ),
               ),
               Text(
                 'Goal ${formatCount(target)}',
-                style: TextStyle(
-                  fontSize: 10,
+                style: const TextStyle(
+                  fontSize: 9.5,
                   fontWeight: FontWeight.w600,
-                  color: scheme.onSurfaceVariant,
+                  color: Color(0xFFA7BDB8),
                 ),
               ),
             ],
@@ -564,13 +704,12 @@ class _ArcProgressPainter extends CustomPainter {
       old.progress != progress || old.progressColor != progressColor;
 }
 
-/// Quick Stats Row: Steps, Water, Sleep (Only 3 tiles, Active Cal removed)
+/// Quick Stats Row: Steps, Water, Sleep with live progress metrics.
 class _QuickStatsGrid extends ConsumerWidget {
   const _QuickStatsGrid();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.appColors;
     final stepSnapshot = ref.watch(stepTrackerProvider).valueOrNull;
     final stepGoal = ref.watch(stepGoalProvider);
     final water = ref.watch(waterTodayProvider);
@@ -589,12 +728,13 @@ class _QuickStatsGrid extends ConsumerWidget {
         Expanded(
           child: _StatCard(
             icon: Icons.directions_walk_rounded,
-            iconColor: colors.primary,
-            iconBg: colors.primary.withValues(alpha: 0.12),
+            iconColor: const Color(0xFF00D6A0),
+            iconBg: const Color(0xFF00D6A0).withValues(alpha: 0.15),
             value: formatCount(stepCount),
             subtext: 'Goal ${formatCount(stepGoal)}',
-            progress: (stepCount / stepGoal).clamp(0.0, 1.0),
-            progressColor: colors.primary,
+            progress: (stepCount / (stepGoal > 0 ? stepGoal : 10000))
+                .clamp(0.0, 1.0),
+            progressColor: const Color(0xFF00D6A0),
             onTap: () => context.push('/activity'),
           ),
         ),
@@ -604,12 +744,12 @@ class _QuickStatsGrid extends ConsumerWidget {
         Expanded(
           child: _StatCard(
             icon: Icons.water_drop_rounded,
-            iconColor: colors.water,
-            iconBg: colors.water.withValues(alpha: 0.12),
+            iconColor: const Color(0xFF00B4D8),
+            iconBg: const Color(0xFF00B4D8).withValues(alpha: 0.15),
             value: '${waterLiters.toStringAsFixed(1)}L',
             subtext: 'Goal ${waterGoal.toStringAsFixed(1)}L',
             progress: water.progress,
-            progressColor: colors.water,
+            progressColor: const Color(0xFF00B4D8),
             onTap: () => context.push('/water'),
           ),
         ),
@@ -619,14 +759,17 @@ class _QuickStatsGrid extends ConsumerWidget {
         Expanded(
           child: _StatCard(
             icon: Icons.bedtime_rounded,
-            iconColor: colors.sleep,
-            iconBg: colors.sleep.withValues(alpha: 0.12),
+            iconColor: const Color(0xFF818CF8),
+            iconBg: const Color(0xFF818CF8).withValues(alpha: 0.15),
             value: sleepMinutes > 0
                 ? '${sleepMinutes ~/ 60}h ${sleepMinutes % 60}m'
                 : '0h 0m',
-            subtext: 'Goal ${(sleepGoalMinutes / 60).toStringAsFixed(1)}h',
-            progress: (sleepMinutes / sleepGoalMinutes).clamp(0.0, 1.0),
-            progressColor: colors.sleep,
+            subtext:
+                'Goal ${(sleepGoalMinutes / 60).toStringAsFixed(1)}h',
+            progress: (sleepMinutes /
+                    (sleepGoalMinutes > 0 ? sleepGoalMinutes : 480))
+                .clamp(0.0, 1.0),
+            progressColor: const Color(0xFF818CF8),
             onTap: () => context.push('/sleep'),
           ),
         ),
@@ -658,158 +801,202 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
-      radius: 20,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 19, color: iconColor),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: scheme.onSurface,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtext,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 4,
-              backgroundColor: scheme.outlineVariant,
-              valueColor: AlwaysStoppedAnimation(progressColor),
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF072521),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF104038), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00110E).withValues(alpha: 0.4),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 19, color: iconColor),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtext,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFA7BDB8),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 4,
+                    backgroundColor: const Color(0xFF021B17),
+                    valueColor: AlwaysStoppedAnimation(progressColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-/// Prominent "AI Nutrition Coach chatbot" entry card matching ref_ui_updated.png
+/// Prominent AI Nutrition Scanner / Quick Food Log Card
 class _AiNutritionCoachCard extends StatelessWidget {
   const _AiNutritionCoachCard();
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
-    return AppCard(
-      radius: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      onTap: () => context.push('/scan'),
-      child: Row(
-        children: [
-          // Glowing avatar disc
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [colors.accent, colors.primary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: colors.accent.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.auto_awesome_rounded,
-                color: Colors.white,
-                size: 22,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'AI Nutrition Coach',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: scheme.onSurface,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Meal detection • Instant logging • Insights',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w500,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            decoration: BoxDecoration(
-              color: colors.primary,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.camera_alt_outlined,
-                  color: scheme.onPrimary,
-                  size: 14,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  'Scan',
-                  style: TextStyle(
-                    color: scheme.onPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF072521),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFF00E5A3).withValues(alpha: 0.35),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00E5A3).withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          onTap: () => context.push('/scan'),
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                // Glowing scanner badge
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF012924),
+                    border: Border.all(
+                      color: const Color(0xFF00E5A3),
+                      width: 1.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF00E5A3).withValues(alpha: 0.30),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.crop_free_rounded,
+                      color: Color(0xFF00E5A3),
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'AI Vision Scanner',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Point camera at any meal for offline macros',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFFA7BDB8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00D6A0),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF00D6A0).withValues(alpha: 0.35),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.camera_alt_outlined,
+                        color: Color(0xFF00241E),
+                        size: 14,
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        'Scan',
+                        style: TextStyle(
+                          color: Color(0xFF00241E),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -823,9 +1010,6 @@ class _DailyHighlightsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
     final hasMeals = state.caloriesConsumed > 0;
 
     return Column(
@@ -834,23 +1018,23 @@ class _DailyHighlightsSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            const Text(
               'Daily Highlights',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
-                color: scheme.onSurface,
+                color: Colors.white,
                 letterSpacing: -0.3,
               ),
             ),
             GestureDetector(
               onTap: () => context.push('/diary'),
-              child: Text(
+              child: const Text(
                 'Diary >',
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: colors.primary,
+                  color: Color(0xFF00D6A0),
                 ),
               ),
             ),
@@ -861,6 +1045,7 @@ class _DailyHighlightsSection extends StatelessWidget {
           height: 118,
           child: ListView(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
             children: [
               _HighlightCard(
                 title: 'Daily Nutrition',
@@ -868,9 +1053,9 @@ class _DailyHighlightsSection extends StatelessWidget {
                     ? 'Logged ${state.caloriesConsumed} kcal today across meals.'
                     : 'No meals logged yet today. Tap Scan to capture your breakfast, lunch or snack.',
                 icon: Icons.insights_rounded,
-                iconColor: colors.primary,
+                iconColor: const Color(0xFF00D6A0),
                 chipText: hasMeals ? 'Active' : 'Get Started',
-                chipColor: colors.primary,
+                chipColor: const Color(0xFF00D6A0),
                 onTap: () => context.push('/diary'),
               ),
               const SizedBox(width: 12),
@@ -880,19 +1065,20 @@ class _DailyHighlightsSection extends StatelessWidget {
                     ? 'Check your personalized protein, carbs, and fat breakdown in Insights.'
                     : 'Personalized targets calculated to help reach your wellness goal.',
                 icon: Icons.pie_chart_outline_rounded,
-                iconColor: colors.gold,
+                iconColor: const Color(0xFFFFC247),
                 chipText: 'Target',
-                chipColor: colors.gold,
+                chipColor: const Color(0xFFFFC247),
                 onTap: () => context.push('/insights'),
               ),
               const SizedBox(width: 12),
               _HighlightCard(
                 title: 'Hydration Status',
-                subtitle: 'Track your daily water glasses to keep energy and metabolism high.',
+                subtitle:
+                    'Track your daily water glasses to keep energy and metabolism high.',
                 icon: Icons.water_drop_outlined,
-                iconColor: colors.water,
+                iconColor: const Color(0xFF00B4D8),
                 chipText: 'Hydration',
-                chipColor: colors.water,
+                chipColor: const Color(0xFF00B4D8),
                 onTap: () => context.push('/water'),
               ),
             ],
@@ -924,15 +1110,19 @@ class _HighlightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Container(
       width: 250,
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: const Color(0xFF072521),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.outlineVariant, width: 1.0),
-        boxShadow: AppShadows.card,
+        border: Border.all(color: const Color(0xFF104038), width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00110E).withValues(alpha: 0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -954,10 +1144,10 @@ class _HighlightCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           title,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
-                            color: scheme.onSurface,
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -968,7 +1158,7 @@ class _HighlightCard extends StatelessWidget {
                         vertical: 2.5,
                       ),
                       decoration: BoxDecoration(
-                        color: chipColor.withValues(alpha: 0.12),
+                        color: chipColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -987,11 +1177,11 @@ class _HighlightCard extends StatelessWidget {
                   subtitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11.5,
                     height: 1.35,
                     fontWeight: FontWeight.w500,
-                    color: scheme.onSurfaceVariant,
+                    color: Color(0xFFA7BDB8),
                   ),
                 ),
               ],
@@ -1001,4 +1191,29 @@ class _HighlightCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Organic leaf silhouette background painter matching step tracker aesthetics.
+class _LeafSilhouettePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF00D6A0)
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, size.height * 0.5)
+      ..quadraticBezierTo(size.width * 0.5, 0, size.width, size.height * 0.2)
+      ..quadraticBezierTo(
+        size.width * 0.7,
+        size.height * 0.7,
+        0,
+        size.height * 0.5,
+      );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

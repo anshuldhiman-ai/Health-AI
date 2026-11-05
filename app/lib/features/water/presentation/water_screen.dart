@@ -131,7 +131,7 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
                   FilledButton(
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(50),
-                      backgroundColor: const Color(0xFF0F5A3C),
+                      backgroundColor: Theme.of(ctx).colorScheme.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -212,7 +212,7 @@ class _WaterScreenState extends ConsumerState<WaterScreen> {
             AppSpacing.screenPadding,
             12,
             AppSpacing.screenPadding,
-            36,
+            130,
           ),
           children: [
             // Header
@@ -560,6 +560,7 @@ class _LuminousWaterDroplet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = (liters / goalLiters).clamp(0.0, 1.0);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Center(
       child: SizedBox(
@@ -576,7 +577,7 @@ class _LuminousWaterDroplet extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
+                    color: const Color(0xFF00B4D8).withValues(alpha: isDark ? 0.22 : 0.35),
                     blurRadius: 40,
                     spreadRadius: 8,
                   ),
@@ -592,15 +593,22 @@ class _LuminousWaterDroplet extends StatelessWidget {
                 height: 240,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFFE0F2FE),
-                      const Color(0xFFBAE6FD).withValues(alpha: 0.7),
-                    ],
+                    colors: isDark
+                        ? [
+                            const Color(0xFF04272E),
+                            const Color(0xFF02161A),
+                          ]
+                        : [
+                            const Color(0xFFE0F2FE),
+                            const Color(0xFFBAE6FD).withValues(alpha: 0.7),
+                          ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: isDark
+                        ? const Color(0xFF00B4D8).withValues(alpha: 0.35)
+                        : Colors.white.withValues(alpha: 0.8),
                     width: 2.5,
                   ),
                 ),

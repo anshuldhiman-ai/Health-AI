@@ -26,33 +26,59 @@ class InsightsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(insightsStateProvider);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenPadding,
-            AppSpacing.x2,
-            AppSpacing.screenPadding,
-            96,
+      body: Stack(
+        children: [
+          if (isDark)
+            Positioned(
+              top: -60,
+              left: -40,
+              child: Container(
+                width: 240,
+                height: 240,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF00D6A0).withValues(alpha: 0.04),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF00D6A0).withValues(alpha: 0.06),
+                      blurRadius: 80,
+                      spreadRadius: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          SafeArea(
+            bottom: false,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                AppSpacing.x2,
+                AppSpacing.screenPadding,
+                130,
+              ),
+              children: [
+                _InsightsHeader(),
+                const SizedBox(height: 16),
+                const _RangeChips(),
+                const SizedBox(height: 18),
+                // Nutrition Balance Donut Card
+                _BalanceCard(state: state),
+                const SizedBox(height: 18),
+                // Live Interactive Calorie Trend Chart Card
+                _TrendCard(state: state),
+                const SizedBox(height: 18),
+                // Key Insights Card from showcase
+                _KeyInsightsCard(state: state),
+                const SizedBox(height: 16),
+                _WeeklyProgressCard(),
+              ],
+            ),
           ),
-          children: [
-            _InsightsHeader(),
-            const SizedBox(height: 16),
-            const _RangeChips(),
-            const SizedBox(height: 18),
-            // Nutrition Balance Donut Card
-            _BalanceCard(state: state),
-            const SizedBox(height: 18),
-            // Live Interactive Calorie Trend Chart Card
-            _TrendCard(state: state),
-            const SizedBox(height: 18),
-            // Key Insights Card from showcase
-            _KeyInsightsCard(state: state),
-            const SizedBox(height: 16),
-            _WeeklyProgressCard(),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -107,10 +133,12 @@ class _RangeChips extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final selected = ref.watch(insightsRangeProvider);
 
+    final isDark = scheme.brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        color: isDark ? const Color(0xFF072521) : scheme.surfaceContainerHighest.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(14),
+        border: isDark ? Border.all(color: const Color(0x3300D6A0), width: 1) : null,
       ),
       padding: const EdgeInsets.all(4),
       child: Row(
@@ -124,13 +152,19 @@ class _RangeChips extends ConsumerWidget {
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   decoration: BoxDecoration(
-                    // Selected state uses primary/onPrimary so it stays
-                    // legible in both themes (a fixed dark green with
-                    // white text vanishes on a dark canvas).
                     color: _ranges[i] == selected
                         ? scheme.primary
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
+                    boxShadow: _ranges[i] == selected && isDark
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF00D6A0).withValues(alpha: 0.26),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Center(
                     child: Text(

@@ -79,7 +79,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -362,7 +362,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -626,7 +626,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                 AppSpacing.screenPadding,
                 10,
                 AppSpacing.screenPadding,
-                32,
+                130,
               ),
               children: [
                 // Top Navigation Bar with Back Button, Title, and Log Sleep action

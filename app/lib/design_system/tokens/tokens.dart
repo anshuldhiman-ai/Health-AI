@@ -44,32 +44,32 @@ abstract final class AppColors {
     line: Color(0xFFE5E9EE),
   );
 
-  // --- dark theme ---
+  // --- dark theme (Premium Dark Fitness & Emerald Palette from step.png) ---
   static const dark = AppColorScheme._(
     brightness: Brightness.dark,
-    canvas: Color(0xFF0E1613),
-    surface: Color(0xFF16211C),
-    surfaceRaised: Color(0xFF1D2A24),
-    ink: Color(0xFFEAEFEB),
-    inkMuted: Color(0xFF9FB0A7),
-    primary: Color(0xFF4CC18F),
-    primaryWash: Color(0xFF1B3A2C),
-    accent: Color(0xFFF0B429),
-    accentWash: Color(0xFF3A2C12),
-    accentSoft: Color(0xFF8A6A1F),
-    gold: Color(0xFFE5B25D),
+    canvas: Color(0xFF001C19),
+    surface: Color(0xFF072521),
+    surfaceRaised: Color(0xFF0C2F2B),
+    ink: Color(0xFFFFFFFF),
+    inkMuted: Color(0xFFA7BDB8),
+    primary: Color(0xFF00D6A0),
+    primaryWash: Color(0xFF042B24),
+    accent: Color(0xFF19B88A),
+    accentWash: Color(0xFF052A23),
+    accentSoft: Color(0xFF0E4A3F),
+    gold: Color(0xFFFFC247),
     goldWash: Color(0xFF332914),
-    deepSage: Color(0xFF729986),
-    obsidian: Color(0xFF0E1613),
-    water: Color(0xFF6FC1E6),
-    sleep: Color(0xFF8A90D8),
-    macroProtein: Color(0xFF4CC18F),
-    macroCarbs: Color(0xFFF0B429),
-    macroFat: Color(0xFF8ED6B0),
-    danger: Color(0xFFF08A7B),
-    warning: Color(0xFFE0B44A),
-    success: Color(0xFF6FD3A0),
-    line: Color(0xFF27332D),
+    deepSage: Color(0xFF104038),
+    obsidian: Color(0xFF001412),
+    water: Color(0xFF00B4D8),
+    sleep: Color(0xFF818CF8),
+    macroProtein: Color(0xFF00D6A0),
+    macroCarbs: Color(0xFFFFC247),
+    macroFat: Color(0xFF19B88A),
+    danger: Color(0xFFFF5252),
+    warning: Color(0xFFFFB74D),
+    success: Color(0xFF00E5A3),
+    line: Color(0xFF103F38),
   );
 }
 
@@ -251,11 +251,17 @@ class AppColorScheme {
   final Color line;
 
   /// Emerald gradient for primary buttons and banners.
-  LinearGradient get emeraldGradient => LinearGradient(
-    colors: [primary, Color.lerp(primary, const Color(0xFF1B8255), 0.5)!],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  LinearGradient get emeraldGradient => isDark
+      ? const LinearGradient(
+          colors: [Color(0xFF042420), Color(0xFF0A3C34)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        )
+      : LinearGradient(
+          colors: [primary, Color.lerp(primary, const Color(0xFF1B8255), 0.5)!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
 
   /// Gold gradient for premium badges and accents.
   LinearGradient get goldGradient => LinearGradient(
@@ -265,14 +271,23 @@ class AppColorScheme {
   );
 
   /// Calorie ring multi-tone vibrant gradient (from ui_design2.jpg).
-  List<Color> get calorieRingColors => [
-    const Color(0xFF0D5C3A),
-    const Color(0xFF28B781),
-    const Color(0xFFE5B25D),
-    const Color(0xFFEE6A50),
-    const Color(0xFF8A58D6),
-    const Color(0xFF0D5C3A),
-  ];
+  List<Color> get calorieRingColors => isDark
+      ? [
+          const Color(0xFF00D6A0),
+          const Color(0xFF19B88A),
+          const Color(0xFFFFC247),
+          const Color(0xFFFF5252),
+          const Color(0xFF818CF8),
+          const Color(0xFF00D6A0),
+        ]
+      : [
+          const Color(0xFF0D5C3A),
+          const Color(0xFF28B781),
+          const Color(0xFFE5B25D),
+          const Color(0xFFEE6A50),
+          const Color(0xFF8A58D6),
+          const Color(0xFF0D5C3A),
+        ];
 }
 
 /// Typography scale (Section 10.3): Plus Jakarta Sans (OFL), bundled

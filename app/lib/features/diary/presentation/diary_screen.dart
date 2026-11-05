@@ -32,28 +32,54 @@ class DiaryScreen extends ConsumerWidget {
     final selectedOffset = ref.watch(selectedDiaryOffsetProvider);
     final state = ref.watch(diaryStateProvider(selectedOffset));
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenPadding,
-            AppSpacing.x2,
-            AppSpacing.screenPadding,
-            130,
+      body: Stack(
+        children: [
+          if (isDark)
+            Positioned(
+              top: -80,
+              right: -60,
+              child: Container(
+                width: 260,
+                height: 260,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF00D6A0).withValues(alpha: 0.04),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF00D6A0).withValues(alpha: 0.06),
+                      blurRadius: 90,
+                      spreadRadius: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          SafeArea(
+            bottom: false,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                AppSpacing.x2,
+                AppSpacing.screenPadding,
+                130,
+              ),
+              children: [
+                _DiaryHeader(),
+                const SizedBox(height: 16),
+                _WeekStrip(),
+                const SizedBox(height: 16),
+                _CaloriesRemainingArcCard(state: state),
+                const SizedBox(height: 16),
+                _MealSectionList(state: state, dayOffset: selectedOffset),
+                const SizedBox(height: 14),
+                _SnacksMacroCard(state: state),
+              ],
+            ),
           ),
-          children: [
-            _DiaryHeader(),
-            const SizedBox(height: 16),
-            _WeekStrip(),
-            const SizedBox(height: 16),
-            _CaloriesRemainingArcCard(state: state),
-            const SizedBox(height: 16),
-            _MealSectionList(state: state, dayOffset: selectedOffset),
-            const SizedBox(height: 14),
-            _SnacksMacroCard(state: state),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -81,11 +107,12 @@ class _DiaryHeader extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Diary/',
+              'Diary',
               style: AppTypography.titleL.copyWith(
                 color: scheme.onSurface,
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
               ),
             ),
             Text(
@@ -169,8 +196,11 @@ class _WeekStrip extends ConsumerWidget {
               // Selected day reads as the main action: primary fill with
               // onPrimary text, so it stays legible when the primary token
               // flips to a light green in dark mode.
+              final isDark = scheme.brightness == Brightness.dark;
               return Material(
-                color: isSelected ? colors.primary : scheme.surface,
+                color: isSelected
+                    ? colors.primary
+                    : (isDark ? const Color(0xFF072521) : scheme.surface),
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   onTap: () =>
@@ -181,10 +211,19 @@ class _WeekStrip extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
-                            ? colors.primary
-                            : scheme.outlineVariant,
+                            ? (isDark ? const Color(0xFF00D6A0) : colors.primary)
+                            : (isDark ? const Color(0x2E00D6A0) : scheme.outlineVariant),
                         width: isSelected ? 1.5 : 1,
                       ),
+                      boxShadow: isSelected && isDark
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF00D6A0).withValues(alpha: 0.28),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Column(
@@ -263,12 +302,30 @@ class _CaloriesRemainingArcCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Center(
-            child: ProgressRing(
-              isArc: true,
-              progress: 1.0 - progress,
-              size: 160,
-              strokeWidth: 14,
-              gradientColors: colors.calorieRingColors,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (scheme.brightness == Brightness.dark)
+                  Container(
+                    width: 140,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF00D6A0).withValues(alpha: 0.12),
+                          blurRadius: 40,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+                ProgressRing(
+                  isArc: true,
+                  progress: 1.0 - progress,
+                  size: 160,
+                  strokeWidth: 14,
+                  gradientColors: colors.calorieRingColors,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -291,6 +348,8 @@ class _CaloriesRemainingArcCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+              ],
             ),
           ),
         ],

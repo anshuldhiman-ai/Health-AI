@@ -23,18 +23,30 @@ class AppCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final borderRadius = BorderRadius.circular(radius);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final card = DecoratedBox(
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.95),
+        color: isDark
+            ? const Color(0xFF072521).withValues(alpha: 0.92)
+            : scheme.surface.withValues(alpha: 0.95),
         borderRadius: borderRadius,
-        // Glassmorphic cards: White surfaces with a very subtle 1px border
+        // Glassmorphic cards: Subtle emerald outline in dark mode, white highlight in light mode
         border: Border.all(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? scheme.outlineVariant
+          color: isDark
+              ? const Color(0xFF00D6A0).withValues(alpha: 0.16)
               : Colors.white.withValues(alpha: 0.8),
           width: 1.0,
         ),
-        boxShadow: AppShadows.card,
+        boxShadow: isDark
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : AppShadows.card,
       ),
       child: Padding(padding: padding, child: child),
     );

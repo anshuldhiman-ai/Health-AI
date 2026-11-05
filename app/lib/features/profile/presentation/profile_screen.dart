@@ -34,7 +34,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 96),
+        padding: const EdgeInsets.only(bottom: 130),
         child: Column(
           children: [
             // Brand header banner (seamlessly integrated, never jitters or
@@ -103,20 +103,32 @@ class ProfileScreen extends ConsumerWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: scheme.onPrimary,
+                                color: scheme.brightness == Brightness.dark
+                                    ? const Color(0xFF00D6A0)
+                                    : scheme.onPrimary,
                                 width: 3.5,
                               ),
-                              // No shadow in dark mode: a black shadow is
-                              // invisible there, so shadow() drops it.
-                              boxShadow: colors.shadow(alpha: 0.15, blur: 10),
+                              boxShadow: scheme.brightness == Brightness.dark
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFF00D6A0).withValues(alpha: 0.35),
+                                        blurRadius: 18,
+                                        spreadRadius: 2,
+                                      ),
+                                    ]
+                                  : colors.shadow(alpha: 0.15, blur: 10),
                             ),
                             child: ClipOval(
                               child: Container(
-                                color: scheme.surface,
+                                color: scheme.brightness == Brightness.dark
+                                    ? const Color(0xFF001C19)
+                                    : scheme.surface,
                                 child: Icon(
                                   Icons.person_rounded,
                                   size: 52,
-                                  color: scheme.primary,
+                                  color: scheme.brightness == Brightness.dark
+                                      ? const Color(0xFF00D6A0)
+                                      : scheme.primary,
                                 ),
                               ),
                             ),
@@ -543,10 +555,11 @@ class _DetailItem extends StatelessWidget {
 class _DetailDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 1,
       height: 26,
-      color: Theme.of(context).colorScheme.outlineVariant,
+      color: isDark ? const Color(0x3300D6A0) : Theme.of(context).colorScheme.outlineVariant,
     );
   }
 }
