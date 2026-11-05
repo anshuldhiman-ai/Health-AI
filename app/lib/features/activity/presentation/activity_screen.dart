@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:app/core/format/count_format.dart';
 import 'package:app/data/sensors/step_tracker.dart';
 import 'package:app/design_system/components/app_toast.dart';
+import 'package:app/design_system/components/unified_floating_nav_bar.dart';
 import 'package:app/domain/entities/activity_snapshot.dart';
 import 'package:app/l10n/app_localizations.dart';
 
@@ -30,7 +31,7 @@ class ActivityScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFF001C19),
-      bottomNavigationBar: const _FloatingBottomNavBar(),
+      bottomNavigationBar: const UnifiedFloatingNavBar(activeBranchIndex: 0),
       body: Stack(
         children: [
           // Ambient background gradient glow
@@ -1741,176 +1742,8 @@ class _HistoryDayStrip extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Floating Bottom Navigation Bar (Matching step.png)
+// 3. Floating Bottom Navigation Bar (Uses UnifiedFloatingNavBar)
 // ---------------------------------------------------------------------------
-
-class _FloatingBottomNavBar extends StatelessWidget {
-  const _FloatingBottomNavBar();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: SizedBox(
-          height: 72,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              // Pill Background container
-              ClipRRect(
-                borderRadius: BorderRadius.circular(38),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                  child: Container(
-                    height: 66,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF041F1C).withValues(alpha: 0.94),
-                      borderRadius: BorderRadius.circular(38),
-                      border: Border.all(
-                        color: const Color(0xFF104038),
-                        width: 1.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF00110E).withValues(alpha: 0.6),
-                          blurRadius: 24,
-                          spreadRadius: 2,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        // Home (Active)
-                        _NavItem(
-                          icon: Icons.home_rounded,
-                          label: l10n.todayTab,
-                          active: true,
-                          onTap: () => context.go('/today'),
-                        ),
-
-                        // Diary
-                        _NavItem(
-                          icon: Icons.menu_book_rounded,
-                          label: l10n.diaryTab,
-                          active: false,
-                          onTap: () => context.go('/diary'),
-                        ),
-
-                        // Center Spacer for SCAN button
-                        const SizedBox(width: 58),
-
-                        // Insights
-                        _NavItem(
-                          icon: Icons.bar_chart_rounded,
-                          label: l10n.insightsTab,
-                          active: false,
-                          onTap: () => context.go('/insights'),
-                        ),
-
-                        // Profile
-                        _NavItem(
-                          icon: Icons.person_outline_rounded,
-                          label: l10n.profileTab,
-                          active: false,
-                          onTap: () => context.go('/profile'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // Raised Circular SCAN Button in the center with glowing mint ring
-              Positioned(
-                top: -4,
-                child: GestureDetector(
-                  onTap: () => context.push('/scan'),
-                  child: Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF012924),
-                      border: Border.all(
-                        color: const Color(0xFF00E5A3),
-                        width: 2.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF00E5A3)
-                              .withValues(alpha: 0.40),
-                          blurRadius: 18,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.crop_free_rounded,
-                        color: Color(0xFF00E5A3),
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = active ? const Color(0xFF00D6A0) : const Color(0xFF7E9D97);
-
-    return InkWell(
-      onTap: onTap,
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 10.5,
-                fontWeight: active ? FontWeight.w800 : FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Custom Painters for Icons and Illustrations

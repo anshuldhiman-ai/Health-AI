@@ -1,0 +1,68 @@
+# --- Flutter / Dart ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.idea/
+
+# FVM downloads the SDK itself; only .fvmrc is tracked
+.fvm/
+
+# Generated code is NOT committed (decision pending; if changed, delete these
+# lines and record the decision in docs/adr/). Regenerate with:
+#   dart run build_runner build --delete-conflicting-outputs
+**/*.g.dart
+**/*.freezed.dart
+**/*.drift.dart
+*.gr.dart
+
+# --- Python / ML ---
+ml/data/
+!ml/data/LICENSES.md
+!ml/data/weighed_plates/plates.csv
+ml/.venv/
+!ml/reports/.gitkeep
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Datasets, checkpoints, training artifacts (R8: never commit these)
+*.pt
+*.ckpt
+*.pth
+*.safetensors
+*.onnx
+# Exported LiteRT mobile model bundled with the app
+app/assets/models/*.tflite
+!app/assets/models/baseline.tflite
+
+# Training/conversion outputs (checkpoints, ONNX, onnx2tf trees).
+ml/weights/
+# onnx2tf conversion trees (84 MB of intermediate files).
+artifacts/
+
+# --- Secrets / local config ---
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+key.properties
+google-services.json
+
+# --- Build outputs ---
+# Locally-built APKs/AABs for manual on-device testing. Each is ~130 MB, so
+# they must never enter git history; publish them as release assets instead.
+releases/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- DVC cache ---
+.dvc/cache/
+.dvc/tmp/

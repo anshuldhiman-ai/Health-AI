@@ -20,26 +20,24 @@ class _DayTotals {
     this.activeSeconds = 0,
     this.reconciledSteps = 0,
     List<int>? hourly,
+    this.dayStartSensor,
+    this.lastSensor,
   }) : hourly = hourly ?? List<int>.filled(24, 0);
 
   int steps;
   int activeSeconds;
-
-  /// Steps recovered from a backlog reading (the app was not running).
-  /// The total is measured; the hour split is time-proportional.
   int reconciledSteps;
-
-  /// Steps per clock hour. While the day is live this is the same list the
-  /// ledger is writing into, so the history entry tracks the buckets as
-  /// they fill; the reference is swapped at midnight, which freezes the
-  /// finished day without a copy.
   List<int> hourly;
+  int? dayStartSensor;
+  int? lastSensor;
 
   Map<String, dynamic> toJson() => {
     'steps': steps,
     'active': activeSeconds,
     'reconciled': reconciledSteps,
     'hourly': hourly,
+    if (dayStartSensor != null) 'dayStartSensor': dayStartSensor,
+    if (lastSensor != null) 'lastSensor': lastSensor,
   };
 }
 
@@ -56,6 +54,7 @@ class ActivityLedger {
   ActivityLedger({
     required this.date,
     this.steps = 0,
+    this.dayStartSensor,
     this.activeSeconds = 0,
     this.activeSteps = 0,
     this.cadenceSpm = 0,
@@ -101,6 +100,8 @@ class ActivityLedger {
                       if (hour is num) math.max(0, hour.toInt()) else 0,
                   ]
                 : null,
+            dayStartSensor: (value['dayStartSensor'] as num?)?.toInt(),
+            lastSensor: (value['lastSensor'] as num?)?.toInt(),
           );
         }
       }
@@ -119,6 +120,7 @@ class ActivityLedger {
       // first syncTo() after load adopts the caller's real day.
       date: rawDate is String && rawDate.isNotEmpty ? rawDate : '',
       steps: (json['steps'] as num?)?.toInt() ?? 0,
+      dayStartSensor: (json['dayStartSensor'] as num?)?.toInt(),
       activeSeconds: (json['activeSeconds'] as num?)?.toInt() ?? 0,
       activeSteps: (json['activeSteps'] as num?)?.toInt() ?? 0,
       cadenceSpm: (json['cadenceSpm'] as num?)?.toDouble() ?? 0,
@@ -135,6 +137,7 @@ class ActivityLedger {
 
   String date;
   int steps;
+  int? dayStartSensor;
   int activeSeconds;
   int activeSteps;
   double cadenceSpm;
@@ -187,8 +190,11 @@ class ActivityLedger {
 
     if (previousSensor == null) {
       final anchor = _legacyAnchor;
-      if (anchor != null && sensorSteps >= anchor) {
+      if (anchor != null && sensorSteps >= anchor && anchor > 0) {
         _addSteps(dateKey: date, hour: at.hour, steps: sensorSteps - anchor);
+        dayStartSensor = anchor;
+      } else {
+        dayStartSensor = sensorSteps;
       }
       lastSensor = sensorSteps;
       lastElapsedMillis = elapsedMillis;
@@ -211,6 +217,7 @@ class ActivityLedger {
             elapsedMillis < previousElapsed) ||
         sensorSteps < previousSensor;
     if (rebooted) {
+      dayStartSensor = sensorSteps;
       lastSensor = sensorSteps;
       lastElapsedMillis = elapsedMillis;
       lastEventAt = at;
@@ -336,6 +343,7 @@ class ActivityLedger {
   Map<String, dynamic> toJson() => {
     'date': date,
     'steps': steps,
+    if (dayStartSensor != null) 'dayStartSensor': dayStartSensor,
     'activeSeconds': activeSeconds,
     'activeSteps': activeSteps,
     'cadenceSpm': cadenceSpm,
@@ -358,6 +366,8 @@ class ActivityLedger {
       activeSeconds: activeSeconds,
       reconciledSteps: reconciledSteps,
       hourly: _hourlySteps,
+      dayStartSensor: dayStartSensor,
+      lastSensor: lastSensor,
     );
   }
 
@@ -493,6 +503,8 @@ class ActivityLedger {
         activeSeconds: activeSeconds,
         reconciledSteps: reconciledSteps,
         hourly: _hourlySteps,
+        dayStartSensor: dayStartSensor,
+        lastSensor: lastSensor,
       );
     }
     date = key;
@@ -502,11 +514,10 @@ class ActivityLedger {
     cadenceSpm = 0;
     reconciledSteps = 0;
     _hourlySteps = List<int>.filled(24, 0);
-    // The sensor cursor deliberately survives midnight. A reading that
-    // arrives after the rollover spans both days and is split across
-    // them, instead of being dropped or dumped entirely into today.
+    // The sensor cursor at midnight rollover becomes the new day's baseline anchor
+    dayStartSensor = lastSensor;
     _legacyAnchor = null;
-    _history[key] = _DayTotals();
+    _history[key] = _DayTotals(dayStartSensor: dayStartSensor);
     _pruneHistory(localDay(now));
   }
 

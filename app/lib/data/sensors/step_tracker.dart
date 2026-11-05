@@ -54,9 +54,12 @@ class ActivityStore {
         final oldBase = int.tryParse(
           await AppLocalStorage.readString(_kLegacyBaseKey) ?? '',
         );
-        if (oldDate == localDateKey(now) && oldBase != null) {
+        if (oldDate == localDateKey(now) && oldBase != null && oldBase > 0) {
           ledger.legacyAnchor = oldBase;
         }
+        // Migration complete: prune legacy keys to prevent 0-anchors
+        await AppLocalStorage.remove(_kLegacyDateKey);
+        await AppLocalStorage.remove(_kLegacyBaseKey);
       } catch (_) {
         // Migration is best-effort.
       }

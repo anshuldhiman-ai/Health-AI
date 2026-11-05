@@ -1,0 +1,64 @@
+# ML CI — ruff, pytest, tiny-model export smoke test (Section 12.2).
+name: ml-ci
+
+on:
+  push:
+    paths:
+      - "ml/**"
+      - ".github/workflows/ml-ci.yml"
+  pull_request:
+    paths:
+      - "ml/**"
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ml
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "ml/uv.lock"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Pytest
+        run: uv run pytest
+
+  # Export smoke test: a tiny random-weights model through the
+  # converter (ADR 0004). Must run on every PR so conversion
+  # failures surface early.
+  export-smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ml
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "ml/uv.lock"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Tiny-model export smoke test
+        run: uv run python -m src.ml_pipeline.export.smoke_test
+        env:
+          # Keeps the smoke model tiny so the job stays fast.
+          SMOKE_TEST: "true"

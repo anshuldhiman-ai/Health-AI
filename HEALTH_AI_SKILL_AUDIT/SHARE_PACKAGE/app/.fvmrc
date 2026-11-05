@@ -1,0 +1,5 @@
+# FVM config — pin the Flutter SDK version here (Section 3).
+# Install with: fvm install
+# At the time of writing (Oct 2026) stable is the 3.47 line with Dart 3.13.
+# Do not float on beta; upgrade deliberately.
+flutter: 3.47.0

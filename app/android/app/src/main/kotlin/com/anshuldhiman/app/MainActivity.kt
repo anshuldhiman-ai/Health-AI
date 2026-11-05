@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import com.anshuldhiman.app.steps.StepBackgroundScheduler
+import com.anshuldhiman.app.steps.StepForegroundService
 import com.anshuldhiman.app.steps.StepSensorReader
 import com.anshuldhiman.app.steps.StepSnapshotStore
 import io.flutter.embedding.android.FlutterActivity
@@ -26,10 +27,20 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "schedule" -> {
                     try {
+                        StepForegroundService.start(applicationContext)
                         StepBackgroundScheduler.schedule(applicationContext)
                         result.success(true)
                     } catch (error: Exception) {
                         result.error("schedule_failed", error.message, null)
+                    }
+                }
+
+                "startService" -> {
+                    try {
+                        StepForegroundService.start(applicationContext)
+                        result.success(true)
+                    } catch (error: Exception) {
+                        result.error("service_start_failed", error.message, null)
                     }
                 }
 

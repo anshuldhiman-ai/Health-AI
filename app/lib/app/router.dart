@@ -7,6 +7,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:app/design_system/components/unified_floating_nav_bar.dart';
 import 'package:app/design_system/tokens/tokens.dart';
 import 'package:app/domain/entities/meal.dart';
 import 'package:app/features/activity/presentation/activity_screen.dart';
@@ -148,16 +149,8 @@ class _NavShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A floating toast has to clear this bar, and the bar is drawn by
-    // THIS Scaffold while the toast is drawn by the nested Scaffold
-    // inside `navigationShell`. Flutter's extendBody handling raises
-    // the body's `padding.bottom` for the bar but leaves `viewPadding`
-    // alone - and floating SnackBars position against `viewPadding`, so
-    // without this they land behind the bar where their action cannot
-    // be tapped. Only `viewPadding` is overridden, so nothing else in
-    // the body shifts.
     final media = MediaQuery.of(context);
-    final barHeight = AppSizing.navBarHeight + media.viewPadding.bottom;
+    final barHeight = 84.0 + media.viewPadding.bottom;
 
     return Scaffold(
       body: MediaQuery(
@@ -169,19 +162,9 @@ class _NavShell extends StatelessWidget {
         child: navigationShell,
       ),
       extendBody: true,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Transform.translate(
-        // The scan disc sits IN the bar: the white ring cuts a notch
-        // out of it, so roughly a third of the disc overlaps the dock.
-        offset: const Offset(0, 20),
-        child: _ScanButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            context.push('/scan');
-          },
-        ),
+      bottomNavigationBar: UnifiedFloatingNavBar(
+        navigationShell: navigationShell,
       ),
-      bottomNavigationBar: _BottomBar(navigationShell: navigationShell),
     );
   }
 }

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "default_plate_id": "standard_thali_round_28cm",
+  "default_katori_id": "standard_katori_10cm",
+  "plates": [
+    {
+      "id": "standard_thali_round_28cm",
+      "name": "Standard Steel Thali",
+      "kind": "round",
+      "diameter_cm": 28.0,
+      "notes": "Standard Indian steel dinner plate"
+    },
+    {
+      "id": "standard_dinner_plate_26_5cm",
+      "name": "Standard Ceramic Dinner Plate",
+      "kind": "round",
+      "diameter_cm": 26.5,
+      "notes": "10.5-inch western ceramic dinner plate"
+    },
+    {
+      "id": "quarter_plate_19cm",
+      "name": "Quarter / Side Plate",
+      "kind": "round",
+      "diameter_cm": 19.0,
+      "notes": "7.5-inch side or snack plate"
+    },
+    {
+      "id": "rectangular_tray_32x24cm",
+      "name": "Compartment Thali Tray",
+      "kind": "rectangular",
+      "width_cm": 32.0,
+      "height_cm": 24.0,
+      "notes": "Standard rectangular steel mess/canteen thali"
+    }
+  ],
+  "bowls": [
+    {
+      "id": "standard_katori_10cm",
+      "name": "Standard Katori",
+      "rim_diameter_cm": 10.0,
+      "rim_radius_cm": 5.0,
+      "depth_cm": 4.0,
+      "capacity_ml": 190.6,
+      "notes": "PLACEHOLDER(T5.0) Standard steel katori"
+    },
+    {
+      "id": "small_katori_8cm",
+      "name": "Small Katori",
+      "rim_diameter_cm": 8.0,
+      "rim_radius_cm": 4.0,
+      "depth_cm": 3.5,
+      "capacity_ml": 115.0,
+      "notes": "PLACEHOLDER(T5.0) Small steel katori"
+    }
+  ]
+}
