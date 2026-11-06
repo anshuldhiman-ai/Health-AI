@@ -9,23 +9,22 @@ const themeModePrefsKey = 'theme_mode';
 /// flash the light theme.
 Future<ThemeMode> loadSavedThemeMode() async {
   try {
-    return themeModeFromName(
-      await AppLocalStorage.readString(themeModePrefsKey),
-    );
+    final saved = await AppLocalStorage.readString(themeModePrefsKey);
+    if (saved == null) return ThemeMode.dark;
+    return themeModeFromName(saved);
   } catch (_) {
-    // Storage unavailable (tests/desktop): fall back to the system.
-    return ThemeMode.system;
+    return ThemeMode.dark;
   }
 }
 
 ThemeMode themeModeFromName(String? name) => switch (name) {
   'light' => ThemeMode.light,
-  'dark' => ThemeMode.dark,
-  _ => ThemeMode.system,
+  'system' => ThemeMode.system,
+  _ => ThemeMode.dark,
 };
 
 /// The value resolved before `runApp`; overridden in `main`.
-final initialThemeModeProvider = Provider<ThemeMode>((ref) => ThemeMode.system);
+final initialThemeModeProvider = Provider<ThemeMode>((ref) => ThemeMode.dark);
 
 /// System / Light / Dark, persisted locally. No account, no network.
 final themeModeProvider = NotifierProvider<ThemeModeController, ThemeMode>(

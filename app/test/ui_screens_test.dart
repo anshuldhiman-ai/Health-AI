@@ -147,6 +147,31 @@ void main() {
     await shoot(tester, 'today_dark');
   }, skip: !runGoldens);
 
+  testWidgets('diary in dark mode', (tester) async {
+    await open(tester, '/diary', themeMode: ThemeMode.dark);
+    await shoot(tester, 'diary_dark');
+  }, skip: !runGoldens);
+
+  testWidgets('insights in dark mode', (tester) async {
+    await open(tester, '/insights', themeMode: ThemeMode.dark);
+    await shoot(tester, 'insights_dark');
+  }, skip: !runGoldens);
+
+  testWidgets('profile in dark mode', (tester) async {
+    await open(tester, '/profile', themeMode: ThemeMode.dark);
+    await shoot(tester, 'profile_dark');
+  }, skip: !runGoldens);
+
+  testWidgets('water in dark mode', (tester) async {
+    await open(tester, '/water', themeMode: ThemeMode.dark);
+    await shoot(tester, 'water_dark');
+  }, skip: !runGoldens);
+
+  testWidgets('sleep in dark mode', (tester) async {
+    await open(tester, '/sleep', themeMode: ThemeMode.dark);
+    await shoot(tester, 'sleep_dark');
+  }, skip: !runGoldens);
+
   testWidgets('activity in dark mode', (tester) async {
     final now = DateTime.now();
     final snapshot = StepSnapshot(
