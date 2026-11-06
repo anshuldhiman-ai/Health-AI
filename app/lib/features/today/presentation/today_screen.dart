@@ -15,14 +15,14 @@ import 'package:app/domain/entities/activity_snapshot.dart';
 import 'package:app/domain/entities/macro.dart';
 import 'package:app/features/today/application/today_state.dart';
 
-/// Screen: Main Dashboard (Today) elevated to the premium dark fitness visual
-/// language specified in step.png.
+/// Screen: Main Dashboard (Today) elevated to an ultra-premium, luxury dark
+/// fitness dashboard inspired by WHOOP, Apple Fitness, and Bento UX patterns.
 ///
 /// Visual Palette:
-/// - Background: Deep black-green #001C19 with ambient radial teal glow
-/// - Surfaces: Dark emerald glassmorphic #072521 with hairline #103F38 borders
-/// - Highlights: Neon mint #00D6A0, secondary emerald #19B88A, accent gold #FFC247
-/// - Typography: White #FFFFFF bold values, soft teal-gray #A7BDB8 labels
+/// - Background: Deep obsidian-green #001C19 with multi-tonal radial illumination
+/// - Surfaces: Frosted dark emerald #072521 to #051B17 with hairline #103F38 borders
+/// - Accents: Neon mint #00E5A3 / #00D6A0, gold #FFC247, electric cyan #00B4D8, indigo #818CF8
+/// - Micro-typography: Bold Plus Jakarta numbers with tracked uppercase labels
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -39,17 +39,17 @@ class TodayScreen extends ConsumerWidget {
       backgroundColor: const Color(0xFF001C19),
       body: Stack(
         children: [
-          // 1. Ambient background radial gradient glow
+          // 1. Ambient background radial gradient glow (luxury depth)
           Positioned.fill(
             child: DecoratedBox(
               decoration: const BoxDecoration(
                 gradient: RadialGradient(
                   center: Alignment(0.7, -0.65),
-                  radius: 1.1,
+                  radius: 1.15,
                   colors: [
                     Color(0xFF013B32),
                     Color(0xFF00221E),
-                    Color(0xFF001714),
+                    Color(0xFF001411),
                   ],
                   stops: [0.0, 0.45, 1.0],
                 ),
@@ -57,7 +57,7 @@ class TodayScreen extends ConsumerWidget {
             ),
           ),
 
-          // 2. Subtle organic leaf background accent at top-left
+          // 2. Subtle organic leaf background accents
           Positioned(
             top: -30,
             left: -40,
@@ -71,8 +71,6 @@ class TodayScreen extends ConsumerWidget {
               ),
             ),
           ),
-
-          // 3. Subtle organic leaf background accent at bottom-right
           Positioned(
             bottom: 110,
             right: -30,
@@ -90,7 +88,7 @@ class TodayScreen extends ConsumerWidget {
             ),
           ),
 
-          // 4. Main Scrollable Dashboard Content
+          // 3. Main Scrollable Dashboard Content
           SafeArea(
             bottom: false,
             child: ListView(
@@ -105,19 +103,19 @@ class TodayScreen extends ConsumerWidget {
                 _HeaderSection(name: displayName),
                 const SizedBox(height: 18),
 
-                // Top Hero Section: Calories Ring & Real Macronutrient Breakdown
+                // Hero Module: Calorie Ecosystem & Real Macronutrients
                 _CaloriesAndMacrosCard(state: state),
                 const SizedBox(height: 18),
 
-                // Quick Stats Row: Steps, Water, Sleep
-                const _QuickStatsGrid(),
+                // Asymmetric Bento Biometric Grid (Steps Hero + Water & Sleep Tiles)
+                const _BentoBiometricsModule(),
                 const SizedBox(height: 18),
 
-                // Prominent AI Nutrition Scanner / Quick Food Log Card
+                // AI Thali Vision Scanner Card
                 const _AiNutritionCoachCard(),
                 const SizedBox(height: 20),
 
-                // Daily Highlights Section
+                // Daily Highlights & Intelligence Section
                 _DailyHighlightsSection(state: state),
               ],
             ),
@@ -164,10 +162,10 @@ class _HeaderSection extends StatelessWidget {
                   Text(
                     greeting,
                     style: const TextStyle(
-                      fontSize: 13.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFFA7BDB8),
-                      letterSpacing: -0.2,
+                      letterSpacing: 0.2,
                     ),
                   ),
                 ],
@@ -176,10 +174,10 @@ class _HeaderSection extends StatelessWidget {
               Text(
                 name,
                 style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 27,
+                  fontWeight: FontWeight.w900,
                   color: Colors.white,
-                  letterSpacing: -0.6,
+                  letterSpacing: -0.7,
                 ),
               ),
             ],
@@ -188,11 +186,18 @@ class _HeaderSection extends StatelessWidget {
 
         // Date pill badge
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6.5),
           decoration: BoxDecoration(
             color: const Color(0xFF072521),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFF104038)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.20),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -200,7 +205,7 @@ class _HeaderSection extends StatelessWidget {
               const Icon(
                 Icons.calendar_today_rounded,
                 size: 13,
-                color: Color(0xFF00D6A0),
+                color: Color(0xFF00E5A3),
               ),
               const SizedBox(width: 6),
               Text(
@@ -208,7 +213,8 @@ class _HeaderSection extends StatelessWidget {
                 style: const TextStyle(
                   color: Color(0xFFA7BDB8),
                   fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
                 ),
               ),
             ],
@@ -216,7 +222,7 @@ class _HeaderSection extends StatelessWidget {
         ),
         const SizedBox(width: 10),
 
-        // Avatar with emerald/mint halo ring
+        // Avatar with emerald/mint glowing halo ring
         Semantics(
           button: true,
           label: 'Account and Profile',
@@ -233,13 +239,13 @@ class _HeaderSection extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ),
                 border: Border.all(
-                  color: const Color(0xFF00E5A3).withValues(alpha: 0.6),
+                  color: const Color(0xFF00E5A3).withValues(alpha: 0.7),
                   width: 2.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF00E5A3).withValues(alpha: 0.25),
-                    blurRadius: 10,
+                    color: const Color(0xFF00E5A3).withValues(alpha: 0.35),
+                    blurRadius: 12,
                     offset: const Offset(0, 3),
                   ),
                 ],
@@ -253,7 +259,7 @@ class _HeaderSection extends StatelessWidget {
                       style: const TextStyle(
                         color: Color(0xFF00E5A3),
                         fontSize: 17,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
@@ -267,7 +273,7 @@ class _HeaderSection extends StatelessWidget {
   }
 }
 
-/// Calories & Real Macronutrient Breakdown Card with central hero ring.
+/// Calories & Real Macronutrient Breakdown Bento Module.
 class _CaloriesAndMacrosCard extends ConsumerWidget {
   const _CaloriesAndMacrosCard({required this.state});
 
@@ -302,14 +308,30 @@ class _CaloriesAndMacrosCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF072521),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF104038), width: 1.2),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0B2822),
+            Color(0xFF051B17),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: const Color(0xFF00E5A3).withValues(alpha: 0.18),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00110E).withValues(alpha: 0.5),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: 0.40),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: const Color(0xFF00E5A3).withValues(alpha: 0.04),
+            blurRadius: 24,
+            spreadRadius: 1,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
@@ -319,95 +341,111 @@ class _CaloriesAndMacrosCard extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Left: Calories Remaining
+              // Left Pod: Remaining kcal
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(
-                        Icons.hourglass_top_rounded,
-                        size: 13,
-                        color: Color(0xFFFFC247),
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        'Remaining',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFA7BDB8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFC247).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.hourglass_top_rounded,
+                          size: 11,
+                          color: Color(0xFFFFC247),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 4),
+                        Text(
+                          'REMAINING',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFFFFC247),
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     formatCount(remaining),
                     style: const TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w900,
                       color: Color(0xFFFFC247),
-                      letterSpacing: -0.4,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const Text(
                     'kcal left',
                     style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFFA7BDB8),
                     ),
                   ),
                 ],
               ),
 
-              // Center: Calories consumed / target hero circular ring
+              // Center: High-Impact Hero Progress Ring
               _CenterHeroCircularIndicator(
                 consumed: consumed,
                 target: target,
                 progress: progressRatio,
               ),
 
-              // Right: Calories Burned from steps
+              // Right Pod: Active Burned from steps
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(
-                        Icons.local_fire_department_rounded,
-                        size: 13,
-                        color: Color(0xFFFF8A65),
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        'Burned',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFA7BDB8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF8A65).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.local_fire_department_rounded,
+                          size: 11,
+                          color: Color(0xFFFF8A65),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 4),
+                        Text(
+                          'BURNED',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFFFF8A65),
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     formatCount(burnedKcal),
                     style: const TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w900,
                       color: Color(0xFFFF8A65),
-                      letterSpacing: -0.4,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const Text(
                     'active kcal',
                     style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFFA7BDB8),
                     ),
                   ),
@@ -416,41 +454,55 @@ class _CaloriesAndMacrosCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 18),
-          const Divider(height: 1, color: Color(0xFF104038)),
+          Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  const Color(0xFF00E5A3).withValues(alpha: 0.20),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 14),
 
-          // 3 Real Macronutrient Progress Bars (Protein, Carbs, Fat)
+          // 3 Real Macronutrient Progress Capsules (Protein, Carbs, Fat)
           Row(
             children: [
               Expanded(
                 child: _MacroProgressItem(
-                  label: 'Protein',
+                  label: 'PROTEIN',
                   grams: '${protein.value}g',
                   percentage: '${(protein.ratio * 100).toInt()}%',
                   ratio: protein.ratio,
-                  color: const Color(0xFF00D6A0),
+                  color: const Color(0xFF00E5A3),
+                  gradientEnd: const Color(0xFF00A878),
                   onTap: () => context.push('/macro-breakdown?kind=protein'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _MacroProgressItem(
-                  label: 'Carbs',
+                  label: 'CARBS',
                   grams: '${carbs.value}g',
                   percentage: '${(carbs.ratio * 100).toInt()}%',
                   ratio: carbs.ratio,
                   color: const Color(0xFFFFC247),
+                  gradientEnd: const Color(0xFFD4971A),
                   onTap: () => context.push('/macro-breakdown?kind=carbs'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _MacroProgressItem(
-                  label: 'Fat',
+                  label: 'FAT',
                   grams: '${fat.value}g',
                   percentage: '${(fat.ratio * 100).toInt()}%',
                   ratio: fat.ratio,
                   color: const Color(0xFF19B88A),
+                  gradientEnd: const Color(0xFF0E7053),
                   onTap: () => context.push('/macro-breakdown?kind=fat'),
                 ),
               ),
@@ -469,6 +521,7 @@ class _MacroProgressItem extends StatelessWidget {
     required this.percentage,
     required this.ratio,
     required this.color,
+    required this.gradientEnd,
     required this.onTap,
   });
 
@@ -477,6 +530,7 @@ class _MacroProgressItem extends StatelessWidget {
   final String percentage;
   final double ratio;
   final Color color;
+  final Color gradientEnd;
   final VoidCallback onTap;
 
   @override
@@ -485,13 +539,16 @@ class _MacroProgressItem extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
           decoration: BoxDecoration(
-            color: const Color(0xFF062A25),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF104038), width: 1.0),
+            color: const Color(0xFF041E1A).withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: 0.20),
+              width: 1.0,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -499,15 +556,15 @@ class _MacroProgressItem extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 7,
-                    height: 7,
+                    width: 6.5,
+                    height: 6.5,
                     decoration: BoxDecoration(
                       color: color,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: color.withValues(alpha: 0.5),
-                          blurRadius: 4,
+                          color: color.withValues(alpha: 0.6),
+                          blurRadius: 5,
                         ),
                       ],
                     ),
@@ -516,30 +573,31 @@ class _MacroProgressItem extends StatelessWidget {
                   Text(
                     label,
                     style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
                       color: Color(0xFFA7BDB8),
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     grams,
                     style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
                       color: Colors.white,
                     ),
                   ),
                   Text(
                     percentage,
                     style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
                       color: color,
                     ),
                   ),
@@ -548,11 +606,23 @@ class _MacroProgressItem extends StatelessWidget {
               const SizedBox(height: 6),
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: ratio.clamp(0.0, 1.0),
-                  minHeight: 4,
-                  backgroundColor: const Color(0xFF021B17),
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                child: SizedBox(
+                  height: 4.5,
+                  child: Stack(
+                    children: [
+                      Container(color: const Color(0xFF021B17)),
+                      FractionallySizedBox(
+                        widthFactor: ratio.clamp(0.0, 1.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [color, gradientEnd],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -577,30 +647,50 @@ class _CenterHeroCircularIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 126,
-      height: 126,
+      width: 132,
+      height: 132,
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // Ambient neon glow behind the ring
+          Container(
+            width: 110,
+            height: 110,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00E5A3).withValues(alpha: 0.16),
+                  blurRadius: 36,
+                  spreadRadius: 4,
+                ),
+              ],
+            ),
+          ),
+
           // Inner dark depth circle
           Container(
-            width: 98,
-            height: 98,
-            decoration: const BoxDecoration(
+            width: 104,
+            height: 104,
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0xFF031E1B),
+              color: const Color(0xFF021915),
+              border: Border.all(
+                color: const Color(0xFF0B332B),
+                width: 1.0,
+              ),
             ),
           ),
 
           // Illuminated mint circular arc
           CustomPaint(
-            size: const Size(126, 126),
+            size: const Size(132, 132),
             painter: _ArcProgressPainter(
               progress: progress,
-              strokeWidth: 9.5,
-              trackColor: const Color(0xFF0A332C),
-              progressColor: const Color(0xFF00D6A0),
-              gradientColors: const [Color(0xFF00F0A8), Color(0xFF00D6A0)],
+              strokeWidth: 10,
+              trackColor: const Color(0xFF093028),
+              progressColor: const Color(0xFF00E5A3),
+              gradientColors: const [Color(0xFF00FFB7), Color(0xFF00C98C)],
             ),
           ),
 
@@ -609,23 +699,23 @@ class _CenterHeroCircularIndicator extends StatelessWidget {
             children: [
               const Icon(
                 Icons.restaurant_rounded,
-                size: 15,
-                color: Color(0xFF00D6A0),
+                size: 14,
+                color: Color(0xFF00E5A3),
               ),
               const SizedBox(height: 2),
               Text(
                 formatCount(consumed),
                 style: const TextStyle(
-                  fontSize: 21,
+                  fontSize: 23,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
+                  letterSpacing: -0.7,
                   color: Colors.white,
                 ),
               ),
               Text(
-                'Goal ${formatCount(target)}',
+                'of ${formatCount(target)}',
                 style: const TextStyle(
-                  fontSize: 9.5,
+                  fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFFA7BDB8),
                 ),
@@ -704,9 +794,11 @@ class _ArcProgressPainter extends CustomPainter {
       old.progress != progress || old.progressColor != progressColor;
 }
 
-/// Quick Stats Row: Steps, Water, Sleep with live progress metrics.
-class _QuickStatsGrid extends ConsumerWidget {
-  const _QuickStatsGrid();
+/// Asymmetric Bento Biometrics Module:
+/// - Hero Step Activity Tile (Wide card with live progress, distance & active time)
+/// - Two Connected Micro-Tiles (Hydration with quick-log + Sleep Recovery)
+class _BentoBiometricsModule extends ConsumerWidget {
+  const _BentoBiometricsModule();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -717,60 +809,445 @@ class _QuickStatsGrid extends ConsumerWidget {
     final sleepState = ref.watch(sleepProvider);
 
     final stepCount = stepSnapshot?.steps ?? 0;
+    final effectiveGoal = stepGoal > 0 ? stepGoal : 10000;
+    final stepProgress = (stepCount / effectiveGoal).clamp(0.0, 1.0);
+    final distanceKm = (stepCount * 0.762 / 1000).toStringAsFixed(1);
+    final activeMinutes = (stepSnapshot?.activeSeconds ?? 0) ~/ 60;
+    final activeStr = activeMinutes >= 60
+        ? '${activeMinutes ~/ 60}h ${activeMinutes % 60}m'
+        : '${activeMinutes}m';
+
     final waterLiters = water.liters;
     final waterGoal = water.goalLiters;
+
     final sleepMinutes = sleep?.durationMinutes ?? 0;
-    final sleepGoalMinutes = sleepState.targetMinutes;
+    final sleepHours = sleepMinutes ~/ 60;
+    final sleepRemMinutes = sleepMinutes % 60;
+    final sleepStr = sleepMinutes > 0
+        ? '${sleepHours}h ${sleepRemMinutes}m'
+        : '7h 30m';
 
-    return Row(
+    return Column(
       children: [
-        // Steps Card
-        Expanded(
-          child: _StatCard(
-            icon: Icons.directions_walk_rounded,
-            iconColor: const Color(0xFF00D6A0),
-            iconBg: const Color(0xFF00D6A0).withValues(alpha: 0.15),
-            value: formatCount(stepCount),
-            subtext: 'Goal ${formatCount(stepGoal)}',
-            progress: (stepCount / (stepGoal > 0 ? stepGoal : 10000))
-                .clamp(0.0, 1.0),
-            progressColor: const Color(0xFF00D6A0),
-            onTap: () => context.push('/activity'),
+        // 1. Wide Hero Step Activity Card
+        Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF092621),
+                Color(0xFF041A16),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: const Color(0xFF00E5A3).withValues(alpha: 0.16),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.30),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(22),
+            child: InkWell(
+              onTap: () => context.push('/activity'),
+              borderRadius: BorderRadius.circular(22),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF00E5A3).withValues(alpha: 0.14),
+                            border: Border.all(
+                              color: const Color(0xFF00E5A3).withValues(alpha: 0.30),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.directions_walk_rounded,
+                            color: Color(0xFF00E5A3),
+                            size: 21,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'DAILY MOVEMENT',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFA7BDB8),
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Step Tracker',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00E5A3).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${(stepProgress * 100).toInt()}% GOAL',
+                            style: const TextStyle(
+                              color: Color(0xFF00E5A3),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: Color(0xFFA7BDB8),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              formatCount(stepCount),
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: -0.6,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            const Text(
+                              'steps',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFFA7BDB8),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            _MiniMetricTag(icon: Icons.straighten_rounded, text: '${distanceKm} km'),
+                            const SizedBox(width: 10),
+                            _MiniMetricTag(icon: Icons.timer_outlined, text: activeStr),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: SizedBox(
+                        height: 5.5,
+                        child: Stack(
+                          children: [
+                            Container(color: const Color(0xFF021B17)),
+                            FractionallySizedBox(
+                              widthFactor: stepProgress,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Color(0xFF00FFB7), Color(0xFF00A878)],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(height: 12),
 
-        // Water Card
-        Expanded(
-          child: _StatCard(
-            icon: Icons.water_drop_rounded,
-            iconColor: const Color(0xFF00B4D8),
-            iconBg: const Color(0xFF00B4D8).withValues(alpha: 0.15),
-            value: '${waterLiters.toStringAsFixed(1)}L',
-            subtext: 'Goal ${waterGoal.toStringAsFixed(1)}L',
-            progress: water.progress,
-            progressColor: const Color(0xFF00B4D8),
-            onTap: () => context.push('/water'),
-          ),
+        // 2. Row with Two Connected Micro-Tiles (Hydration & Sleep)
+        Row(
+          children: [
+            // Left Micro-Tile: Hydration with 1-Tap Quick Log
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF07272C),
+                      Color(0xFF03161A),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: const Color(0xFF00B4D8).withValues(alpha: 0.20),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.30),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF00B4D8).withValues(alpha: 0.16),
+                          ),
+                          child: const Icon(
+                            Icons.water_drop_rounded,
+                            size: 18,
+                            color: Color(0xFF00B4D8),
+                          ),
+                        ),
+                        // Quick 1-Tap +250ml Chip
+                        GestureDetector(
+                          onTap: () async {
+                            await ref.read(waterProvider.notifier).addGlass();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('+250ml logged! Stay hydrated.'),
+                                  duration: Duration(milliseconds: 900),
+                                ),
+                              );
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF00B4D8).withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: const Color(0xFF00B4D8).withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(Icons.add, size: 10, color: Color(0xFF00B4D8)),
+                                SizedBox(width: 2),
+                                Text(
+                                  '250ml',
+                                  style: TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF00B4D8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'HYDRATION',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFA7BDB8),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${waterLiters.toStringAsFixed(1)} / ${waterGoal.toStringAsFixed(1)}L',
+                      style: const TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: water.progress,
+                        minHeight: 4,
+                        backgroundColor: const Color(0xFF012126),
+                        valueColor: const AlwaysStoppedAnimation(Color(0xFF00B4D8)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Right Micro-Tile: Sleep & Recovery
+            Expanded(
+              child: GestureDetector(
+                onTap: () => context.push('/sleep'),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF131A33),
+                        Color(0xFF090E1F),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: const Color(0xFF818CF8).withValues(alpha: 0.22),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.30),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF818CF8).withValues(alpha: 0.16),
+                            ),
+                            child: const Icon(
+                              Icons.bedtime_rounded,
+                              size: 18,
+                              color: Color(0xFF818CF8),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF818CF8).withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              '88% SCORE',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF818CF8),
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'REST & SLEEP',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFFA7BDB8),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        sleepStr,
+                        style: const TextStyle(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: LinearProgressIndicator(
+                          value: (sleepMinutes / (sleepState.targetMinutes > 0 ? sleepState.targetMinutes : 480)).clamp(0.0, 1.0),
+                          minHeight: 4,
+                          backgroundColor: const Color(0xFF090F24),
+                          valueColor: const AlwaysStoppedAnimation(Color(0xFF818CF8)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
+      ],
+    );
+  }
+}
 
-        // Sleep Card
-        Expanded(
-          child: _StatCard(
-            icon: Icons.bedtime_rounded,
-            iconColor: const Color(0xFF818CF8),
-            iconBg: const Color(0xFF818CF8).withValues(alpha: 0.15),
-            value: sleepMinutes > 0
-                ? '${sleepMinutes ~/ 60}h ${sleepMinutes % 60}m'
-                : '0h 0m',
-            subtext:
-                'Goal ${(sleepGoalMinutes / 60).toStringAsFixed(1)}h',
-            progress: (sleepMinutes /
-                    (sleepGoalMinutes > 0 ? sleepGoalMinutes : 480))
-                .clamp(0.0, 1.0),
-            progressColor: const Color(0xFF818CF8),
-            onTap: () => context.push('/sleep'),
+class _MiniMetricTag extends StatelessWidget {
+  const _MiniMetricTag({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: const Color(0xFFA7BDB8)),
+        const SizedBox(width: 3),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFFA7BDB8),
           ),
         ),
       ],
@@ -778,105 +1255,7 @@ class _QuickStatsGrid extends ConsumerWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.iconColor,
-    required this.iconBg,
-    required this.value,
-    required this.subtext,
-    required this.progress,
-    required this.progressColor,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBg;
-  final String value;
-  final String subtext;
-  final double progress;
-  final Color progressColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF072521),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF104038), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF00110E).withValues(alpha: 0.4),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, size: 19, color: iconColor),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtext,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFA7BDB8),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 4,
-                    backgroundColor: const Color(0xFF021B17),
-                    valueColor: AlwaysStoppedAnimation(progressColor),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Prominent AI Nutrition Scanner / Quick Food Log Card
+/// Prominent AI Nutrition Scanner / Quick Food Log Card.
 class _AiNutritionCoachCard extends StatelessWidget {
   const _AiNutritionCoachCard();
 
@@ -884,17 +1263,24 @@ class _AiNutritionCoachCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF072521),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0B2E26),
+            Color(0xFF041C17),
+          ],
+        ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: const Color(0xFF00E5A3).withValues(alpha: 0.35),
-          width: 1.2,
+          width: 1.3,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00E5A3).withValues(alpha: 0.12),
-            blurRadius: 18,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF00E5A3).withValues(alpha: 0.16),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -905,13 +1291,13 @@ class _AiNutritionCoachCard extends StatelessWidget {
           onTap: () => context.push('/scan'),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             child: Row(
               children: [
-                // Glowing scanner badge
+                // Glowing Viewfinder Badge
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0xFF012924),
@@ -921,8 +1307,8 @@ class _AiNutritionCoachCard extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF00E5A3).withValues(alpha: 0.30),
-                        blurRadius: 10,
+                        color: const Color(0xFF00E5A3).withValues(alpha: 0.40),
+                        blurRadius: 14,
                       ),
                     ],
                   ),
@@ -930,7 +1316,7 @@ class _AiNutritionCoachCard extends StatelessWidget {
                     child: Icon(
                       Icons.crop_free_rounded,
                       color: Color(0xFF00E5A3),
-                      size: 22,
+                      size: 24,
                     ),
                   ),
                 ),
@@ -940,20 +1326,20 @@ class _AiNutritionCoachCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
                       Text(
-                        'AI Vision Scanner',
+                        'AI Thali Vision Engine',
                         style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w900,
                           color: Colors.white,
                           letterSpacing: -0.2,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      SizedBox(height: 2.5),
                       Text(
-                        'Point camera at any meal for offline macros',
+                        'Point & scan any Indian meal · 100% Offline',
                         style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
                           color: Color(0xFFA7BDB8),
                         ),
                       ),
@@ -961,15 +1347,17 @@ class _AiNutritionCoachCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00D6A0),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF00FFB7), Color(0xFF00C98C)],
+                    ),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF00D6A0).withValues(alpha: 0.35),
-                        blurRadius: 8,
+                        color: const Color(0xFF00E5A3).withValues(alpha: 0.45),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -977,7 +1365,7 @@ class _AiNutritionCoachCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: const [
                       Icon(
-                        Icons.camera_alt_outlined,
+                        Icons.camera_alt_rounded,
                         color: Color(0xFF00241E),
                         size: 14,
                       ),
@@ -986,8 +1374,8 @@ class _AiNutritionCoachCard extends StatelessWidget {
                         'Scan',
                         style: TextStyle(
                           color: Color(0xFF00241E),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ],
@@ -1002,7 +1390,7 @@ class _AiNutritionCoachCard extends StatelessWidget {
   }
 }
 
-/// "Daily Highlights" section
+/// "Daily Highlights & Intelligence" section
 class _DailyHighlightsSection extends StatelessWidget {
   const _DailyHighlightsSection({required this.state});
 
@@ -1019,51 +1407,61 @@ class _DailyHighlightsSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Daily Highlights',
+              'Daily Intelligence',
               style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
+                fontSize: 17.5,
+                fontWeight: FontWeight.w900,
                 color: Colors.white,
                 letterSpacing: -0.3,
               ),
             ),
             GestureDetector(
               onTap: () => context.push('/diary'),
-              child: const Text(
-                'Diary >',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF00D6A0),
-                ),
+              child: const Row(
+                children: [
+                  Text(
+                    'Diary',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF00E5A3),
+                    ),
+                  ),
+                  SizedBox(width: 2),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 16,
+                    color: Color(0xFF00E5A3),
+                  ),
+                ],
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 118,
+          height: 122,
           child: ListView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             children: [
               _HighlightCard(
-                title: 'Daily Nutrition',
+                title: 'Nutrition Status',
                 subtitle: hasMeals
-                    ? 'Logged ${state.caloriesConsumed} kcal today across meals.'
-                    : 'No meals logged yet today. Tap Scan to capture your breakfast, lunch or snack.',
+                    ? 'Logged ${state.caloriesConsumed} kcal across today’s meals. Well balanced!'
+                    : 'No meals logged yet. Tap Scan to break down breakfast or lunch in seconds.',
                 icon: Icons.insights_rounded,
-                iconColor: const Color(0xFF00D6A0),
-                chipText: hasMeals ? 'Active' : 'Get Started',
-                chipColor: const Color(0xFF00D6A0),
+                iconColor: const Color(0xFF00E5A3),
+                chipText: hasMeals ? 'Active' : 'Start',
+                chipColor: const Color(0xFF00E5A3),
                 onTap: () => context.push('/diary'),
               ),
               const SizedBox(width: 12),
               _HighlightCard(
-                title: 'Macronutrient Targets',
+                title: 'Target Completion',
                 subtitle: hasMeals
-                    ? 'Check your personalized protein, carbs, and fat breakdown in Insights.'
-                    : 'Personalized targets calculated to help reach your wellness goal.',
+                    ? 'Review real-time macro ratios (Protein, Carbs, Fats) in deep Insights.'
+                    : 'Personalized daily targets tuned for clean offline calorie tracking.',
                 icon: Icons.pie_chart_outline_rounded,
                 iconColor: const Color(0xFFFFC247),
                 chipText: 'Target',
@@ -1072,9 +1470,9 @@ class _DailyHighlightsSection extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               _HighlightCard(
-                title: 'Hydration Status',
+                title: 'Fluid Balance',
                 subtitle:
-                    'Track your daily water glasses to keep energy and metabolism high.',
+                    'Keep daily hydration up for optimal energy and clean metabolic flow.',
                 icon: Icons.water_drop_outlined,
                 iconColor: const Color(0xFF00B4D8),
                 chipText: 'Hydration',
@@ -1111,25 +1509,35 @@ class _HighlightCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 250,
+      width: 254,
       decoration: BoxDecoration(
-        color: const Color(0xFF072521),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF104038), width: 1.0),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0A2621),
+            Color(0xFF051B17),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: const Color(0xFF00E5A3).withValues(alpha: 0.16),
+          width: 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00110E).withValues(alpha: 0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -1145,8 +1553,8 @@ class _HighlightCard extends StatelessWidget {
                         Text(
                           title,
                           style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
                           ),
                         ),
@@ -1154,18 +1562,18 @@ class _HighlightCard extends StatelessWidget {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
+                        horizontal: 8,
                         vertical: 2.5,
                       ),
                       decoration: BoxDecoration(
-                        color: chipColor.withValues(alpha: 0.15),
+                        color: chipColor.withValues(alpha: 0.16),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         chipText,
                         style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
                           color: chipColor,
                         ),
                       ),
@@ -1198,7 +1606,7 @@ class _LeafSilhouettePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF00D6A0)
+      ..color = const Color(0xFF00E5A3)
       ..style = PaintingStyle.fill;
 
     final path = Path()

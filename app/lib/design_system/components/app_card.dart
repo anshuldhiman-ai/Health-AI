@@ -27,23 +27,37 @@ class AppCard extends StatelessWidget {
 
     final card = DecoratedBox(
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF072521).withValues(alpha: 0.92)
-            : scheme.surface.withValues(alpha: 0.95),
+        gradient: isDark
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0A2621),
+                  Color(0xFF051B17),
+                ],
+              )
+            : null,
+        color: isDark ? null : scheme.surface.withValues(alpha: 0.95),
         borderRadius: borderRadius,
         // Glassmorphic cards: Subtle emerald outline in dark mode, white highlight in light mode
         border: Border.all(
           color: isDark
-              ? const Color(0xFF00D6A0).withValues(alpha: 0.16)
+              ? const Color(0xFF00E5A3).withValues(alpha: 0.16)
               : Colors.white.withValues(alpha: 0.8),
           width: 1.0,
         ),
         boxShadow: isDark
             ? [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.25),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: const Color(0xFF00E5A3).withValues(alpha: 0.04),
+                  blurRadius: 20,
+                  spreadRadius: 1,
+                  offset: const Offset(0, -2),
                 ),
               ]
             : AppShadows.card,
