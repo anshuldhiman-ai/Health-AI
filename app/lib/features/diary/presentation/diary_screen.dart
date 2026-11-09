@@ -367,13 +367,6 @@ class _MealSectionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final byMeal = <MealKind, List<MealLogEntry>>{
-      for (final e in state.mealLog) e.mealKind: [],
-    };
-    for (final e in state.mealLog) {
-      byMeal[e.mealKind]!.add(e);
-    }
-
     const mainMeals = [MealKind.breakfast, MealKind.lunch, MealKind.dinner];
 
     return Column(
@@ -381,7 +374,7 @@ class _MealSectionList extends StatelessWidget {
         for (final meal in mainMeals) ...[
           _MealRowCard(
             meal: meal,
-            entries: byMeal[meal] ?? const [],
+            entries: state.entriesForMeal(meal),
             dayOffset: dayOffset,
           ),
           const SizedBox(height: 10),
@@ -409,9 +402,10 @@ class _MealRowCard extends ConsumerWidget {
     final colors = context.appColors;
 
     final hasEntries = entries.isNotEmpty;
-    final kcal = entries.fold<int>(0, (sum, e) => sum + e.calories);
-    var protein = 0, carbs = 0, fat = 0;
-    for (final e in entries) {
+    var kcal = 0, protein = 0, carbs = 0, fat = 0;
+    for (var i = 0; i < entries.length; i++) {
+      final e = entries[i];
+      kcal += e.calories;
       protein += e.proteinGrams;
       carbs += e.carbsGrams;
       fat += e.fatGrams;
@@ -619,9 +613,10 @@ class _SnacksMacroCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
 
+    final snackEntries = state.entriesForMeal(MealKind.snacks);
     var kcal = 0, protein = 0, carbs = 0, fat = 0;
-    for (final e in state.mealLog) {
-      if (e.mealKind != MealKind.snacks) continue;
+    for (var i = 0; i < snackEntries.length; i++) {
+      final e = snackEntries[i];
       kcal += e.calories;
       protein += e.proteinGrams;
       carbs += e.carbsGrams;

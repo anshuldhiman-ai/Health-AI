@@ -57,16 +57,18 @@ class TodayScreen extends ConsumerWidget {
             ),
           ),
 
-          // 2. Subtle organic leaf background accents
+          // 2. Subtle organic leaf background accents (isolated via RepaintBoundary)
           Positioned(
             top: -30,
             left: -40,
             child: IgnorePointer(
               child: Opacity(
                 opacity: 0.10,
-                child: CustomPaint(
-                  size: const Size(180, 220),
-                  painter: _LeafSilhouettePainter(),
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    size: const Size(180, 220),
+                    painter: _LeafSilhouettePainter(),
+                  ),
                 ),
               ),
             ),
@@ -77,11 +79,13 @@ class TodayScreen extends ConsumerWidget {
             child: IgnorePointer(
               child: Opacity(
                 opacity: 0.08,
-                child: Transform.rotate(
-                  angle: 2.4,
-                  child: CustomPaint(
-                    size: const Size(160, 200),
-                    painter: _LeafSilhouettePainter(),
+                child: RepaintBoundary(
+                  child: Transform.rotate(
+                    angle: 2.4,
+                    child: CustomPaint(
+                      size: const Size(160, 200),
+                      painter: _LeafSilhouettePainter(),
+                    ),
                   ),
                 ),
               ),
@@ -132,9 +136,12 @@ class _HeaderSection extends StatelessWidget {
 
   final String name;
 
+  static final _dateFormat = DateFormat('EEE, d MMM');
+
   @override
   Widget build(BuildContext context) {
-    final hour = DateTime.now().hour;
+    final now = DateTime.now();
+    final hour = now.hour;
     final greeting = hour < 12
         ? 'Good morning,'
         : hour < 17
@@ -146,7 +153,7 @@ class _HeaderSection extends StatelessWidget {
             ? Icons.sunny
             : Icons.nights_stay_rounded;
 
-    final dateFormatted = DateFormat('EEE, d MMM').format(DateTime.now());
+    final dateFormatted = _dateFormat.format(now);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -286,24 +293,29 @@ class _CaloriesAndMacrosCard extends ConsumerWidget {
     final remaining = math.max(0, target - consumed);
     final progressRatio = (consumed / target).clamp(0.0, 1.0);
 
-    final stepSnapshot = ref.watch(stepTrackerProvider).valueOrNull;
-    final burnedKcal =
-        ((stepSnapshot?.steps ?? 0) * kKcalPerStepEstimate).round();
+    // Watch integer burned kcal with select to eliminate unnecessary rebuilds on sub-step updates
+    final burnedKcal = ref.watch(
+      stepTrackerProvider.select(
+        (s) => ((s.valueOrNull?.steps ?? 0) * kKcalPerStepEstimate).round(),
+      ),
+    );
 
-    final protein = state.macros.firstWhere(
-      (m) => m.kind == MacroKind.protein,
-      orElse: () =>
-          const MacroLine(kind: MacroKind.protein, value: 0, target: 100),
-    );
-    final carbs = state.macros.firstWhere(
-      (m) => m.kind == MacroKind.carbs,
-      orElse: () =>
-          const MacroLine(kind: MacroKind.carbs, value: 0, target: 180),
-    );
-    final fat = state.macros.firstWhere(
-      (m) => m.kind == MacroKind.fat,
-      orElse: () => const MacroLine(kind: MacroKind.fat, value: 0, target: 60),
-    );
+    MacroLine? protein;
+    MacroLine? carbs;
+    MacroLine? fat;
+    for (var i = 0; i < state.macros.length; i++) {
+      final m = state.macros[i];
+      if (m.kind == MacroKind.protein) {
+        protein = m;
+      } else if (m.kind == MacroKind.carbs) {
+        carbs = m;
+      } else if (m.kind == MacroKind.fat) {
+        fat = m;
+      }
+    }
+    protein ??= const MacroLine(kind: MacroKind.protein, value: 0, target: 100);
+    carbs ??= const MacroLine(kind: MacroKind.carbs, value: 0, target: 180);
+    fat ??= const MacroLine(kind: MacroKind.fat, value: 0, target: 60);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
@@ -393,11 +405,13 @@ class _CaloriesAndMacrosCard extends ConsumerWidget {
                 ],
               ),
 
-              // Center: High-Impact Hero Progress Ring
-              _CenterHeroCircularIndicator(
-                consumed: consumed,
-                target: target,
-                progress: progressRatio,
+              // Center: High-Impact Hero Progress Ring (isolated via RepaintBoundary)
+              RepaintBoundary(
+                child: _CenterHeroCircularIndicator(
+                  consumed: consumed,
+                  target: target,
+                  progress: progressRatio,
+                ),
               ),
 
               // Right Pod: Active Burned from steps
@@ -797,16 +811,39 @@ class _ArcProgressPainter extends CustomPainter {
 /// Asymmetric Bento Biometrics Module:
 /// - Hero Step Activity Tile (Wide card with live progress, distance & active time)
 /// - Two Connected Micro-Tiles (Hydration with quick-log + Sleep Recovery)
-class _BentoBiometricsModule extends ConsumerWidget {
+class _BentoBiometricsModule extends StatelessWidget {
   const _BentoBiometricsModule();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: const [
+        // 1. Wide Hero Step Activity Card (isolated via RepaintBoundary)
+        RepaintBoundary(
+          child: _StepBentoHeroCard(),
+        ),
+        SizedBox(height: 12),
+
+        // 2. Row with Two Decoupled Micro-Tiles (Hydration & Sleep)
+        Row(
+          children: [
+            Expanded(child: _HydrationBentoTile()),
+            SizedBox(width: 12),
+            Expanded(child: _SleepBentoTile()),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StepBentoHeroCard extends ConsumerWidget {
+  const _StepBentoHeroCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stepSnapshot = ref.watch(stepTrackerProvider).valueOrNull;
     final stepGoal = ref.watch(stepGoalProvider);
-    final water = ref.watch(waterTodayProvider);
-    final sleep = ref.watch(sleepTodayProvider);
-    final sleepState = ref.watch(sleepProvider);
 
     final stepCount = stepSnapshot?.steps ?? 0;
     final effectiveGoal = stepGoal > 0 ? stepGoal : 10000;
@@ -817,8 +854,315 @@ class _BentoBiometricsModule extends ConsumerWidget {
         ? '${activeMinutes ~/ 60}h ${activeMinutes % 60}m'
         : '${activeMinutes}m';
 
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF092621),
+            Color(0xFF041A16),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: const Color(0xFF00E5A3).withValues(alpha: 0.16),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.30),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          onTap: () => context.push('/activity'),
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF00E5A3).withValues(alpha: 0.14),
+                        border: Border.all(
+                          color: const Color(0xFF00E5A3).withValues(alpha: 0.30),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.directions_walk_rounded,
+                        color: Color(0xFF00E5A3),
+                        size: 21,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          'DAILY MOVEMENT',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFFA7BDB8),
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Step Tracker',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00E5A3).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${(stepProgress * 100).toInt()}% GOAL',
+                        style: const TextStyle(
+                          color: Color(0xFF00E5A3),
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Color(0xFFA7BDB8),
+                      size: 20,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          formatCount(stepCount),
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.6,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        const Text(
+                          'steps',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFA7BDB8),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        _MiniMetricTag(icon: Icons.straighten_rounded, text: '${distanceKm} km'),
+                        const SizedBox(width: 10),
+                        _MiniMetricTag(icon: Icons.timer_outlined, text: activeStr),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: SizedBox(
+                    height: 5.5,
+                    child: Stack(
+                      children: [
+                        Container(color: const Color(0xFF021B17)),
+                        FractionallySizedBox(
+                          widthFactor: stepProgress,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF00FFB7), Color(0xFF00A878)],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HydrationBentoTile extends ConsumerWidget {
+  const _HydrationBentoTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final water = ref.watch(waterTodayProvider);
     final waterLiters = water.liters;
     final waterGoal = water.goalLiters;
+
+    return GestureDetector(
+      onTap: () => context.push('/water'),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF07272C),
+              Color(0xFF03161A),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: const Color(0xFF00B4D8).withValues(alpha: 0.20),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.30),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF00B4D8).withValues(alpha: 0.16),
+                  ),
+                  child: const Icon(
+                    Icons.water_drop_rounded,
+                    size: 18,
+                    color: Color(0xFF00B4D8),
+                  ),
+                ),
+
+                // Quick 1-Tap +250ml Chip
+                GestureDetector(
+                  onTap: () async {
+                    await ref.read(waterProvider.notifier).addGlass();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('+250ml logged! Stay hydrated.'),
+                          duration: Duration(milliseconds: 900),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00B4D8).withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFF00B4D8).withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.add, size: 10, color: Color(0xFF00B4D8)),
+                        SizedBox(width: 2),
+                        Text(
+                          '250ml',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF00B4D8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'HYDRATION',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFFA7BDB8),
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${waterLiters.toStringAsFixed(1)} / ${waterGoal.toStringAsFixed(1)}L',
+              style: const TextStyle(
+                fontSize: 16.5,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: water.progress,
+                minHeight: 4,
+                backgroundColor: const Color(0xFF012126),
+                valueColor: const AlwaysStoppedAnimation(Color(0xFF00B4D8)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SleepBentoTile extends ConsumerWidget {
+  const _SleepBentoTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sleep = ref.watch(sleepTodayProvider);
+    final sleepState = ref.watch(sleepProvider);
 
     final sleepMinutes = sleep?.durationMinutes ?? 0;
     final sleepHours = sleepMinutes ~/ 60;
@@ -827,404 +1171,101 @@ class _BentoBiometricsModule extends ConsumerWidget {
         ? '${sleepHours}h ${sleepRemMinutes}m'
         : '7h 30m';
 
-    return Column(
-      children: [
-        // 1. Wide Hero Step Activity Card
-        Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF092621),
-                Color(0xFF041A16),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: const Color(0xFF00E5A3).withValues(alpha: 0.16),
-              width: 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.30),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
+    return GestureDetector(
+      onTap: () => context.push('/sleep'),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF131A33),
+              Color(0xFF090E1F),
             ],
           ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(22),
-            child: InkWell(
-              onTap: () => context.push('/activity'),
-              borderRadius: BorderRadius.circular(22),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFF00E5A3).withValues(alpha: 0.14),
-                            border: Border.all(
-                              color: const Color(0xFF00E5A3).withValues(alpha: 0.30),
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.directions_walk_rounded,
-                            color: Color(0xFF00E5A3),
-                            size: 21,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'DAILY MOVEMENT',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFFA7BDB8),
-                                letterSpacing: 0.6,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Step Tracker',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00E5A3).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${(stepProgress * 100).toInt()}% GOAL',
-                            style: const TextStyle(
-                              color: Color(0xFF00E5A3),
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: Color(0xFFA7BDB8),
-                          size: 20,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              formatCount(stepCount),
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                letterSpacing: -0.6,
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            const Text(
-                              'steps',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFFA7BDB8),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            _MiniMetricTag(icon: Icons.straighten_rounded, text: '${distanceKm} km'),
-                            const SizedBox(width: 10),
-                            _MiniMetricTag(icon: Icons.timer_outlined, text: activeStr),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(5),
-                      child: SizedBox(
-                        height: 5.5,
-                        child: Stack(
-                          children: [
-                            Container(color: const Color(0xFF021B17)),
-                            FractionallySizedBox(
-                              widthFactor: stepProgress,
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [Color(0xFF00FFB7), Color(0xFF00A878)],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: const Color(0xFF818CF8).withValues(alpha: 0.22),
+            width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.30),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-
-        // 2. Row with Two Connected Micro-Tiles (Hydration & Sleep)
-        Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left Micro-Tile: Hydration with 1-Tap Quick Log
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF07272C),
-                      Color(0xFF03161A),
-                    ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF818CF8).withValues(alpha: 0.16),
                   ),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: const Color(0xFF00B4D8).withValues(alpha: 0.20),
-                    width: 1.2,
+                  child: const Icon(
+                    Icons.bedtime_rounded,
+                    size: 18,
+                    color: Color(0xFF818CF8),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.30),
-                      blurRadius: 14,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFF00B4D8).withValues(alpha: 0.16),
-                          ),
-                          child: const Icon(
-                            Icons.water_drop_rounded,
-                            size: 18,
-                            color: Color(0xFF00B4D8),
-                          ),
-                        ),
-                        // Quick 1-Tap +250ml Chip
-                        GestureDetector(
-                          onTap: () async {
-                            await ref.read(waterProvider.notifier).addGlass();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('+250ml logged! Stay hydrated.'),
-                                  duration: Duration(milliseconds: 900),
-                                ),
-                              );
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF00B4D8).withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0xFF00B4D8).withValues(alpha: 0.4),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.add, size: 10, color: Color(0xFF00B4D8)),
-                                SizedBox(width: 2),
-                                Text(
-                                  '250ml',
-                                  style: TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF00B4D8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF818CF8).withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    '88% SCORE',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF818CF8),
+                      letterSpacing: 0.3,
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'HYDRATION',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFFA7BDB8),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${waterLiters.toStringAsFixed(1)} / ${waterGoal.toStringAsFixed(1)}L',
-                      style: const TextStyle(
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
-                      child: LinearProgressIndicator(
-                        value: water.progress,
-                        minHeight: 4,
-                        backgroundColor: const Color(0xFF012126),
-                        valueColor: const AlwaysStoppedAnimation(Color(0xFF00B4D8)),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'REST & SLEEP',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFFA7BDB8),
+                letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(width: 12),
-
-            // Right Micro-Tile: Sleep & Recovery
-            Expanded(
-              child: GestureDetector(
-                onTap: () => context.push('/sleep'),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF131A33),
-                        Color(0xFF090E1F),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: const Color(0xFF818CF8).withValues(alpha: 0.22),
-                      width: 1.2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.30),
-                        blurRadius: 14,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: const Color(0xFF818CF8).withValues(alpha: 0.16),
-                            ),
-                            child: const Icon(
-                              Icons.bedtime_rounded,
-                              size: 18,
-                              color: Color(0xFF818CF8),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF818CF8).withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              '88% SCORE',
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF818CF8),
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'REST & SLEEP',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFFA7BDB8),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        sleepStr,
-                        style: const TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
-                        child: LinearProgressIndicator(
-                          value: (sleepMinutes / (sleepState.targetMinutes > 0 ? sleepState.targetMinutes : 480)).clamp(0.0, 1.0),
-                          minHeight: 4,
-                          backgroundColor: const Color(0xFF090F24),
-                          valueColor: const AlwaysStoppedAnimation(Color(0xFF818CF8)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            const SizedBox(height: 2),
+            Text(
+              sleepStr,
+              style: const TextStyle(
+                fontSize: 16.5,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: (sleepMinutes / (sleepState.targetMinutes > 0 ? sleepState.targetMinutes : 480)).clamp(0.0, 1.0),
+                minHeight: 4,
+                backgroundColor: const Color(0xFF090F24),
+                valueColor: const AlwaysStoppedAnimation(Color(0xFF818CF8)),
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }

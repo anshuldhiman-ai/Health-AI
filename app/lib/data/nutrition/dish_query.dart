@@ -71,18 +71,31 @@ List<DishInfo> filterDishes(
   ];
 }
 
-List<DishInfo> popularDishes(DishCatalog catalog) => [
-  for (final id in popularDishIds)
-    if (catalog.dishes[id] != null) catalog.dishes[id]!,
-];
+final _popularDishesCache = Expando<List<DishInfo>>();
+final _catalogFamiliesCache = Expando<List<String>>();
+
+List<DishInfo> popularDishes(DishCatalog catalog) {
+  final cached = _popularDishesCache[catalog];
+  if (cached != null) return cached;
+  final dishes = [
+    for (final id in popularDishIds)
+      if (catalog.dishes[id] != null) catalog.dishes[id]!,
+  ];
+  _popularDishesCache[catalog] = dishes;
+  return dishes;
+}
 
 /// Families present in the catalog, in the product's preferred order.
 List<String> catalogFamilies(DishCatalog catalog) {
+  final cached = _catalogFamiliesCache[catalog];
+  if (cached != null) return cached;
   final present = {for (final dish in catalog.dishes.values) dish.family};
-  return [
+  final families = [
     for (final family in familyOrder)
       if (present.contains(family)) family,
     for (final family in present)
       if (!familyOrder.contains(family)) family,
   ];
+  _catalogFamiliesCache[catalog] = families;
+  return families;
 }

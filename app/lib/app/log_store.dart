@@ -57,31 +57,46 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
 
   final SharedPreferences? prefs;
   Future<void> _saveQueue = Future<void>.value();
+  final Map<int, DayTotals> _totalsCache = {};
 
   List<LogEntry> entriesFor(int dayOffset) => state[dayOffset] ?? const [];
 
   bool get hasEntries => state.values.any((entries) => entries.isNotEmpty);
 
   DayTotals totalsFor(int dayOffset) {
-    var protein = 0, carbs = 0, fat = 0;
+    final cached = _totalsCache[dayOffset];
+    if (cached != null) return cached;
+
+    var protein = 0, carbs = 0, fat = 0, consumed = 0;
     final entries = entriesFor(dayOffset);
-    for (final e in entries) {
+    for (var i = 0; i < entries.length; i++) {
+      final e = entries[i];
+      consumed += e.kcal;
       protein += e.proteinGrams;
       carbs += e.carbsGrams;
       fat += e.fatGrams;
     }
-    return DayTotals(
-      consumed: entries.fold(0, (sum, e) => sum + e.kcal),
+    final totals = DayTotals(
+      consumed: consumed,
       protein: protein,
       carbs: carbs,
       fat: fat,
     );
+    _totalsCache[dayOffset] = totals;
+    return totals;
   }
 
-  int kcalForMeal(int dayOffset, MealKind kind) =>
-      entriesFor(dayOffset)
-          .where((e) => e.mealKind == kind)
-          .fold(0, (sum, e) => sum + e.kcal);
+  int kcalForMeal(int dayOffset, MealKind kind) {
+    final entries = entriesFor(dayOffset);
+    var sum = 0;
+    for (var i = 0; i < entries.length; i++) {
+      final e = entries[i];
+      if (e.mealKind == kind) {
+        sum += e.kcal;
+      }
+    }
+    return sum;
+  }
 
   /// Append a confirmed scan/menu pick to the requested day. The UI
   /// never writes raw macro numbers — it gets an estimated entry from
@@ -138,6 +153,7 @@ class DayLog extends StateNotifier<Map<int, List<LogEntry>>> {
   Future<void> flush() => _saveQueue;
 
   void _commit(Map<int, List<LogEntry>> next) {
+    _totalsCache.clear();
     state = next;
     final payload = jsonEncode({
       'baseDate': _dateOnly(DateTime.now()).toIso8601String(),

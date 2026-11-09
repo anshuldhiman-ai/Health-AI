@@ -65,11 +65,11 @@ class InsightsScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 const _RangeChips(),
                 const SizedBox(height: 18),
-                // Nutrition Balance Donut Card
-                _BalanceCard(state: state),
+                // Nutrition Balance Donut Card (isolated via RepaintBoundary)
+                RepaintBoundary(child: _BalanceCard(state: state)),
                 const SizedBox(height: 18),
-                // Live Interactive Calorie Trend Chart Card
-                _TrendCard(state: state),
+                // Live Interactive Calorie Trend Chart Card (isolated via RepaintBoundary)
+                RepaintBoundary(child: _TrendCard(state: state)),
                 const SizedBox(height: 18),
                 // Key Insights Card from showcase
                 _KeyInsightsCard(state: state),

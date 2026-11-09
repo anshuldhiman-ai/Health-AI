@@ -343,63 +343,73 @@ class _StepTrackerBodyState extends ConsumerState<_StepTrackerBody> {
             const SizedBox(height: 14),
           ],
 
-          // B. Main Step Progress Hero Section
-          _HeroProgressSection(
-            displaySteps: displaySteps,
-            goalSteps: effectiveGoal,
-            progress: progress,
-            calories: calories,
+          // B. Main Step Progress Hero Section (isolated via RepaintBoundary)
+          RepaintBoundary(
+            child: _HeroProgressSection(
+              displaySteps: displaySteps,
+              goalSteps: effectiveGoal,
+              progress: progress,
+              calories: calories,
+            ),
           ),
           const SizedBox(height: 16),
 
           // C. Activity Summary Card (Distance, Active Time, Stairs)
-          _ActivitySummaryCard(
-            distanceKm: distanceKm,
-            activeMinutes: activeMinutes,
-            measuredActive: measuredActive,
-            cadenceSpm: cadence,
+          RepaintBoundary(
+            child: _ActivitySummaryCard(
+              distanceKm: distanceKm,
+              activeMinutes: activeMinutes,
+              measuredActive: measuredActive,
+              cadenceSpm: cadence,
+            ),
           ),
           const SizedBox(height: 16),
 
           // D. Step Activity Chart Card
-          _StepActivityChartCard(
-            hourlySteps: activeHourly,
-            history: widget.snapshot.history,
-            displaySteps: displaySteps,
-            chartPeriod: _chartPeriod,
-            selectedBarIndex: _selectedBarIndex,
-            onPeriodChanged: (p) => setState(() {
-              _chartPeriod = p;
-              _selectedBarIndex = null;
-            }),
-            onBarSelected: (idx) => setState(() => _selectedBarIndex = idx),
-            isViewingHistory: isViewingHistory,
-            reconciledSteps: isViewingHistory
-                ? (_selectedDay?.reconciledSteps ?? 0)
-                : widget.snapshot.reconciledSteps,
+          RepaintBoundary(
+            child: _StepActivityChartCard(
+              hourlySteps: activeHourly,
+              history: widget.snapshot.history,
+              displaySteps: displaySteps,
+              chartPeriod: _chartPeriod,
+              selectedBarIndex: _selectedBarIndex,
+              onPeriodChanged: (p) => setState(() {
+                _chartPeriod = p;
+                _selectedBarIndex = null;
+              }),
+              onBarSelected: (idx) => setState(() => _selectedBarIndex = idx),
+              isViewingHistory: isViewingHistory,
+              reconciledSteps: isViewingHistory
+                  ? (_selectedDay?.reconciledSteps ?? 0)
+                  : widget.snapshot.reconciledSteps,
+            ),
           ),
           const SizedBox(height: 16),
 
           // E. Goal Progress Motivational Card
-          _GoalProgressCard(remainingSteps: remainingSteps),
+          RepaintBoundary(
+            child: _GoalProgressCard(remainingSteps: remainingSteps),
+          ),
           const SizedBox(height: 16),
 
           // 7-Day History Pills (for rapid day comparison & automated test compatibility)
-          _HistoryDayStrip(
-            history: widget.snapshot.history,
-            selectedDate: _selectedDay?.date,
-            onDaySelected: (day) {
-              setState(() {
-                final now = DateTime.now();
-                if (day.date.year == now.year &&
-                    day.date.month == now.month &&
-                    day.date.day == now.day) {
-                  _selectedDay = null;
-                } else {
-                  _selectedDay = day;
-                }
-              });
-            },
+          RepaintBoundary(
+            child: _HistoryDayStrip(
+              history: widget.snapshot.history,
+              selectedDate: _selectedDay?.date,
+              onDaySelected: (day) {
+                setState(() {
+                  final now = DateTime.now();
+                  if (day.date.year == now.year &&
+                      day.date.month == now.month &&
+                      day.date.day == now.day) {
+                    _selectedDay = null;
+                  } else {
+                    _selectedDay = day;
+                  }
+                });
+              },
+            ),
           ),
         ],
       ),
@@ -992,10 +1002,10 @@ class _StepActivityChartCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bars = _barsFor(Localizations.localeOf(context));
-    final maxStep = bars.fold<int>(
-      0,
-      (value, bar) => math.max(value, bar.steps),
-    );
+    var maxStep = 0;
+    for (var i = 0; i < bars.length; i++) {
+      if (bars[i].steps > maxStep) maxStep = bars[i].steps;
+    }
     final effectiveMax = math.max(1500, (maxStep * 1.15).round());
     final selected = (selectedBarIndex ?? _defaultIndex).clamp(
       0,
